@@ -1,0 +1,24 @@
+﻿System-98 Image Format
+----------------------
+four･nine/Izuho Saruta VN engine
+
+Pos	Len	Description
+--------------------------------
+00h	02h	image width (Big Endian!)
+02h	02h	image height (Big Endian!)
+04h	30h	palette data (16 colours, 3 bytes each)
+		order: Red, Green, Blue
+34h	??	image data (compressed)
+
+The file is effectively a ".PI" graphics file without header.
+https://mooncore.eu/bunny/txt/pi-pic.htm
+
+One can convert them to "Pi" files by prepending these bytes:
+5069 1A00 0001 0104 5749 4E2A 0000
+
+see also https://mooncore.eu/bunny/txt/pitech_e.txt
+online view: http://recoil.sourceforge.net/web.html
+
+"ViX" tool (Windows) for decoding/encoding of Pi image files: https://web.archive.org/web/20110823043022/http://www.katch.ne.jp/~k_okada/
+"MG" tool (DOS): http://www.vector.co.jp/soft/dos/art/se002524.html
+"MysticTK (Mystic Square Toolkit)" (Windows): http://lunarcast.net/mystictk.php
