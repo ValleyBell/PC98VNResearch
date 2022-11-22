@@ -3,9 +3,9 @@ import sys
 import struct
 
 if len(sys.argv) < 3:
-	print("Gaogao 4 Canaan Prologue Image De/-Interleaver")
-	print("Usage: {} input.bmp output.bmp")
-	print("Run the tool twice to revert the interleaving.")
+	print("Gaogao 4 Canaan Prologue Image De/-Interlacer")
+	print("Usage: {} input.bmp output.bmp".format(sys.argv[0]))
+	print("Run the tool twice to revert the interlacing.")
 	sys.exit(1)
 
 with open(sys.argv[1], "rb") as f:
