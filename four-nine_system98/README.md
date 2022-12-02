@@ -38,3 +38,7 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
   Example: *WAKUWAKU\_Greeting* [Shift-JIS text file](ExampleFiles/WAKUWAKU_Greeting.txt), [PNG reference image for first 4 text boxes](ExampleFiles/WAKUWAKU_Greeting.png)
 - Games may load custom fonts for stylised punctiation symbols and emojis.
   In Canaan, those occupy JIS plane 01-86 (Shift-JIS eb9f..ebfc). *TODO: figure out how many planes are really used*
+
+## Thanks
+
+- Thanks a lot to the people at the PC-9800 Series Central Discord for helping me to figure out various things, especially text and image formats.

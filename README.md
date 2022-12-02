@@ -14,3 +14,7 @@ In the long run, this information may help with the translation of some of these
 | Engine name | Developer | folder |
 |:------------|:----------|:-------|
 | System-98   | Four･Nine | `four-nine_system98` |
+
+## Game list
+
+A list of various games and their known engine versions can be found in [game-list.md](game-list.md).
