@@ -1,0 +1,49 @@
+Hatchake Ayayo-san 2 - Message Format
+====================
+[loop]
+1 byte - command
+2 bytes  absolute file offset of command data end / begin of next command
+x bytes - command data
+[loop end]
+
+Known commands
+00 - end of file
+	no parameters
+21 - menu: wait for selection
+	no parameters
+24 - ??
+	no parameters
+25 - ??
+	5 bytes - ??
+26 - menu: destination pointers
+	1 byte - number of texts (n)
+	2*n bytes - n absolute file pointers, pointing to commands for the respective menu entry
+2A - place/background name
+	? bytes - null-terminated text string
+2B - ??
+	no parameters
+2D - ??
+	1 byte - ASCII digit '1' to '4'
+2F - text: narrator/menu
+	? bytes - null-terminated text string
+30 - text: character Ayayo
+	? bytes - null-terminated text string
+31 - text: character Tomoko
+	? bytes - null-terminated text string
+32 - text: NPC character
+	? bytes - null-terminated text string
+33 - text: NPC character
+	? bytes - null-terminated text string
+3D - ??
+3F - menu: choice texts
+	1 byte - number of texts (n)
+	? bytes - n null-terminated text strings
+5E - ??
+	3 bytes - ??
+5F - ??
+	3 bytes - ??
+	? bytes - null-terminated text string
+7C - jump
+	2 bytes - absolute file offset of destination command to be executed next
+7E - ??
+	?? bytes - ??
