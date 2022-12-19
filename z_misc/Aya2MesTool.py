@@ -45,7 +45,7 @@ CMD_MODES = {
     0x5E: 0,    #
     0x5F: 0,    #
     0x7C: 2,    # jump
-    0x7E: 0,    # jump
+    0x7E: 0,    # meta-command
 }
 
 ESCAPE_TBL = {  # special characters to be escaped
@@ -136,6 +136,11 @@ def decode_mes_file(filepath_in: str, filepath_out: str) -> int:
         if cmd == 0x7C: # jump
             pos = struct.unpack_from("<H", dbytes, 0)[0];
             generate_label(cmdList, cmdPosMap, pos)
+        elif cmd == 0x7E: # meta-command
+            subcmd = 0 if len(dbytes) < 1 else dbytes[0]
+            if subcmd == 0x03:  # conditional jump
+                pos = struct.unpack_from("<H", dbytes, 1)[0];
+                generate_label(cmdList, cmdPosMap, pos)
         elif cmd == 0x26:   # menu choices (code jumps)
             # 1 byte - number of menu entries
             # 2*n bytes - n pointers
@@ -161,6 +166,13 @@ def decode_mes_file(filepath_in: str, filepath_out: str) -> int:
             if cmd == 0x7C: # jump
                 pos = struct.unpack_from("<H", dbytes, 0)[0];
                 dstr = get_label_str(cmdList, cmdPosMap, pos)
+            elif cmd == 0x7E: # meta-command
+                subcmd = 0 if len(dbytes) < 1 else dbytes[0]
+                if subcmd == 0x03:  # conditional jump
+                    pos = struct.unpack_from("<H", dbytes, 1)[0];
+                    dstr = dump_as_hex(dbytes[0:1]) + " " + get_label_str(cmdList, cmdPosMap, pos)
+                else:
+                    dstr = dump_as_hex(dbytes)
             elif cmd == 0x5F:
                 # 3 bytes formatting + text
                 dstr = dump_as_hex(dbytes[0:3])
@@ -217,7 +229,8 @@ def find_string_end(datastr: str, startpos: int, quote_chr: str) -> int:
             pos += 2    # skip backslash + escaped character
         elif datastr[pos] == quote_chr:
             return pos
-        pos += 1
+        else:
+            pos += 1
     return -1
 
 def read_escaped_string(datastr: str) -> str:

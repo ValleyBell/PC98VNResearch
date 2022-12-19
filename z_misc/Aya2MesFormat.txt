@@ -1,16 +1,22 @@
 Hatchake Ayayo-san 2 - Message Format
 ====================
+
+File structure
+--------------
 [loop]
 1 byte - command
 2 bytes  absolute file offset of command data end / begin of next command
 x bytes - command data
 [loop end]
 
-Known commands
+Commands
+--------
 00 - end of file
 	no parameters
 21 - menu: wait for selection
 	no parameters
+23 - ??
+	? bytes - null-terminated text string
 24 - ??
 	no parameters
 25 - ??
@@ -24,26 +30,37 @@ Known commands
 	no parameters
 2D - ??
 	1 byte - ASCII digit '1' to '4'
-2F - text: narrator/menu
+2F - narrator text
 	? bytes - null-terminated text string
-30 - text: character Ayayo
-	? bytes - null-terminated text string
-31 - text: character Tomoko
-	? bytes - null-terminated text string
-32 - text: NPC character
-	? bytes - null-terminated text string
-33 - text: NPC character
+30..33 - character text (for character 00..03, defined by command 5F)
 	? bytes - null-terminated text string
 3D - ??
+	?? bytes - ??
 3F - menu: choice texts
 	1 byte - number of texts (n)
 	? bytes - n null-terminated text strings
-5E - ??
-	3 bytes - ??
-5F - ??
-	3 bytes - ??
+5E - character related
+	1 byte - character ID (00..03)
+	?? bytes - ??
+5F - define character
+	1 byte - character ID (00..03)
+	2 bytes - ??
 	? bytes - null-terminated text string
 7C - jump
 	2 bytes - absolute file offset of destination command to be executed next
-7E - ??
-	?? bytes - ??
+7E - meta-command
+	1 byte - sub-command ID (01..07, other commands are ignored)
+7E 01 - ??
+	no parameters
+7E 02 - set flag
+	1 byte - bit mask to be ORed
+7E 03 - check flag variable, jump when it equals 07
+	2 bytes - absolute file offset of destination command
+7E 04 - ??
+	no parameters
+7E 05 - ??
+	no parameters
+7E 06 - ??
+	no parameters
+7E 07 - ??
+	no parameters
