@@ -20,12 +20,14 @@
 | [Canaan \~Yakusoku no Chi\~<br/>カナン ～約束の地～](https://vndb.org/v8697) | Four･Nine | 1997-04-18 | Four･Nine System-98 v3.10 |
 | Gao Gao! Optional Disc<br/>ＧＡＯＧＡＯ！オプショナルディスク | Four･Nine | 1995 | Four･Nine System-98 v3.10 |
 | [H+<br/>エッチプラス](https://vndb.org/v8707) | Desire | 1994-07-20 | Four･Nine System-98 "Desire Special Version" |
+| [Hacchake Ayayo-san 2 - Ikenai Holiday - Ayayo's Love Affair<br/>はっちゃけ あやよさん２ いけないホリデイ ＡＹＡＹＯ＇Ｓ ＬＯＶＥ ＡＦＦＡＩＲ](https://vndb.org/v8893) | HARD | 1990-09-14 | HARD custom |
+| [Hacchake Ayayo-san 3 - Watashi, Icchattan Desu - Ayayo's Life After<br/>はっちゃけ あやよさん３ 私、逝っちゃったんです ＡＹＡＹＯ＇Ｓ ＬＩＦＥ ＡＦＴＥＲ](https://vndb.org/v8894) | HARD | 1991-09-20 | HARD custom |
 | [Half-Pipe](https://www.mobygames.com/game/half-pipe) | AyPio | 1993-09-29 | AyPio UK2 (very early version)? |
 | [Halfmoon ni Kawaru made \~Ramiya Ryou no Niji-iro Tamatebako\~<br/>](https://vndb.org/v8897) | IDES | 1994-04-28 | Adv98V  Version 1.72.59(R8) |
 | [Injuu Gakuen \~La★Blue Girl\~<br/>淫獣学園 ～Ｌａ★Ｂｌｕｅ Ｇｉｒｌ～](https://vndb.org/v8733) | IDES | 1994-03-24 | Adv98V  Version 1.72.59(R8) |
 | [JYB \~Mehame Haruuga wa Himitsu no Jumon\~<br/>JYB　～メハメ・ハルーガは秘密の呪文～](https://vndb.org/v11722) | IDES | 1993-04-28 | Adv98V  Version 1.70.57(R8)
 | [Kimi Dake ni Ai o...<br/>キミだけに愛を・・・](https://vndb.org/v8749) | Game Technopolis | 1991-08 | Adv for PC-9801V  Version 1.70.39 |
-| [Kindan no Ketsuzoku<br/>禁断の血族](https://vndb.org/v739) | C's Ware | 1993-11-12 | C's Ware AGS |
+| [Kindan no Ketsuzoku<br/>禁断の血族](https://vndb.org/v739) | C's Ware | 1993-11-12 | C's Ware AGS (early version) |
 | [Kounai Shasei Vol.1<br/>校内写生 第1巻](https://vndb.org/v8751) | Kirara | 1991-07-26 | Adv for PC-9801V  Version 1.70.33 |
 | [Kounai Shasei Vol.2<br/>校内写生 第2巻](https://vndb.org/v8752) | Kirara | 1991-07-26 | Adv for PC-9801V  Version 1.70.33 |
 | [Kounai Shasei Vol.3<br/>校内写生 第3巻](https://vndb.org/v8753) | Kirara | 1991-07-26 | Adv for PC-9801V  Version 1.70.33 |
@@ -46,7 +48,6 @@
 | [X-GIRL](https://vndb.org/v8717) | IDES | 1996-04-19 | Adv98V  Version 1.75.63(R8) |
 | [Xenon \~Mugen no Shitai\~<br/>XENON ～夢幻の肢体～](https://vndb.org/v7474) | C's Ware | 1994-12-09 | C's Ware AGS |
 | [Yume no Sei<br/>夢の精](https://vndb.org/v9165) | 13cm | 1996-01-26 | AyPio UK2 (late version) "DREAM SYSTEM" |
-
 
 ## Notes
 
