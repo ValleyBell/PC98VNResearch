@@ -23,6 +23,9 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 - an English patch for Canaan's options menu (requires the ASCII patch above)
   - [WAKUWAKU-EN.SCN](ExampleFiles/WAKUWAKU-EN.SCN) (unscrambled / readable version)
   - [WAKUWAKU-EN.S](ExampleFiles/WAKUWAKU-EN.S) (scrambled), can be inserted into the game by storing it as `WAKUWAKU.S` into the game's main folder. (No repacking is required.)
+- NEC PC-9801 JIS ↔ Unicode mapping:
+  - [Python Pickle file](NEC-C-6226-lut.pkl), generated from HarJIT's `NEC-C-6226-visual3.txt` (see [z\_misc folder](z_misc/README.md))
+  - Shift JIS/JIS ↔ Unicode [Python converter module](nec_jis_conv.py) (used by the scenario decompiler)
 
 ## Notes
 

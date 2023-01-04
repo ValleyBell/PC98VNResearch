@@ -4,6 +4,7 @@ import os
 import struct
 import typing
 import argparse
+import nec_jis_conv
 
 
 # Scene Command Parameter Types
@@ -160,7 +161,7 @@ SCENE_CMD_LIST = {
 	0x7C: (None     , []),
 	0x7D: (None     , []),
 	0x7E: (None     , []),
-	0x7F: ("DOSRETR", [SCPT_REG_INT]),
+	0x7F: ("DOSRETR", [SCPT_REG_INT], SC_EXEC_END),
 	0x80: ("STRFLD" , [SCPT_REG_STR, SCPT_FNAME]),
 	0x81: ("STRFSAV", [SCPT_REG_STR, SCPT_FNAME]),
 	0x82: ("GFX82"  , []),
@@ -365,19 +366,21 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		curpos += 0x02
 		if cmd_id >= 0x100:
 			# The game engine treats this as command 0x00. (return to DOS)
-			print(f"Found invalid command ID {cmd_id:02X} at offset 0x{cmd_pos}!")
+			print(f"Found invalid command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
+			file_usage[cmd_pos+0] &= ~0x01
+			file_usage[cmd_pos+1] &= ~0x01
 			curpos = None	# stop processing here
 			continue
 		if cmd_id not in SCENE_CMD_LIST:
 			# These commands will crash the game.
-			print(f"Found invalid command ID {cmd_id:02X} at offset 0x{cmd_pos}!")
+			print(f"Found invalid command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
 			cmd_list += [(cmd_pos, -2, [cmd_id])]
 			continue
 		
 		cmd_info = SCENE_CMD_LIST[cmd_id]
 		if cmd_info[0] is None:
 			# The game engine will quit with an error message for these commands.
-			print(f"Found reserved command ID {cmd_id:02X} at offset 0x{cmd_pos}!")
+			print(f"Found reserved command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
 			cmd_list += [(cmd_pos, -2, [cmd_id])]
 			continue
 		
@@ -525,7 +528,7 @@ def generate_label_names(label_list: dict) -> None:
 		label_list[lbl_pos] = (par_type, lbl_flags, lbl_name)
 	return
 
-def str2asm(str_data: bytes) -> str:
+def str2asm(str_data: bytes) -> typing.List[str]:
 	# convert binary array to ASM string
 	# This outputs a list of "tokens", consisting of either
 	#   - a quoted string or
@@ -542,11 +545,16 @@ def str2asm(str_data: bytes) -> str:
 			else:
 				res_chrs.append(c)
 		else:
-			try:
-				# TODO: use "manual" conversion, so we can catch all the special characters.
-				sjis_str = bytes([sjis_1st, c]).decode("shift-jis")
+			#try:
+			#	sjis_str = bytes([sjis_1st, c]).decode("shift-jis")
+			#except:
+			#	sjis_str = None
+			# manual conversion to catch all the special PC-9801 font ROM characters as well
+			#sjis_str = nec_jis_conv.nec_sjis_decode_str(bytes([sjis_1st, c]))
+			sjis_str = nec_jis_conv.nec_sjis_decode_chr((sjis_1st << 8) | (c << 0))
+			if type(sjis_str) is str:
 				res_chrs.append(sjis_str)
-			except:
+			else:
 				res_chrs.append(sjis_1st)
 				res_chrs.append(c)
 			sjis_1st = None
@@ -574,6 +582,29 @@ def str2asm(str_data: bytes) -> str:
 			res_items[-1] += c_add
 		mode = new_mode
 	return res_items
+
+def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
+	# generate "groups" of string items to be places on the same line
+	# splits after 0D (new line) and 01 (wait for key press)
+	has_nl = None
+	chr_mode = None
+	result = []
+	for (idx, itm) in enumerate(data_items):
+		if itm.startswith('"'):
+			chr_id = 0x22
+		else:
+			chr_id = int(itm, 0)
+		# ignore first character (disk drive in file names)
+		# but split at 0D/01 -> text
+		if (idx > 0) and (chr_id in [0x01, 0x0D]):
+			new_chr_mode = 1
+		elif chr_id != 0x00:	# don't split at terminator characters
+			new_chr_mode = 0
+		if new_chr_mode == 0 and chr_mode == 1:
+			result.append(idx)
+		chr_mode = new_chr_mode
+	result.append(len(data_items))
+	return result
 
 def get_filename(params: list) -> typing.Union[str, None]:
 	if params[0] > 0x01:
@@ -616,6 +647,7 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 			if cmd_id < 0:
 				# output raw data (byte arrays, word arrays, strings, ...)
 				group_size = 8
+				group_list = None
 				show_idx = False
 				if cmd_pos in label_list:
 					lbl_flags = label_list[cmd_pos][1]
@@ -645,15 +677,21 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					cmd_name = "DB"
 					if (cmd_pos in label_list) and (label_list[cmd_pos][0] in [SCPT_STR, SCPT_FNAME]):
 						data_strs = str2asm(params)
+						group_list = gen_string_groups(data_strs)	# intelligent line splitting
 					else:
 						data_strs = [f"0x{val:02X}" for val in params]
-				# output multiple lines with N items per line
-				for i in range(0, len(data_strs), group_size):
-					data_str = ", ".join(data_strs[i : i+group_size])
+				
+				if group_list is None:
+					# output multiple lines with N items per line
+					group_list = [i for i in range(group_size, len(data_strs), group_size)] + [len(data_strs)]
+				start_idx = 0
+				for end_idx in group_list:
+					data_str = ", ".join(data_strs[start_idx : end_idx])
 					f.write(f"\t{cmd_name}\t{data_str}")
 					if show_idx:
-						f.write(f"\t; {i}")
+						f.write(f"\t; {start_idx}")
 					f.write("\n")
+					start_idx = end_idx
 				last_mode = 1
 			else:
 				# output commands
