@@ -3,7 +3,7 @@ import sys
 
 if len(sys.argv) < 3:
 	print("four-nine/Izuho Saruta System-98 Scenario De-/Encoder")
-	print("Usage: {} input.bin output.bin".format(sys.argv[0])
+	print("Usage: {} input.bin output.bin".format(sys.argv[0]))
 	sys.exit(1)
 
 with open(sys.argv[1], "rb") as f:

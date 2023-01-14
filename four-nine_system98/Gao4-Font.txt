@@ -1,0 +1,71 @@
+# JIS	Unicode	ASM comment
+0x7621	U+1F4A6	sweat drops 1
+0x7622	U+1F4A7	sweat droplet 1
+0x7623	U+1F31F	glowing star
+0x7624		emoji: ??
+0x7625	U+1F604	emoji: happy
+0x7626	U+1F62D	emoji: crying
+0x7627	U+1F4A2	anger
+0x7628		angry face	# U+1F620 ?
+0x7629	U+2699	gear
+0x762A	U+1F48B	kiss
+0x762B	U+2764	transparent heart
+0x762C	U+1F495	hearts
+0x762D	U+1F493	happy heart
+0x762E	U+1F62E	emoji: open mouth
+0x762F	U+1F595	middle finger
+0x7630	U+1F44D	thumbs up
+0x7631	U+270C	victory hand
+0x7632	U+1F631	emoji: scream/fear
+0x7633	U+266A	8th note
+0x7634	U+2669	4th note
+0x7635	U+266C	16th notes
+0x7636	U+203C	!!
+0x7637	U+2762	heavy !
+0x7638	U+2048	?!
+0x7639	U+1F611	emoji: expressionless
+0x763A		alert (surprised)
+0x763B	U+1F4A1	lightbulb
+#0x763C		
+0x763D	U+1F43E	paw print
+0x763E	U+1F441	eye
+0x763F	U+1F4A4	Zzz
+#0x7640		
+#0x7641		
+0x7642	U+1F431	cat face
+0x7643		sweat droplet 2
+0x7644		sweat drops 2
+0x7645		sweat drops 3
+0x7646	U+1F4A8	dashing
+#0x7647		
+0x7648		press button, frame 1
+0x7649		press button, frame 2
+0x764A		press button, frame 3
+0x764B		press button, frame 4
+0x764C		press button, frame 5
+0x764D		press button, frame 6
+0x764E		press button, frame 7
+0x764F		press button, frame 8
+0x7650	U+2587	bar, 7/8
+0x7651	U+2586	bar, 6/8
+0x7652	U+2585	bar, 5/8
+0x7653	U+2584	bar, 4/8
+0x7654	U+2583	bar, 3/8
+0x7655	U+2582	bar, 2/8
+0x7656	U+2581	bar, 1/8
+0x7657	U+2588	bar, 8/8
+0x7658		line at pixel 3/16
+0x7659		line at pixel 1/16
+0x765A		2 flames
+0x765B	U+1F525	big flame
+0x765C		explosion white
+0x765D		explosion black
+0x765E	U+1F605	emoji: smile with cold sweat
+#0x765F		
+#0x7660		
+0x7661		emoji: surprised with cold sweat
+#0x7662		
+#0x7663		
+#0x7664		
+0x7665		dizzy face
+0x7666		Hiragana A + voiced sound mark	U+3042+3099

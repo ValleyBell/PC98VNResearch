@@ -5,7 +5,7 @@ import struct
 
 if len(sys.argv) < 4:
 	print("System-98 (four-nine/Izuho Saruta) Archive Unpacker")
-	print("Usage: {} disk_X.cat disk_X.lib out_folder")
+	print("Usage: {} disk_X.cat disk_X.lib out_folder".format(sys.argv[0]))
 	sys.exit(1)
 
 def Decompress(cmpdata: bytes, maxsize: int) -> bytes:

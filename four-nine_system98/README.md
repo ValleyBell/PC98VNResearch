@@ -14,6 +14,9 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
 - `SYS98.COM` disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
 - Python tool to convert a four･nine font file (`.FNT`) to an image: [font2img.py](font2img.py) (supports BMP/PNG/... through Pillow library)
+- Gaogao 4 font:
+  - an [image conversion of GAO4.FNT](GAO4_FNT.PNG)
+  - a [JIS to Unicode mapping](Gao4-Font.txt), for use with the scenario decompiler
 
 ## Extras
 
@@ -27,7 +30,6 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 - NEC PC-9801 JIS ↔ Unicode mapping:
   - [Python Pickle file](NEC-C-6226-lut.pkl), generated from HarJIT's `NEC-C-6226-visual3.txt` (see [z\_misc folder](z_misc/README.md))
   - Shift JIS/JIS ↔ Unicode [Python converter module](nec_jis_conv.py) (used by the scenario decompiler)
-- a [BMP conversion of GAO4.FNT](GAO4_FNT.BMP)
 
 ## Notes
 

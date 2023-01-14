@@ -179,6 +179,45 @@ SCENE_CMD_LIST = {
 	0x8E: ("GFX8E"  , []),
 }
 
+JISCHR_COMMENTS = {}
+necjis = nec_jis_conv.JISConverter()
+config = {}
+
+
+def load_additional_font_table(filepath: str) -> int:
+	global necjis
+	global JISCHR_COMMENTS
+	
+	with open(filepath, "rt") as f:
+		for line in f:
+			line = line.rstrip()
+			items = line.split('\t')
+			for (iid, item) in enumerate(items):
+				if item.lstrip().startswith('#'):
+					items = items[0:iid]
+					break
+			if len(items) <= 1:
+				continue
+			
+			# parse table
+			jis_code = int(items[0], 0)
+			ucode_str = items[1]
+			if ucode_str.startswith('U'):
+				ucodes_strs = ucode_str.split('+')[1:]
+				ucodes = [int(uc, 0x10) for uc in ucodes_strs]
+				
+				if config.use_emojis:
+					ins = necjis.add_character(jis_code, ucodes)
+					if not ins:
+						print(f"Warning: Replacing JIS character 0x{jis_code:04X}.")
+			elif (len(ucode_str) == 0) or (ucode_str.startswith('-')):
+				pass	# undefined character (comment only)
+			else:
+				print(f"Error in line: {line}")
+				continue
+			if len(items) > 2:
+				JISCHR_COMMENTS[jis_code] = items[2]
+	necjis.recalc_decode_lut()
 
 def load_scene_binary(fn_in: str) -> bytes:
 	with open(fn_in, "rb") as f:
@@ -210,7 +249,7 @@ def is_sjis_str(data: bytes) -> bool:
 		if not sjis_2nd:
 			if c >= 0x20 and c <= 0x7E:
 				pass
-			elif c <= 0x0E:
+			elif c <= 0x0F:
 				pass	# allow for text control commands
 			elif c == 0x00:
 				break
@@ -495,7 +534,9 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			strend = scenedata.find(0x00, curpos, endpos)
 			if strend >= 0:
 				endpos = strend + 1
-		if (cmd_mode == -20) or (cmd_mode == -2):
+			str_arr = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
+			cmd_list += get_sjis_str_items(str_arr, curpos)
+		elif (cmd_mode == -20) or (cmd_mode == -2):
 			# do 2-byte word parsing
 			darray = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
 			iterat = struct.iter_unpack("<H", darray)
@@ -528,6 +569,54 @@ def generate_label_names(label_list: dict) -> None:
 		label_list[lbl_pos] = (par_type, lbl_flags, lbl_name)
 	return
 
+def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
+	#if not config.inline_sjis_bytes:
+	#	return [(startpos, -11, str_data)]	# this line simplifies the output by inlining Shift-JIS data.
+	
+	# This function splits string data in such a way, that Shift-JIS characters from
+	# the "custom font" JIS planes get their own assembly command.
+	last_type = None
+	new_type = None
+	token_data = []
+	token_pos = startpos
+	new_data = None
+	result = []
+	sjis_1st = None
+	chrpos = 0
+	for (pos, c) in enumerate(str_data):
+		new_type = -11
+		if sjis_1st is None:
+			if c >= 0x80:
+				sjis_1st = c
+				new_data = None
+			else:
+				new_data = bytes([c])
+			chrpos = pos	# save start position of current character
+		else:
+			sjis = (sjis_1st << 8) | (c << 0)
+			jis = necjis.sjis2jis(sjis)
+			if (jis is not None) and (jis not in necjis.jis_uc_lut):
+				# use special "DSJ" instruction for JIS codes we can not convert
+				new_type = -25
+				new_data = [jis]
+			if new_type == -11:
+				new_data = bytes([sjis_1st, c])
+			sjis_1st = None
+			# do NOT set chrpos
+		
+		if new_data is not None:
+			if last_type != new_type:
+				if len(token_data) > 0:
+					result += [(token_pos, last_type, token_data)]
+				token_data = new_data
+				last_type = new_type
+				token_pos = startpos + chrpos
+			else:
+				token_data += new_data
+	if len(token_data) > 0:
+		result += [(token_pos, last_type, token_data)]
+	return result
+
 def str2asm(str_data: bytes) -> typing.List[str]:
 	# convert binary array to ASM string
 	# This outputs a list of "tokens", consisting of either
@@ -550,8 +639,8 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 			#except:
 			#	sjis_str = None
 			# manual conversion to catch all the special PC-9801 font ROM characters as well
-			#sjis_str = nec_jis_conv.nec_sjis_decode_str(bytes([sjis_1st, c]))
-			sjis_str = nec_jis_conv.nec_sjis_decode_chr((sjis_1st << 8) | (c << 0))
+			#sjis_str = necjis.sjis_decode_str(bytes([sjis_1st, c]))
+			sjis_str = necjis.sjis_decode_chr((sjis_1st << 8) | (c << 0))
 			if type(sjis_str) is str:
 				res_chrs.append(sjis_str)
 			else:
@@ -586,8 +675,8 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 	# generate "groups" of string items to be places on the same line
 	# splits after 0D (new line) and 01 (wait for key press)
-	has_nl = None
 	chr_mode = None
+	new_chr_mode = None
 	result = []
 	for (idx, itm) in enumerate(data_items):
 		if itm.startswith('"'):
@@ -649,6 +738,7 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 				group_size = 8
 				group_list = None
 				show_idx = False
+				comment = None
 				if cmd_pos in label_list:
 					lbl_flags = label_list[cmd_pos][1]
 					if lbl_flags & LBLFLG_MENU:
@@ -664,22 +754,28 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 						else:
 							data_strs.append(f"0x{ptr:04X}")
 					last_mode = -1
+				elif cmd_id == -25:
+					cmd_name = "DSJ"	# Data: Shift-JIS
+					data_strs = [f"0x{val:04X}" for val in params]
+					chrs = [JISCHR_COMMENTS[val] for val in params if val in JISCHR_COMMENTS]
+					if len(chrs) > 0:
+						comment = ", ".join(chrs)
 				elif cmd_id == -20:
-					cmd_name = "DW"
+					cmd_name = "DW"	# Data: word (decimal)
 					data_strs = [f"{val}" for val in params]
 				elif cmd_id == -2:
-					cmd_name = "DW"
+					cmd_name = "DW"	# Data: word (hex)
 					data_strs = [f"0x{val:04X}" for val in params]
+				elif cmd_id == -11:
+					cmd_name = "DB"	# Data: string
+					data_strs = str2asm(params)
+					group_list = gen_string_groups(data_strs)	# intelligent line splitting
 				elif cmd_id == -10:
-					cmd_name = "DB"
+					cmd_name = "DB"	# Data: byte (decimal)
 					data_strs = [f"{val}" for val in params]
 				else:
-					cmd_name = "DB"
-					if (cmd_pos in label_list) and (label_list[cmd_pos][0] in [SCPT_STR, SCPT_FNAME]):
-						data_strs = str2asm(params)
-						group_list = gen_string_groups(data_strs)	# intelligent line splitting
-					else:
-						data_strs = [f"0x{val:02X}" for val in params]
+					cmd_name = "DB"	# Data: word (hex)
+					data_strs = [f"0x{val:02X}" for val in params]
 				
 				if group_list is None:
 					# output multiple lines with N items per line
@@ -690,6 +786,8 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					f.write(f"\t{cmd_name}\t{data_str}")
 					if show_idx:
 						f.write(f"\t; {start_idx}")
+					if comment is not None:
+						f.write(f"\t; {comment}")
 					f.write("\n")
 					start_idx = end_idx
 				last_mode = 1
@@ -761,14 +859,22 @@ def decompile_scene(fn_in: str, fn_out: str) -> int:
 	return 0
 
 def main(argv):
+	global config
+	global necjis
+	
 	print("four-nine/Izuho Saruta System-98 Scenario Decompiler")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
+	aparse.add_argument("-E", "--use-emojis", action="store_true", help="decode custom font into emojis")
 	aparse.add_argument("in_file", help="input scenario file (.S)")
 	aparse.add_argument("out_file", help="output assembly file (.ASM)")
 	
-	ap_args = aparse.parse_args(argv[1:])
+	config = aparse.parse_args(argv[1:])
 	
-	return decompile_scene(ap_args.in_file, ap_args.out_file)
+	necjis.load_from_pickle("NEC-C-6226-lut.pkl")
+	if config.font_file:
+		load_additional_font_table(config.font_file)
+	return decompile_scene(config.in_file, config.out_file)
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))
