@@ -4,8 +4,8 @@ import os
 import struct
 
 """
-DLB Archive Format
-------------------
+UK2 DLB Archive Format
+----------------------
 16h bytes - "<< dlb file Ver1.00>>" + 00h
 2 bytes - number of files (n) (Little Endian)
 15h*n bytes - file entry
@@ -19,7 +19,7 @@ File Entry:
 """
 
 if len(sys.argv) < 3:
-	print("DLB Archive Unpacker")
+	print("UK2 DLB Archive Unpacker")
 	print("Usage: {} datalib.dlb folder".format(sys.argv[0]))
 	sys.exit(1)
 

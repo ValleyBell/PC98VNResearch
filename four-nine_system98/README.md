@@ -43,7 +43,7 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
   further information: [Specialised JIS related mappings by HarJIT](https://harjit.moe/jismappings.html)  
   Example: *WAKUWAKU\_Greeting* [Shift-JIS text file](ExampleFiles/WAKUWAKU_Greeting.txt), [PNG reference image for first 4 text boxes](ExampleFiles/WAKUWAKU_Greeting.png)
 - Games may load custom fonts for stylised punctiation symbols and emojis.
-  In Canaan, those occupy JIS plane 01-86 (Shift-JIS eb9f..ebfc). *TODO: figure out how many planes are really used*
+  Those occupy JIS planes 01-86/01-87 (Shift-JIS eb9f..ec9e).
 - The four･nine font file (`.FNT`) stores the 8x8 character parts of the 16x16 font in a *different* order compared to the PC-98 font ROM.
   - PC-98 font ROM 8x8 character order: upper left, lower left, upper right, lower right
   - four･nine font 8x8 character order: upper left, upper right, lower left, lower right
