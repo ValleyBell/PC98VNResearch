@@ -10,6 +10,7 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 - decompression tool for the game's LZSS-packed data: [cleaned up version](Decompress.py), [original disassembly translation](Decompress.py.bak)
 - [scenario descrambler](ScenarioDecode.py)
 - [scenario decompiler](ScenarioDecompile.py)
+- [scenario compiler](ScenarioCompile.py)
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
 - `SYS98.COM` disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))

@@ -188,7 +188,7 @@ def load_additional_font_table(filepath: str) -> int:
 	global necjis
 	global JISCHR_COMMENTS
 	
-	with open(filepath, "rt") as f:
+	with open(filepath, "rt", encoding="utf-8") as f:
 		for line in f:
 			line = line.rstrip()
 			items = line.split('\t')
@@ -223,9 +223,12 @@ def load_scene_binary(fn_in: str) -> bytes:
 	with open(fn_in, "rb") as f:
 		data = f.read()
 
-	# remove the "encryption":
-	#   The game engine skips the first 0x100 bytes and XORs all remaining ones with 0x01.
-	return data[:0x100] + bytes([x ^ 0x01 for x in data[0x100:]])
+	if config.unscrambled:
+		return data
+	else:
+		# remove the "encryption":
+		#   The game engine skips the first 0x100 bytes and XORs all remaining ones with 0x01.
+		return data[:0x100] + bytes([x ^ 0x01 for x in data[0x100:]])
 
 def scene_read_array(scenedata: bytes, usage_mask: list, pos: int, array_size: int) -> bytes:
 	for ofs in range(array_size):
@@ -653,7 +656,7 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 	for c in res_chrs:
 		if type(c) is str:
 			new_mode = 1
-			if c in ['"', "'", '\\']:
+			if c in ['"', "'", '\\']:	# escape some special characters
 				c = '\\' + c_add
 			else:
 				c_add = c
@@ -814,6 +817,7 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 								par_type = SCPT_REG_INT
 							else:
 								par_type = SCPT_REG_LNG
+								par_val -= 0x400
 						# output register names
 						if par_type == SCPT_REG_INT:
 							data_str = f"i{par_val}"
@@ -853,6 +857,7 @@ def decompile_scene(fn_in: str, fn_out: str) -> int:
 	generate_label_names(label_list)
 	try:
 		write_asm(cmd_list, label_list, fn_out)
+		print("Done.")
 	except IOError:
 		print(f"Error writing {fn_out}")
 		return 1
@@ -865,7 +870,8 @@ def main(argv):
 	print("four-nine/Izuho Saruta System-98 Scenario Decompiler")
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
-	aparse.add_argument("-E", "--use-emojis", action="store_true", help="decode custom font into emojis")
+	aparse.add_argument("-e", "--use-emojis", action="store_true", help="decode custom font into emojis")
+	aparse.add_argument("-u", "--unscrambled", action="store_true", help="assume descrambled input data")
 	aparse.add_argument("in_file", help="input scenario file (.S)")
 	aparse.add_argument("out_file", help="output assembly file (.ASM)")
 	

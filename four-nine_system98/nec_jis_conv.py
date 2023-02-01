@@ -34,6 +34,8 @@ class JISConverter:
 	# convert JIS (2-byte int) -> Shift JIS (2-byte int)
 	@staticmethod
 	def jis2sjis(chr_id: int) -> typing.Union[int, None]:
+		if chr_id < 0x80:
+			return chr_id
 		jis1 = (chr_id >> 8) & 0xFF
 		jis2 = (chr_id >> 0) & 0xFF
 		
@@ -57,7 +59,9 @@ class JISConverter:
 	# convert Shift JIS (2-byte int) -> JIS (2-byte int)
 	@staticmethod
 	def sjis2jis(chr_id: int) -> typing.Union[int, None]:
-		if not ((chr_id >= 0x8140 and chr_id <= 0x9ffc) or (chr_id >= 0xe040 and chr_id <= 0xeffc)):
+		if chr_id < 0x80:
+			return chr_id
+		if not ((chr_id >= 0x8140 and chr_id <= 0x9FFC) or (chr_id >= 0xE040 and chr_id <= 0xEFFC)):
 			return None
 		sjis1 = (chr_id >> 8) & 0xFF
 		sjis2 = (chr_id >> 0) & 0xFF
@@ -75,11 +79,11 @@ class JISConverter:
 
 	# decode JIS character (2-byte int) to Python String (may be 1 or more characters)
 	def jis_decode_chr(self, chr_id: int) -> typing.Union[str, None]:
-		if chr_id < 0x80:
-			return chr(chr_id)
-		elif chr_id in self.jis_uc_lut:
+		if chr_id in self.jis_uc_lut:
 			c_ids = self.jis_uc_lut[chr_id]
 			return "".join([chr(c) for c in c_ids])
+		elif chr_id < 0x80:
+			return chr(chr_id)
 		else:
 			return None
 
@@ -94,25 +98,24 @@ class JISConverter:
 	# encode Python character (str) into JIS character (int)
 	# returns a tuple of (JIS character, consumed str characters)
 	def jis_encode_chr(self, chr_str: str) -> typing.Union[typing.Tuple[int, int], None]:
-		chr_id = [ord(c) for c in chr_str]
-		if chr_id[0] < 0x80:
-			return (chr_id, 1)
-		elif chr_id[0] in self.uc_jis_lut:
+		chr_ids = [ord(c) for c in chr_str]
+		if chr_ids[0] in self.uc_jis_lut:
 			max_match = 0
 			result = None
-			for (ucodes, jis_code) in self.uc_jis_lut[chr_id[0]]:
-				lm = __list_longest_match(chr_id, ucodes)
-				if lm > max_match:
+			for (ucodes, jis_code) in self.uc_jis_lut[chr_ids[0]]:
+				lm = self.__list_longest_match(chr_ids, ucodes)
+				if (lm >= len(ucodes)) and (lm > max_match):
 					max_match = lm
 					result = jis_code
-			return (result, max_match)
+			if result is not None:
+				return (result, max_match)
+		if chr_ids[0] < 0x80:
+			return (chr_ids[0], 1)
 		else:
 			return None
 
 	# decode Shift JIS character (2-byte int) to Python String (may be 1 or more characters)
 	def sjis_decode_chr(self, chr_id: int) -> typing.Union[str, None]:
-		if chr_id < 0x80:
-			return chr(chr_id)
 		jis_chr = self.sjis2jis(chr_id)
 		if jis_chr is None:
 			return None
@@ -121,13 +124,10 @@ class JISConverter:
 	# encode Python character (str) into Shift JIS character (int)
 	# returns a tuple of (Shift JIS character, consumed str characters)
 	def sjis_encode_chr(self, chr_str: str) -> typing.Union[typing.Tuple[int, int], None]:
-		chr_id = ord(chr_str[0])
-		if chr_id < 0x80:
-			return (chr_id, 1)
 		res_data = self.jis_encode_chr(chr_str)
 		if res_data is None:
 			return None
-		sjis_chr = jis2sjis(res_data[0])
+		sjis_chr = self.jis2sjis(res_data[0])
 		if sjis_chr is None:
 			return None
 		return (sjis_chr, res_data[1])
@@ -160,7 +160,7 @@ class JISConverter:
 		while idx < len(data):
 			cdata = self.sjis_encode_chr(data[idx:])
 			if cdata is None:
-				return (pos, result)
+				return (idx, result)
 			if cdata[0] < 0x80:
 				result += bytes([cdata[0]])
 			else:
@@ -175,8 +175,13 @@ if __name__ == "__main__":
 	print("testing JIS conversion ...")
 	necjis = JISConverter()
 	necjis.load_from_pickle("NEC-C-6226-lut.pkl")
-	for ch_sjis in [0x8175,0x864C,0x8176,0x8262,0x8292,0x8299,0x989e,0x9ffc,0xe040,0xeafc,0xeffc]:
+	print("SJIS     JIS    SJIS   str  SJIS")
+	for ch_sjis in [0x0041,0x8560,0x8168,0x8641,0x8175,0x864C,0x8176,0x8262,0x8292,0x8299,0x989E,0x9FFC,0xE040,0xEAFC,0xEFFC]:
 		ch_jis = necjis.sjis2jis(ch_sjis)
 		ch_sjis2 = necjis.jis2sjis(ch_jis)
 		dec = necjis.sjis_decode_chr(ch_sjis)
-		print(f"{ch_sjis:04X} -> {ch_jis:04X} -> {ch_sjis2:04X} = {dec}")
+		if dec is None:
+			enc = None
+		else:
+			enc = "{:04X}".format(necjis.sjis_encode_chr(dec)[0])
+		print(f"{ch_sjis:04X} -> {ch_jis:04X} -> {ch_sjis2:04X} = {dec} -> {enc}")
