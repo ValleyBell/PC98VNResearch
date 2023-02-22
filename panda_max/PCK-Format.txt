@@ -1,0 +1,45 @@
+PCK Archive Format
+==================
+
+NOTE: Before parsing the file, the file header must be descrambled.
+The scrambling includes the file signature.
+
+for the first 0x4000 bytes, do:
+1. read 2 bytes as a 16-bit Little Endian word
+2. rotate the word left by 1 bit
+    decoded = ((encoded & 0x7FFF) << 1) | (encoded & 0x8000) >> 15)
+
+PCK File header (after decoding)
+---------------
+Pos	Len	Description
+00	10	"PCK Version 1.00"
+10	02	value 0
+12	0D	all spaces (20h)
+1F	01	Carriage Return byte (0Dh)
+20	3FE0	file entries x511 (20h bytes each)
+
+PCK File entry
+--------------
+Pos	Len	Description
+00	0C	file name, null-terminated string, padded with spaces
+0C	04	always 0
+10	04	data start offset (absolute)
+14	04	data length
+18	01	time stamp: year (relative to 1980)
+19	01	time stamp: month (1..12)
+1A	01	time stamp: day (1..31)
+1B	01	time stamp: hour
+1C	01	time stamp: minute
+1D	01	time stamp: second
+1E	02	time stamp: unused
+
+
+Files may be LZSS-compressed. The EXDD.COM driver detects this by checking the file header for "MAXPACK"+00h.
+
+Maxpack File Header
+-------------------
+00	08	"MAXPACK" 00h
+08	02	decompression buffer size
+0A	04	size of compressed data (scd)
+0E	04	size of decompressed data (usually the same as decompression buffer size)
+12	scd	compressed data
