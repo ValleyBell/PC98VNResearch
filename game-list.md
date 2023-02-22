@@ -3,7 +3,7 @@
 | Game name | Developer | Release | Engine |
 |:----------|:----------|:----------|:----------|
 | [ANGEL<br/>エンジェル](https://vndb.org/v8554) | IDES | 1993-10-01 | Adv98V  Version 1.70.57(R8) | |
-| [Angel☆Night ~Yamiyo o Kakeru Tenshi-tachi no Monogatari~<br/>えんじぇる☆ないと ～闇夜を翔ける天使たちの物語～](https://vndb.org/v8646) | Four･Nine | 1996-04-26 | PC-98 D-SHELL v0.92 |
+| [Angel☆Night \~Yamiyo o Kakeru Tenshi-tachi no Monogatari\~<br/>えんじぇる☆ないと ～闇夜を翔ける天使たちの物語～](https://vndb.org/v8646) | Four･Nine | 1996-04-26 | PC-98 D-SHELL v0.92 |
 | [Can Can Bunny Extra<br/>きゃんきゃんバニー　エクストラ](https://vndb.org/v4560) | IDES | 1993-06-25 | Adv98V  Version 1.70.57(R8) |
 | [Can Can Bunny Spirits<br/>きゃんきゃんバニー スピリッツ](https://vndb.org/v6480) | Kirara | 1991-08-10 | Adv for PC-9801V  Version 1.70.39 |
 | [Cat's Part 1](https://vndb.org/v8607) | Cat's Pro. | 1993-02-28 | Adv98V  Version 1.70.54 |
@@ -14,7 +14,7 @@
 | [Dengeki Nurse<br/>電撃ナース](https://vndb.org/v8676) | IDES | 1992-09-22 | Adv98V  Version 1.70.54 |
 | [DESIRE - Haitoku no Rasen<br/>DESIRE 背徳の螺旋](https://vndb.org/v151) | C's Ware | 1994-07-22 | C's Ware AGS |
 | [Eimmy to Yobanaide<br/>エイミーと呼ばないでっ](https://vndb.org/v734) | C's Ware | 1995-05-19 | C's Ware AGS |
-| [Escalation '95 ~Onee-sama tte Yonde Ii Desu ka?~<br/>エスカレーション　’９５　～お姉さまって呼んでいいですか？～](https://vndb.org/v10875) | Melody | 1995-03-04 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.40<br>Note: calls itself "[ESC] Escalation Adventure Driver" |
+| [Escalation '95 \~Onee-sama tte Yonde Ii Desu ka?\~<br/>エスカレーション　’９５　～お姉さまって呼んでいいですか？～](https://vndb.org/v10875) | Melody | 1995-03-04 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.40<br>Note: calls itself "[ESC] Escalation Adventure Driver" |
 | [Etsuraku no Gakuen<br/>悦楽の学園](https://vndb.org/v740) | C's Ware | 1994-02-25 | C's Ware AGS |
 | [Eve \~Burst Error\~](https://vndb.org/v147) | C's Ware | 1995-11-22 | C's Ware AGS |
 | [Fechi / Feti<br/>ふぇち](https://vndb.org/v8877) | Cat's Pro. | 1994-03-18 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.26 |
@@ -29,7 +29,7 @@
 | [Half-Pipe](https://www.mobygames.com/game/half-pipe) | AyPio | 1993-09-29 | AyPio UK2 (very early version)? |
 | [Halfmoon ni Kawaru made \~Ramiya Ryou no Niji-iro Tamatebako\~<br/>](https://vndb.org/v8897) | IDES | 1994-04-28 | Adv98V  Version 1.72.59(R8) |
 | [HHG Heart Heat Girls<br/>ＨＨＧ ハートヒートガールズ](https://vndb.org/v8716) | Cat's Pro. | 1993-12-02 | [MAX] Adventure Scenario Driver for PC-9801 Ver0.92 |
-| [Ikenie ~Kyouraku no Shinden~<br/>いけにえ ～享楽の神殿～](https://vndb.org/v8906) | Cat's Pro. | 1994-06-11 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.30 |
+| [Ikenie \~Kyouraku no Shinden\~<br/>いけにえ ～享楽の神殿～](https://vndb.org/v8906) | Cat's Pro. | 1994-06-11 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.30 |
 | [Injuu Gakuen \~La★Blue Girl\~<br/>淫獣学園 ～Ｌａ★Ｂｌｕｅ Ｇｉｒｌ～](https://vndb.org/v8733) | IDES | 1994-03-24 | Adv98V  Version 1.72.59(R8) |
 | [JYB \~Mehame Haruuga wa Himitsu no Jumon\~<br/>JYB　～メハメ・ハルーガは秘密の呪文～](https://vndb.org/v11722) | IDES | 1993-04-28 | Adv98V  Version 1.70.57(R8)
 | [Kimi Dake ni Ai o...<br/>キミだけに愛を・・・](https://vndb.org/v8749) | Game Technopolis | 1991-08 | Adv for PC-9801V  Version 1.70.39 |

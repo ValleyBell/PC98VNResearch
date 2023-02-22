@@ -4,7 +4,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
 
 **Note:** In most cases, file names and strings are terminated using a `00` byte. Keep in mind to append a `00` byte especially after file names.
 
-- Escalation '95 ~Onee-sama tte Yonde Ii Desu ka?
+- Escalation '95 \~Onee-sama tte Yonde Ii Desu ka?\~
   - jump to ending
     - in `start.mdr` (decrypt by XORing with 0FFh)
       - search for `=esop.mdr` (should be at the end of the file)
