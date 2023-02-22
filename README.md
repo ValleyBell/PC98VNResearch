@@ -17,8 +17,11 @@ In the long run, this information may help with the translation of some of these
 | AGS         | C's Ware  | <https://github.com/XenonTranslation>, [updated tools](https://cdn.discordapp.com/attachments/231949854463623168/1008244535383556136/cswaretools2.zip), [Discord message by Tamamoball](https://discord.com/channels/231947749862539264/231949854463623168/1008244535672975361) |
 | MAX         | PANDA HOUSE | folder [panda\_max](panda_max) |
 
-see also: [unsorted tools/documentation](z_misc/README.md)
-
 ## Game list
 
 A list of various games and their known engine versions can be found in [game-list.md](game-list.md).
+
+## see also
+
+- [unsorted tools/documentation](z_misc/README.md)
+- [various small game hacks](z_hacks/README.md)
