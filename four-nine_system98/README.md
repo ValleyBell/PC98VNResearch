@@ -25,9 +25,11 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 - a [patch to support ASCII text](Sys98_ANK-patch.asm) for `SYS98.EXE` v3.10
   - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
   - A prepatched version is included as [SYS98ANK.EXE](SYS98ANK.EXE).
-- an English patch for Canaan's options menu (requires the ASCII patch above)
-  - [WAKUWAKU-EN.SCN](ExampleFiles/WAKUWAKU-EN.SCN) (unscrambled / readable version)
-  - [WAKUWAKU-EN.S](ExampleFiles/WAKUWAKU-EN.S) (scrambled), can be inserted into the game by storing it as `WAKUWAKU.S` into the game's main folder. (No repacking is required.)
+- an English translation patch for parts of the game Canaan can be found in the [canaan-en folder](canaan-en)
+  - `.ASM` files are decompiled game scripts.
+  - `.S` files are compiled game scripts, ready to be inserted into the game.  
+    You can just place them in the game's root directory and they will take priority over the files inside the `DISK_#.LIB` archives.
+  - The English translations require the ASCII patch (SYS98ANK) linked above in order to be shown correctly.
 - NEC PC-9801 JIS ↔ Unicode mapping:
   - [Python Pickle file](NEC-C-6226-lut.pkl), generated from HarJIT's `NEC-C-6226-visual3.txt` (see [z\_misc folder](z_misc/README.md))
   - Shift JIS/JIS ↔ Unicode [Python converter module](nec_jis_conv.py) (used by the scenario decompiler)

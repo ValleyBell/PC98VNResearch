@@ -673,6 +673,8 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 		elif new_mode == 1 and mode == 1:
 			res_items[-1] += c_add
 		mode = new_mode
+	if mode == 1:
+		res_items[-1] += '"'
 	return res_items
 
 def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:

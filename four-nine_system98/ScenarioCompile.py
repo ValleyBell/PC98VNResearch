@@ -185,6 +185,18 @@ TKTP_NAME = 0x80	# register or label name
 TKTP_REG = 0x81	# register
 TKTP_LBL = 0x82	# label name
 
+UNESCAPE_TBL = {
+	'\\': '\\',	# backslash (5C)
+	"'": "'",	# single quote (27)
+	'"': '"',	# double quote (22)
+	'a': '\a',	# bell (07)
+	'b': '\b',	# backspace (08)
+	't': '\t',	# horizontal tab (09)
+	'n': '\n',	# new line/linefeed (0A)
+	'v': '\v',	# vertical tab (0B)
+	'f': '\f',	# formfeed (0C)
+	'r': '\r',	# carriage return (0D)
+}
 TOKEN_ALPHABET = [chr(x) for x in \
 	[x for x in range(0x30, 0x3A)] + \
 	[x for x in range(0x41, 0x5B)] + \
@@ -244,20 +256,8 @@ def find_next_token(line: str, startpos: int) -> int:
 	return pos
 
 def get_token_str(line: str, startpos: int) -> typing.Tuple[int, str, int]:
-	"""
 	start_chr = line[startpos]
-	pos = startpos + 1
-	while pos < len(line):
-		if line[pos] == '\\':
-			pos += 2	# skip escaped character
-		elif line[pos] == start_chr:
-			pos += 1
-			break
-		else:
-			pos += 1
-	return (TKTP_STR, line[startpos : pos], pos)
-	"""
-	start_chr = line[startpos]
+	did_close = False
 	pos = startpos + 1
 	result = ""
 	while pos < len(line):
@@ -294,13 +294,16 @@ def get_token_str(line: str, startpos: int) -> typing.Tuple[int, str, int]:
 				result += chr(int(line[pos : pos2], 0o10))
 				pos = pos2
 			else:
-				return None
+				return None	# invalid escape sequence
 		elif line[pos] == start_chr:
+			did_close = True
 			pos += 1
 			break
 		else:
 			result += line[pos]
 			pos += 1
+	if not did_close:
+		return None	# string was not terminated properly
 	return (TKTP_STR, result, pos)	# return parsed string without quotes
 
 def get_token_int(line: str, startpos: int) -> typing.Tuple[int, int, int]:
@@ -401,7 +404,11 @@ def parse_asm(lines: typing.List[str]):
 		params = []
 		while pos < len(line):
 			tpos = pos
-			(ttype, tdata, pos) = get_token(line, pos)
+			res = get_token(line, pos)
+			if res is None:
+				print(f"Error in line {1+lid}: Parsing error!")	# TODO: print details
+				return None
+			(ttype, tdata, pos) = res
 			params += [(ttype, tdata, tpos)]
 			pos = find_next_token(line, pos)	# skip spaces
 			if pos >= len(line):
