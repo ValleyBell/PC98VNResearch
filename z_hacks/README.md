@@ -5,7 +5,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
 **Note:** In most cases, file names and strings are terminated using a `00` byte. Keep in mind to append a `00` byte especially after file names.
 
 - Escalation '95 \~Onee-sama tte Yonde Ii Desu ka?\~
-  - jump to ending
+  - jump to ending from main menu
     - in `start.mdr` (decrypt by XORing with 0FFh)
       - search for `=esop.mdr` (should be at the end of the file)
       - overwrite it with `=end.mdr` + a 00 byte
@@ -13,8 +13,23 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
   - Note: The game seems a bit buggy and corrupts the main save file after the staff roll finishes the 2nd time, making the game crash while loading the main menu.
+- Kurayami
+  - jump to ending from title screen
+    - in `start.mdr` (decrypt by XORing with 0FFh)
+      - search for `=start2.mdr` (should be at the end of the file)
+      - overwrite it with `=end_a1.mdr` (possible endings are: `a1`, `a2`, `a3`, `b1`, `b2`, `b3`, `c1`, `c2`, `c3`)
+      - then re-encrypt the file
+    - the ending will be shown right after the title screen
+    - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+  - jump to ending from main menu
+    - in `start2.mdr` (extract from *MDR.PCK* and decrypt by XORing with 0FFh)
+      - search for `=YM001.mdr`
+      - overwrite it with `=end_a1.mdr` + a 00 byte
+      - then re-encrypt the file
+    - select "start from beginning" in the main menu
+    - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
 - Mesuneko Hishoshitsu
-  - jump to ending
+  - jump to ending from main menu
     - in `start.mdr` (decrypt by XORing with 0FFh)
       - search for `=neko000.mdr` (should be at the end of the file)
       - overwrite it with `=last.mdr` + a 00 byte
