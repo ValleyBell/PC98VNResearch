@@ -20,7 +20,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - overwrite it with `=end_a1.mdr` (possible endings are: `a1`, `a2`, `a3`, `b1`, `b2`, `b3`, `c1`, `c2`, `c3`)
       - then re-encrypt the file
     - the ending will be shown right after the title screen
-    - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+    - You can also do the search/replace process in the PC-98 emulator's RAM directly while on the title screen. In this case, no decryption is necessary.
   - jump to ending from main menu
     - in `start2.mdr` (extract from *MDR.PCK* and decrypt by XORing with 0FFh)
       - search for `=YM001.mdr`
@@ -36,6 +36,28 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - then re-encrypt the file
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+- Night Slave
+  - reach ending quickly
+    - extract `NS_DSK_H.PCK/NSVS0E.MDR` and save it in the game's main folder as `NSVS7S.MDR`
+    - extract `NS_DSK_A.PCK/NSSTG7_.CMF` and save copies of the file in the main folder as:
+      - `NSEVE1.CMF`
+      - `NSEVE2.CMF`
+      - `NSSTG0.CMF`
+      - `NSSTG0_.CMF`
+      - `NSSTG1.CMF`
+      - `NSSTG2.CMF`
+      - `NSSTG3.CMF`
+      - `NSSTG4.CMF`
+      - `NSSTG5.CMF`
+      - `NSSTG6.CMF`
+      - `NSSTG7.CMF`
+      - `NSSTG7_.CMF`
+      - `NSSTG8.CMF`
+      - `NSSTG8B.CMF`
+      - `NSSTG9.CMF`
+      - `SHIP_E.CMF`
+      - `SHIP_P.CMF`
+    - after this, you can start the game and will reach the ending after skipping the same short cutscene 17 times
 - Street Mahjong 2
   - [StreetMahjong2_Patches.7z](StreetMahjong2_Patches.7z) contains a partial disassembly + various tiny patches for the main executable
     - `JANTAKU+BOB.EXE` - always trigger "Bob" easter egg cutscene before a match
