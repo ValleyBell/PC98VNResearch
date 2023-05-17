@@ -1,0 +1,28 @@
+REKIAI.DAT Format
+=================
+
+Header
+------
+Pos	Len	Description
+00	02	file signature: bytes 9E 99
+04	04	TOC start offset OR entry size? (ignored by SCE.EXE)
+08	04	number of files "n"
+0C	14	unused (all 00h bytes)
+20	20*n	TOC file entries (20h bytes per entry)
+??	??	data
+
+TOC file entry
+--------------
+Pos	Len	Description
+00	01	decryption key
+		The remaining 1Fh bytes of the TOC entry are to be XORed with the key.
+01	0D	file name (null-terminated)
+0E	02	FAT file attributes? (usually 20h)
+10	02	FAT time
+12	02	FAT date
+14	04	file size
+18	08	unused (all 00h bytes)
+
+The TOC contains no file offset.
+The data of the first file begins right where the TOC ends.
+The files are stored consecutively in the order they are listed in the TOC.
