@@ -13,6 +13,33 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
   - Note: The game seems a bit buggy and corrupts the main save file after the staff roll finishes the 2nd time, making the game crash while loading the main menu.
+- Frontier
+  - jump to ending from main menu
+    - Notes:
+      - The actions are to be performed by editing the PC-98 emulator RAM while at a certain location. The script files (`.SO3`) are compressed, so editing them directly is harder.
+      - Playing through the intro dialogue ensures that special characters and portraits are loaded properly and show up during the Ending scenes.
+    - 遠雷ワイバーン
+      - variant 1: while at the menu selection screen (file `A0_002.SO3`), search for `A:\WB_000.SO3` and overwrite it with `A:\WB_END0.SO3` + a `00` byte  
+        This will jump directly to the credits screen after confirming the character name.
+      - variant 2: while viewing the first dialogue line (file `WB_001.SO3`), search for `b:\wb_002.so3` (must be lower case) and overwrite it with `b:\wb_013.so3`
+        After the 9th intro dialogue, it will jump to the Epilogue.
+    - 快感空間「愛」
+      - variant 1: while at the menu selection screen (file `A0_002.SO3`), search for `A:\KI_000.SO3` and overwrite it with `A:\KI_END1.SO3` + a `00` byte  
+        This will jump directly to the credits screen after confirming the character names.
+      - variant 2: while viewing the first dialogue line (file `WB_001.SO3`), search for `B:\KI_002.SO3` and overwrite it with `B:\KI_END0.SO3` + a `00` byte  
+        After many dialogue lines, it will jump to the Ending.
+    - Ｂｌｏｏｄ　ｌｉｎｅ
+      - variant 1: while at the menu selection screen (file `A0_002.SO3`), search for `A:\BL_000.SO3` and overwrite it with `A:\BL_END.SO3`
+        This will jump to the credits screen directly.
+      - variant 2: while viewing the first dialogue line (file `BL_001.SO3`), search for `b:\bl_002.so3` and overwrite it with `b:\bl_015.so3`
+        After many dialogue lines, it will jump to one of the endings (NSFW!).
+- Irium
+  - jump to ending from main menu
+    - while on the main menu (NOT in a sub-menu like music mode), search for `A:\IRMEMO.SCC` and overwrite it with `A:\B_BOSSB.SCC` + a `00` byte
+    - then select the last entry in the menu
+    - During the ending screen, choose the option in the centre to progress.
+    - Note 1: The script file for the main menu is called `IR01.SCC`. But it is LZSS-compressed, so it can't be edited directly.
+    - Note 2: When jumping to the ending directly, some graphics are garbled. In order to avoid this, load the first scene and patch `A:\IR03.SCC` to A:\B_BOSSB.SCC` + a `00` byte
 - Kurayami
   - jump to ending from title screen
     - in `start.mdr` (decrypt by XORing with 0FFh)
@@ -25,6 +52,22 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - in `start2.mdr` (extract from *MDR.PCK* and decrypt by XORing with 0FFh)
       - search for `=YM001.mdr`
       - overwrite it with `=end_a1.mdr` + a 00 byte
+      - then re-encrypt the file
+    - select "start from beginning" in the main menu
+    - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+- Lilith
+  - jump to ending after first scene
+    - in `l0_00.s` (extract from *DISK_B.LIB* and decrypt by XORing with 01h)
+      - search for `L0_01.s` (Note: must be just after a `02` byte)
+      - overwrite it with `lg_00.s`
+      - then re-encrypt the file
+    - select "start from beginning" in the main menu, then progress until you find a cat
+    - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the respective scene is playing. In this case, no decryption is necessary.
+    - Note: Trying to jump there from the main menu will prevent the border from loading properly.
+  - jump to final battle from title screen
+    - in `lilith.s` (extract from *DISK_A.LIB* and decrypt by XORing with 01h)
+      - search for `L0_00.s` (Note: must be just after a `02` byte)
+      - overwrite it with `lf_02.s`
       - then re-encrypt the file
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
@@ -58,6 +101,24 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - `SHIP_E.CMF`
       - `SHIP_P.CMF`
     - after this, you can start the game and will reach the ending after skipping the same short cutscene 17 times
+- Oerstedia
+  - `SAD.EXE` is used to play back the ingame videos and intro cutscene. (`.CMD` files)  
+    It requires `KBDRIVE` (INT D2h) and `MTM` (INT 50h) to be loaded.
+    The game uses the following calls in `OERINIT.EXE` (intro) and `OERTERM.EXE` (ending):
+    - `SAD.EXE B:FGTTL 0 0` - show FUGA Systems logo
+    - `SAD.EXE B:OEROPEN1` - show opening
+    - `SAD.EXE B:OEROPEN2 0 0 1 0 0` - show intro cutscene (king audience), parameters
+      - parameter 1/2: unknown
+      - parameter 3: number of characters to show (`1` = 1 characters, all other values = 2 characters)
+      - parameter 4: character 1 type (left side, `0` = fighter, `1` = elf, `2` = dwarf, `3` = lizard, other values = invalid graphics)
+      - parameter 5: character 2 type (right side)
+    - `SAD.EXE B:OEREND_H 0 0` - show ending and credits
+      - The game replaces the last character of the file name with one of the following letters, depending on the player character:
+        - `H` - fighter
+        - `E` - elf
+        - `D` - dwarf
+        - `L` - lizard
+      - Playing the `OEREND_?` files directly doesn't work, but swapping them with `FGTTL.CMD` works just fine. (aside from the lack of music)
 - Street Mahjong 2
   - [StreetMahjong2_Patches.7z](StreetMahjong2_Patches.7z) contains a partial disassembly + various tiny patches for the main executable
     - `JANTAKU+BOB.EXE` - always trigger "Bob" easter egg cutscene before a match
