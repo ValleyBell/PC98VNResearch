@@ -1,8 +1,10 @@
 # various unsorted tools and documents
 
-- [uk2DlbUnpack.py](uk2DlbUnpack.py) - `DLB` archive unpacker for the format used by the *AyPio UK2* engine
-- [dshellDlbUnpack.py](dshellDlbUnpack.py) - `DLB` archive unpacker for the format used by the *Four･Nine D-SHELL* engine
+- [uk2DlbUnpack.py](uk2DlbUnpack.py) - `DLB` archive unpacker for the format used by the *AyPio UK2* engine (format documentation is at the top of the source file)
+- [dshellDlbUnpack.py](dshellDlbUnpack.py) - `DLB` archive unpacker for the format used by the *Four･Nine D-SHELL* engine (format documentation is at the top of the source file)
 - [rekiai_unpack.py](rekiai_unpack.py) - archive unpacker for `REKIAI.DAT` used by the game "Rekiai", published by Blucky ([format documentation](rekiai_dat.txt))
+- [lenam_packer.py](lenam_packer.py) - archive unpacker and repacker for "Lenam: Sword of Legend", published by Hertz (format documentation is at the top of the source file)
+- [forest_packer.py](forest_packer.py) - archive unpacker and repacker for `.FA1` archives used by games published by Forest (format documentation is at the top of the source file)
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
 - Python tool to convert the NEC PC-9801 `FONT.ROM` to an image: [fontrom2img.py](fontrom2img.py) (supports BMP/PNG/... through Pillow library)
