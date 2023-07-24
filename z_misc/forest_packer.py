@@ -32,6 +32,7 @@ file TOC entry:
 -> 14h bytes
 
 Notes:
+- All values are stored in Little Endian.
 - FAD.BIN must be the first file in the archive (start offset 0x0C) AND it must be
   uncompressed, as the starter COM executable will jump directly to offset 0x0C.
 - Files are stored consecutively in the archive (starting at offset 0x0C).
@@ -99,7 +100,6 @@ def arc_extract(config):
 				(fTitle, flags, fpos, flen1, flen2) = tocEntry
 				print(f"File {1 + fileID:3}: {fTitle:12} - flags 0x{flags:02X}, pos 0x{fpos:06X}, len1 0x{flen1:04X}, len2 0x{flen2:04X}")
 				with (basepath / fTitle).open("wb") as fOut:
-					fArc.seek(fpos)
 					fTxt.write(f"{fTitle}\t{flags:02X}\t{flen1:04X}\t{flen2:04X}\n")
 					fArc.seek(fpos)
 					fOut.write(fArc.read(flen1))
@@ -178,7 +178,7 @@ def arc_create(config):
 			inputPath = basepath / fInfo[0]
 			with inputPath.open("rb") as fIn:
 				fArc.seek(fInfo[2])
-				fArc.write(fIn.read())
+				fArc.write(fIn.read(fInfo[3]))
 
 		fArc.seek(tocOfs)
 		fArc.write(tocData)

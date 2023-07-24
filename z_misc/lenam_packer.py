@@ -18,9 +18,11 @@ File Entry:
 4 bytes - start offset (absolute, Little Endian)
 -> 12h bytes
 
-The files *may* be compressed. This apparently depends on the type of the stored file.
-In that case they begin with a 4-byte value containing the length of the compressed data.
-The compression algorithm is LZSS. The dictionary appears to be initialized with spaces.
+Notes:
+- All values are stored in Little Endian.
+- The files *may* be compressed. This apparently depends on the type of the stored file.
+  In that case they begin with a 4-byte value containing the length of the compressed data.
+  The compression algorithm is LZSS. The dictionary appears to be initialized with spaces. (TODO: verify)
 
 Known uncompressed:
 - NVFILE.BIN
@@ -134,7 +136,7 @@ def arc_create(config):
 			inputPath = basepath / fInfo[0]
 			with inputPath.open("rb") as fIn:
 				fArc.seek(fInfo[2])
-				fArc.write(fIn.read())
+				fArc.write(fIn.read(fInfo[3]))
 
 	print("Done.")
 	return 0

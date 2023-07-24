@@ -71,6 +71,9 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - then re-encrypt the file
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+  - In decrypted scripts, the following byte sequence is used to play a song:
+    - `1800 2002 nnnn  5400 2041` where `nnnn` is the song ID
+    - for searching in encrypted files, XOR all bytes with 01h
 - Mesuneko Hishoshitsu
   - jump to ending from main menu
     - in `start.mdr` (decrypt by XORing with 0FFh)

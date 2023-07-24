@@ -42,6 +42,7 @@
 | [LIXUS<br/>LIXUS -リクサス-](https://vndb.org/v37152) | Four･Nine | 1992-12-25 | Four･Nine System-98 v1.00 |
 | [Marine Philt<br/>マリンフィルト](https://vndb.org/v8961) | IDES | 1993-03-12 | Adv98V  Version 1.70.57(R8) |
 | [Mesuneko Hishoshitsu<br/>牝猫秘書室](https://vndb.org/v8809) | Melody | 1995-12-22 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.80 |
+| [Merry Go Round<br/>メリーゴーランド](https://vndb.org/v8807) | Mischief | 1996-03-08 | OVL  Version 1.00 for NEC PC-9801/9821 |
 | [Nocturnal Illusion / Mugen Yasoukyoku<br/>夢幻夜想曲](https://vndb.org/v725) | Apricot | 1995-04-22 | Four･Nine System-98 v3.10 |
 | [Noushuku ANGEL 120%<br/>濃縮ANGEL・120%](https://vndb.org/v8991) | IDES | 1995-04-14 | Adv98V  Version 1.75.62(R8) |
 | [Neko Manma EX<br/>ねこまんまEX](https://vndb.org/v37151) | Four･Nine | 1993-05-21 | Four･Nine System-98 v0.E |
@@ -54,6 +55,7 @@
 | [Sorcer Kingdom](https://www.mobygames.com/game/sorcer-kingdom) | AyPio | 1995-10-27| AyPio UK2 (late version) "SOSAR SYSTEM" |
 | [STARS](https://vndb.org/v9097) | AyPio | 1997-03-14 | AyPio UK2 (late version) "NORMAL SYSTEM" |
 | [Travel★Junction<br/>トラベル★ジャンクション](https://vndb.org/v9133) | IDES | 1996-06-28 | Adv98V  Version 1.75.63(R8) |
+| [Visitte<br/>ビジット](https://vndb.org/v8808) | Mischief | 1996-08-30 | OVL  Version 1.00 for NEC PC-9801/9821<br/>Note: calls itself "EXE  Version 1.00" |
 | [VR Date - May Club<br/>Ｖ．Ｒ．デート 五月倶楽部メイクラブ](https://vndb.org/v190) | Desire | 1995-08-25 | Four･Nine System-98 v3.12 |
 | [X-GIRL](https://vndb.org/v8717) | IDES | 1996-04-19 | Adv98V  Version 1.75.63(R8) |
 | [Xenon \~Mugen no Shitai\~<br/>XENON ～夢幻の肢体～](https://vndb.org/v7474) | C's Ware | 1994-12-09 | C's Ware AGS |
