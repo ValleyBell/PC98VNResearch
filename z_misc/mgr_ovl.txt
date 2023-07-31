@@ -1,0 +1,67 @@
+Mischief OVL format
+-------------------
+The format is used in "Merry Go Round".
+Note: in MGR, OVL files are LZSS-compressed.
+
+"Visitte" (another game by Mischief) uses OVL files as well, but those have a different structure.
+Its text strings use the same control codes and script commands are probably similar, except with embedded file names.
+
+
+Values are stored in Little Endian.
+
+File layout
+-----------
+? bytes - Game title (null-terminated string)
+	Note: This seems to be ignored by the game engine. It is usually "MGR" + 00h.
+2 bytes - text data size (ts)
+ts bytes - text data
+2 bytes - script data size (ss)
+ss bytes - script data
+
+Text data
+---------
+The text data consists of a series of null-terminated strings in Shift-JIS encoding.
+Control codes are implemented using "backslash + letter" codes.
+
+Known control codes:
+	\cN. - set text colour? (many scripts begin with "\c0.", the dot seems to mark the end of the number)
+	\r - line break
+	\p - paragraph end (makes the game wait for the user to press a key)
+
+When the first byte in a string is less than 5Ch (TODO: verify the value), this introduces "selection" entries in the following format:
+2 bytes - number of entries to follow (n)
+n bytes - entries
+	1 byte - entry ID (usually 0 .. n-1 or 0FFh)
+	? bytes - entry text (null-terminated string)
+
+Script data
+-----------
+mostly unknown
+
+- 88 49 xx yy = play music where (yyxx = 262h + musicID*6)
+	88 49 68 02 = play music M01 (opening)
+	88 49 C8 02 = play music M17 (ending)
+
+There are no file names stored there. Those are kept inside MGR.PTR instead.
+
+
+MGR.PTR
+-------
+2 bytes - main file list size (ms)
+ms bytes - main file list entries
+2 bytes - BGM list size (bs)
+bs bytes - BGM list entries
+
+File list entry:
+1 byte - file type
+	'O' - OVL
+	'P' - PCM
+	'M' - music file (OPL/MSF)
+	'A' - ANM
+	'G' - GTR
+? bytes - null-terminated file title (without extension)
+1 byte - disk ID? (00 = DISK1.LIB, 01 = DISK2.LIB, etc.)
+
+BGM list entry:
+? bytes - null-terminated file title (without extension)
+1 byte - "valid" flag? (0 = invalid, 1 = valid)

@@ -74,6 +74,13 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
   - In decrypted scripts, the following byte sequence is used to play a song:
     - `1800 2002 nnnn  5400 2041` where `nnnn` is the song ID
     - for searching in encrypted files, XOR all bytes with 01h
+- Merry Go Round
+  - replace opening scene with ending/staff roll
+    - in `DISK1.NDX` replace `OPENING.OVL` with `#PENING.OVL`
+    - then overwrite `ENDING.OVL` with `OPENING.OVL`
+    - alternative: overwrite with `S11_9.OVL` + 00h instead to view the final scene, followed by the ending
+    - Bonus: The final scene transitions to the ending by fading over white. Same with the transition from the intro logo.
+      However if you select "オープニング・デモ" ("Opening Demo") on the title screen, it will fade over black.
 - Mesuneko Hishoshitsu
   - jump to ending from main menu
     - in `start.mdr` (decrypt by XORing with 0FFh)

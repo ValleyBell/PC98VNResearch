@@ -5,7 +5,10 @@
 - [rekiai_unpack.py](rekiai_unpack.py) - archive unpacker for `REKIAI.DAT` used by the game "Rekiai", published by Blucky ([format documentation](rekiai_dat.txt))
 - [lenam_packer.py](lenam_packer.py) - archive unpacker and repacker for "Lenam: Sword of Legend", published by Hertz [^1]
 - [forest_packer.py](forest_packer.py) - archive unpacker and repacker for `.FA1` archives used by games published by Forest [^1]
-- [mgr_packer.py](mgr_packer.py) - archive unpacker for `DISK#.NDX/LIB` archives used by the game "Merry Go Round Archive", published by Mischief [^1]
+- [mgr_packer.py](mgr_packer.py) - archive unpacker for `DISK#.NDX/LIB` archives used by the game "Merry Go Round", published by Mischief [^1]
+- [mgr_ovl.txt](mgr_ovl.txt) - some documentation on OVL script files used by the game "Merry Go Round"  
+  It was a byproduct of me trying to figure out where the one untitled song is used.
+  (It is used in S05\_3, S09\_8 and S10\_4.)
 - [visitte_packer.py](visitte_packer.py) - archive unpacker for `DISK#.LBX` archives used by the game "Visitte", published by Mischief [^1]
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
