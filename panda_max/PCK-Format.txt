@@ -21,7 +21,7 @@ Pos	Len	Description
 PCK File entry
 --------------
 Pos	Len	Description
-00	0C	file name, null-terminated string, padded with spaces
+00	0C	file name, terminated with one 00h byte when shorter than 0Ch bytes, then padded with spaces
 0C	04	always 0
 10	04	data start offset (absolute)
 14	04	data length

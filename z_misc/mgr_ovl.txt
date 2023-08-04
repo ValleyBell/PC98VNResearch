@@ -38,7 +38,8 @@ Script data
 -----------
 mostly unknown
 
-- 88 49 xx yy = play music where (yyxx = 262h + musicID*6)
+- 88 49 xx yy = play music where (yyxx = 268h + (musicID-1)*6)
+	yyxx is actually an offset to the file title from the "main file list". (see MGR.PTR)
 	88 49 68 02 = play music M01 (opening)
 	88 49 C8 02 = play music M17 (ending)
 

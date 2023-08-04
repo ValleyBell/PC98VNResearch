@@ -105,7 +105,7 @@ def arc_create(config):
 			fileToc.append([litems[0], int(litems[1], 0x10), -1, -1])
 	if len(fileToc) > ARC_TOC_FILE_COUNT:
 		print(f"Warning! File list contains {len(fileToc)} files, but only {ARC_TOC_FILE_COUNT} can be stored!")
-		fileToc = fileToc[0 :ARC_TOC_FILE_COUNT]
+		fileToc = fileToc[0:ARC_TOC_FILE_COUNT]
 
 	print("Packing {} {} ...".format(len(fileToc), "file" if len(fileToc) == 1 else "files"), flush=True)
 	# go through all files, determining file sizes and archive file data offsets
@@ -146,9 +146,9 @@ def main(argv):
 	aparse = argparse.ArgumentParser()
 	apgrp = aparse.add_mutually_exclusive_group(required=True)
 	apgrp.add_argument("-x", "--extract", action="store_true", help="extract archive")
-	apgrp.add_argument("-c", "--create", action="store_true", help="create archive (specify file_list.txt)")
+	apgrp.add_argument("-c", "--create", action="store_true", help="create archive (specify fileList.txt)")
 	aparse.add_argument("arc_file", help="archive file")
-	aparse.add_argument("file_path", help="destination folder (extract) OR file_list.txt (create)")
+	aparse.add_argument("file_path", help="destination folder (extract) OR fileList.txt (create)")
 
 	config = aparse.parse_args(argv[1:])
 	config.arc_file = pathlib.Path(config.arc_file)

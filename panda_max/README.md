@@ -4,7 +4,7 @@
 
 - [list of games using the engine](game-list.md)
 - [an archive with all known game executables](executables.7z)
-- [archive unpacking tool](archive_unpack.py) for `.PCK` files
+- [archive unpacking and repacking tool](pck_packer.py) for `.PCK` files
 - a [PCK file format specification](PCK-Format.txt), also contains notes on the "MAXPACK" file header used by compressed files
 - `EXDD.COM` disassembly ([IDB file](es95_98__EXDD.DEC.idb)), based on the version from Escalation'95)
 

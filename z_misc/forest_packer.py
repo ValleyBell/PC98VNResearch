@@ -191,9 +191,9 @@ def main(argv):
 	aparse = argparse.ArgumentParser()
 	apgrp = aparse.add_mutually_exclusive_group(required=True)
 	apgrp.add_argument("-x", "--extract", action="store_true", help="extract archive")
-	apgrp.add_argument("-c", "--create", action="store_true", help="create archive (specify file_list.txt)")
+	apgrp.add_argument("-c", "--create", action="store_true", help="create archive (specify fileList.txt)")
 	aparse.add_argument("arc_file", help="archive file")
-	aparse.add_argument("file_path", help="destination folder (extract) OR file_list.txt (create)")
+	aparse.add_argument("file_path", help="destination folder (extract) OR fileList.txt (create)")
 
 	config = aparse.parse_args(argv[1:])
 	config.arc_file = pathlib.Path(config.arc_file)
