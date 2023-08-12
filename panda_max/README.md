@@ -7,6 +7,7 @@
 - [archive unpacking and repacking tool](pck_packer.py) for `.PCK` files
 - a [PCK file format specification](PCK-Format.txt), also contains notes on the "MAXPACK" file header used by compressed files
 - `EXDD.COM` disassembly ([IDB file](es95_98__EXDD.DEC.idb)), based on the version from Escalation'95)
+- Night Slave [MDR de-/encoding tool](ns-mdr-tool.py) (does *not* work with other games' MDR files)
 
 ## Notes
 
