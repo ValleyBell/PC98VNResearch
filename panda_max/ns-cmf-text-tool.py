@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Night Slave MDR Tool
-# Written by Valley Bell, 2023-08-12
-# based on Hatchake Ayayo-san 2 MES Tool
+# Night Slave CMF Text Tool
+# Written by Valley Bell, 2023-08-19
+# based on Night Slave MDR Tool
 import sys
 import os
 import struct
@@ -12,9 +12,11 @@ import argparse
 Text format used by this tool:
 
 - line consists of 3 columns, separated by TABs.
-  - command file offset in the original file (ignored when reading the file) [4-digit hex]
+  - command file offset [4-digit hex]
   - command ID [hex code, 2 to 4 digits]
-  - command data
+  - text start file offset [4-digit hex]
+  - text end file offset [4-digit hex]
+  - text data
 - comment lines begin with a # and are ignored
 - command data token format:
   - 2-digit hex number (represents one byte)
@@ -23,47 +25,16 @@ Text format used by this tool:
 """
 
 """
-Night Slave MDR format
-----------------------
-This is a series of commands that follow this pattern:
+The tool searches for:
+  [text command 3A/4F] [data] [text pointer] [jump command 03] [jump destination pointer]
 
-- 2 bytes - command ID (2-byte Little Endian)
-- ? bytes - data
+"text pointer" is assumed to be right after the search pattern.
+"jump destination pointer" is assumed to be the end of the text.
 
-Commands:
-
-0000 - end of file (?)
-        no parameters
-0001 - load graphics file
-        parameters: file name (e.g. C01.vdf), ends with a single 00 byte
-0002 - graphics effect
-        parameters: one 2-byte word (Little Endian): effect ID (valid: 01h..10h)
-0003 - print text
-        parameters: Shift-JIS encoded text, ends with a two(!) 00 bytes
-0004 - wait for user keypress
-        no parameters
-0005 - load music file
-        parameters: file name (e.g. nss01.uso), ends with a single 00 byte
-        Note: The game can replace the file extension with .mfd to load MIDI songs.
-0006 - fade music out
-        no parameters
-0007 - Timeout (user-interruptable)
-        parameters: one 2-byte word (Little Endian): number of frames to wait
-0008 - print text, then delay for up to 90 frames (user-interruptable)
-        parameters: Shift-JIS encoded text, ends with a two(!) 00 bytes
+When reinserting, the tool will try to reuse the original text buffer (between jump
+command and jump destination) when possible. When the space is too small, the new
+text will be moved to the end of the file.
 """
-
-CMD_MODES = {
-    0x00: 0,    # end of file (no parameters)
-    0x01: -1,   # ASCII file name (load graphics VDF)
-    0x02: 2,    # graphics effect (2 bytes of parameters)
-    0x03: -2,   # Shift-JIS text
-    0x04: 0,    # ?? (no parameters)
-    0x05: -1,   # ASCII file name (load music USO)
-    0x06: 0,    # ?? (no parameters)
-    0x07: 2,    # ?? (2 bytes of parameters)
-    0x08: -2,   # Shift-JIS text
-}
 
 ESCAPE_TBL = {  # special characters to be escaped
     '\\': '\\\\',   # backslash (5C)
@@ -144,7 +115,7 @@ def dump_as_str(data: bytes) -> str:
                 pos += 2
     return quote_str(text, '"') # surround with apostrophes
 
-def decode_mdr_file(filepath_in: str, filepath_out: str) -> int:
+def decode_cmf_file(filepath_in: str, filepath_out: str) -> int:
     with open(filepath_in, "rb") as f:
         msgData = f.read()
 
@@ -152,62 +123,28 @@ def decode_mdr_file(filepath_in: str, filepath_out: str) -> int:
     pos = 0x00
     cmdList = [] # list of [command offset, command ID, data bytes, label text]
     cmdPosMap = {}  # list of "command start offsets" for pointer references
-    while pos < len(msgData):
-        cmdPos = pos
-        cmd = struct.unpack_from("<H", msgData, pos)[0]
+    while pos + 0x0A < len(msgData):
+        data = struct.unpack_from("<HHHHH", msgData, pos)
+        if (data[2] == pos + 0x0A) and (data[3] == 0x0003) and (data[4] > data[2]):
+            if (data[0] == 0x3A) or (data[0] == 0x4F):
+                cmdPosMap[pos] = len(cmdList)
+                dbytes = msgData[data[2] : data[4]]
+                if dbytes[-2] == 0 and dbytes[-1] == 0:
+                    dbytes = dbytes[:-2]
+                cmdList.append([pos, data[0], data[1], data[2], data[4], dbytes])
         pos += 0x02
-        if cmd not in CMD_MODES:
-            print(f"File offset 0x{cmdPos:04X}: unknown command {cmd:02X} found!")
-            break
-        cmdLen = CMD_MODES[cmd]
-        if cmdLen >= 0:
-            dbytes = msgData[pos : pos+cmdLen]
-        elif (cmdLen == -1) or (cmdLen == -2 and ALL_ASCII):
-            cmdLen = 0
-            while pos + cmdLen < len(msgData):
-                data = msgData[pos + cmdLen]
-                if data == 0:
-                    break
-                cmdLen += 0x01
-            dbytes = msgData[pos : pos+cmdLen]
-            cmdLen += 0x01
-        elif cmdLen == -2:
-            cmdLen = 0
-            while pos + cmdLen < len(msgData):
-                data = struct.unpack_from("<H", msgData, pos + cmdLen)[0]
-                if data == 0:
-                    break
-                cmdLen += 0x02
-            dbytes = msgData[pos : pos+cmdLen]
-            cmdLen += 0x02
-        else:
-            print(f"File offset 0x{cmdPos:04X}: unknown command mode {cmdLen}!")
-            break
-        pos += cmdLen
-
-        cmdPosMap[cmdPos] = len(cmdList)
-        cmdList.append([cmdPos, cmd, dbytes, ""])
 
     # generate text file with escaped text strings
     with open(filepath_out, "wt", encoding="utf-8") as f:
-        f.write("#pos\tcmd\tdata\n")
+        f.write("#pos\tcmd\tparam\tst_pos\tend_pos\tdata\n")
         for cdata in cmdList:
-            (cmdPos, cmd, dbytes, lblname) = cdata
-            if cmd in CMD_MODES:
-                cmode = CMD_MODES[cmd]
-            else:
-                cmode = 0
+            (pos, cmd, param, startPos, endPos, dbytes) = cdata
 
-            if lblname != "":
-                f.write(lblname + ":\n")
-            elif cmode == -1 or cmode == -2:
-                try:
-                    dstr = dump_as_str(dbytes)
-                except UnicodeDecodeError:
-                    dstr = dump_as_hex(dbytes)
-            else:
+            try:
+                dstr = dump_as_str(dbytes)
+            except UnicodeDecodeError:
                 dstr = dump_as_hex(dbytes)
-            f.write(f"{cmdPos:04X}\t{cmd:02X}\t{dstr}\n")
+            f.write(f"{pos:04X}\t{cmd:02X}\t{param:02X}\t{startPos:04X}\t{endPos:04X}\t{dstr}\n")
     print("Decoding finished.")
     return 0
 
@@ -373,66 +310,74 @@ def generate_data_bytes(data_items: list) -> int:
             data += param[1]
     return data
 
-def encode_mdr_file(filepath_in: str, filepath_out: str) -> int:
+def encode_cmf_file(filepath_intxt: str, filepath_incmf: str, filepath_outcmf: str) -> int:
     cmdList = []
-    cmdLblMap = {}
     # parse the text file, splitting separate lines into commands and parsing the data
-    with open(filepath_in, "rt", encoding="utf-8") as f:
+    with open(filepath_intxt, "rt", encoding="utf-8") as f:
         lblstr = ""
-        cmdPos = 0
         for (lid, line) in enumerate(f):
             line = line.rstrip()
             if (line == "") or (line.lstrip()[0] == '#'):
                 continue
 
             # split line into columns (separated by TABs)
-            splt = line.split('\t', 2)
-            if len(splt) < 3:
-                splt += [""] * (3 - len(splt))  # fill up to 3 columns
-            (posstr, cmdstr, datastr) = splt
+            splt = line.split('\t', 5)
+            if len(splt) < 5:
+                splt += [""] * (6 - len(splt))  # fill up to 6 columns
+            (posstr, cmdstr, paramstr, psstr, pestr, datastr) = splt
 
             posstr = posstr.strip()
             cmdstr = cmdstr.strip()
+            paramstr = paramstr.strip()
+            psstr = psstr.strip()
+            pestr = pestr.strip()
             datastr = datastr.strip()
             if posstr.endswith(':'):    # label
                 lblstr = posstr[:-1]
             if len(cmdstr) == 0:
                 continue    # no "command" column -> read next line (+ remember label for next line)
 
+            pos = int(posstr, 0x10)
             cmd = int(cmdstr, 0x10)
+            param = int(paramstr, 0x10)
+            startPos = int(psstr, 0x10)
+            endPos = int(pestr, 0x10)
             ditems = parse_data_line(datastr)
             if type(ditems) is tuple:
                 print(f"Line {1+lid} parser error: {ditems[1]}")
                 print(line)
                 return -2
-            if not cmd in CMD_MODES:
-                print(f"Line {1+lid} error: unknown command {cmd:02X} found!")
-                return -2
-            cmdLen = CMD_MODES[cmd]
-            if cmdLen >= 0:
-                if len(ditems) != cmdLen:
-                    print(f"Line {1+lid} error: command {cmd:02X} requires {cmdLen} data bytes, "
-                        "but script has {len(ditems)}!")
-                    return -2
+            if ALL_ASCII:
+                process_str_data(ditems, 1)
             else:
-                if (cmdLen == -1) or (cmdLen == -2):
-                    if ALL_ASCII:
-                        process_str_data(ditems, 1)
-                    else:
-                        process_str_data(ditems, -cmdLen)
+                process_str_data(ditems, 2)
 
-            cmdList.append([cmdPos, cmd, ditems, lblstr])
-            if lblstr != "":
-                cmdLblMap[lblstr] = len(cmdList) - 1
-                lblstr = ""
-            cmdPos += 0x02 + calc_data_size(ditems)
+            cmdList.append([pos, cmd, param, startPos, endPos, ditems])
 
     # write file with generated binary data
-    with open(filepath_out, "wb") as f:
-        for cdata in cmdList:
-            (cmdPos, cmd, ditems, lblname) = cdata
-            cmdbytes = struct.pack("<H", cmd) + generate_data_bytes(ditems)
-            f.write(cmdbytes)
+    with open(filepath_incmf, "rb") as f:
+        msgData = bytearray(f.read())
+    # reinsert text into CMF files
+    for cdata in cmdList:
+        (pos, cmd, param, startPos, endPos, ditems) = cdata
+
+        txtBufSize = endPos - startPos
+        txtData = generate_data_bytes(ditems)
+        txtSize = len(txtData)
+        if txtSize <= txtBufSize:
+            # new text has enough space in the original buffer - overwrite it
+            txtPos = startPos
+            txtData += b'\x00' * (txtBufSize - txtSize)
+            msgData[startPos : startPos+txtBufSize] = txtData
+        else:
+            # not enough room at the original position - append to the end of the file
+            txtPos = len(msgData)
+            msgData += txtData
+
+        # rewrite text command (with possibly relocated pointer)
+        struct.pack_into("<HHH", msgData, pos, cmd, param, txtPos)
+    with open(filepath_outcmf, "wb") as f:
+        f.write(msgData)
 
     print("Encoding finished.")
     return 0
@@ -441,27 +386,28 @@ def main(argv):
     global USE_MIRROR_PAGE
     global ALL_ASCII
 
-    print("Night Slave MDR Tool")
+    print("Night Slave CMF Text Tool")
     aparse = argparse.ArgumentParser()
     ap_mode = aparse.add_subparsers(dest="mode", help="conversion mode", required=True)
     aparse.add_argument("-M", "--no-ascii-mirror", action="store_true", help="do NOT convert text strings from/to ASCII mirror page (Shift JIS 85xx)")
     aparse.add_argument("-a", "--all-ascii", action="store_true", help="assume 1-byte terminator in texts (default: 2 bytes)")
 
-    pm_decode = ap_mode.add_parser("d", help="decode binary .MDR to text file")
-    pm_decode.add_argument("in_file", help="input file .MDR")
+    pm_decode = ap_mode.add_parser("d", help="decode binary .CMF to text file")
+    pm_decode.add_argument("in_file", help="input file .CMF")
     pm_decode.add_argument("out_file", help="output text file")
-    pm_encode = ap_mode.add_parser("e", help="encode text file back to .MDR")
-    pm_encode.add_argument("in_file", help="input text file")
-    pm_encode.add_argument("out_file", help="output file .MDR")
+    pm_encode = ap_mode.add_parser("e", help="encode text file back to .CMF")
+    pm_encode.add_argument("in_text", help="input text file")
+    pm_encode.add_argument("in_cmf", help="input file .CMF")
+    pm_encode.add_argument("out_cmf", help="output file .CMF")
 
     ap_args = aparse.parse_args(argv[1:])
 
     USE_MIRROR_PAGE = not ap_args.no_ascii_mirror
     ALL_ASCII = ap_args.all_ascii
     if ap_args.mode == "d":
-        return decode_mdr_file(ap_args.in_file, ap_args.out_file)
+        return decode_cmf_file(ap_args.in_file, ap_args.out_file)
     elif ap_args.mode == "e":
-        return encode_mdr_file(ap_args.in_file, ap_args.out_file)
+        return encode_cmf_file(ap_args.in_text, ap_args.in_cmf, ap_args.out_cmf)
     else:
         print("Invalid mode!")
         return 1
