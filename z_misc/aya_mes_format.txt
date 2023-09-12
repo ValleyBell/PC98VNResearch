@@ -1,0 +1,181 @@
+Hatchake Ayayo-san 2/3 - Message Format
+======================
+
+File structure
+--------------
+[loop]
+1 byte - command
+2 bytes  absolute file offset of command data end / begin of next command
+x bytes - command data
+[loop end]
+
+Ayayo 2 Commands
+----------------
+00 - end of file
+	no parameters
+21 - menu: wait for selection
+	no parameters
+23 - ??
+	? bytes - null-terminated text string
+24 - ??
+	no parameters
+25 - ??
+	5 bytes - ??
+26 - menu: destination pointers
+	1 byte - number of texts (n)
+	2*n bytes - n absolute file pointers, pointing to commands for the respective menu entry
+2A - load image group
+	? bytes - null-terminated text string (also used as place/background name)
+2B - ??
+	no parameters
+2D - ??
+	1 byte - ASCII digit '1' to '4'
+2F - narrator text
+	? bytes - null-terminated text string
+30..33 - character text (for character 00..03, defined by command 5F)
+	? bytes - null-terminated text string
+3D - ??
+	?? bytes - ??
+3F - menu: choice texts
+	1 byte - number of texts (n)
+	? bytes - n null-terminated text strings
+5E - character related
+	1 byte - character ID (00..03)
+	?? bytes - ??
+5F - define character
+	1 byte - character ID (00..03)
+	2 bytes - ??
+	? bytes - null-terminated text string
+7C - jump
+	2 bytes - absolute file offset of destination command to be executed next
+7E - meta-command
+	1 byte - sub-command ID (01..07, other commands are ignored)
+7E 01 - ??
+	no parameters
+7E 02 - set flag
+	1 byte - bit mask to be ORed
+7E 03 - check flag variable, jump when it equals 07
+	2 bytes - absolute file offset of destination command
+7E 04 - ??
+	no parameters
+7E 05 - ??
+	no parameters
+7E 06 - ??
+	no parameters
+7E 07 - ??
+	no parameters
+
+
+Ayayo 3 Commands
+----------------
+00 - end of file
+	no parameters
+01 - narrator text
+	? bytes - null-terminated text string
+02..09 - character text (for character 00..07, defined by command 5F)
+	? bytes - null-terminated text string
+0A - load image group
+	? bytes - null-terminated text string
+	The game appends ".grp" to the string and loads the file with this name.
+0B - ?? (graphics related, show background image?)
+	1 byte - graphic ID
+0C - ?? (graphics related)
+	1 byte - graphic ID
+0D - ??
+	no parameters
+0E - ??
+	1 byte - ?? (bitfield, values can be 00..0F)
+0F - ??
+	1 byte - ?? (bitfield, values can be 00..07)
+10 - ?? (graphics related, 1-byte version of command 21)
+	1 byte - index of loaded graphic
+11 - ?? (graphics related)
+	1 byte - index of loaded graphic
+12 - clear graphics memory
+	1 byte - memory types to clear
+		bit 0 (01): clear pixel memory
+		bit 1 (02): clear text memory
+13 - ??
+	1 byte - number of items (n)
+	[loop n times]
+		2 bytes - file offset of data
+		1 byte - ??
+	[loop end]
+	?? bytes - data
+14 - set message speed
+	1 byte - 01 = fastest, FF = slowest
+		Ayayo 3 uses 02 = fast, 04 = normal, 06 = slow
+15 - wait for user input
+	no parameters
+	Waits for the user to press the Space button.
+16 - define character
+	1 byte - character ID (00..07)
+	1 byte - palette colour of the name
+	? bytes - null-terminated text string
+17 - ??
+	1 byte - character ID (00..07)
+	1 byte - ??
+	?? bytes - data
+18 - play music
+	? bytes - null-terminated text string (file name of the song to be played)
+19 - selection: set choice texts
+	1 byte - number of texts (n)
+	? bytes - n null-terminated text strings
+1A - selection: set destination pointers, wait for user selection
+	1 byte - number of texts (n)
+	2*n bytes - n absolute file pointers, pointing to commands for the respective menu entry
+1B - selection: jump to pointer of selected entry
+1C - jump
+	2 bytes - absolute file offset of destination command to be executed next
+1D - meta-command
+	1 byte - sub-command ID (00..01, v)
+1D 00 - check flag variable, jump when it equals 03
+	2 bytes - absolute file offset of destination command
+1D 01 - set flag
+	1 byte - bit mask to be ORed
+1E - text box related
+	2 bytes - X position (in characters)
+	2 bytes - Y position (in characters)
+	2 bytes - maximum number of characters per lines
+	2 bytes - maximum number of lines
+1F - text box related
+	2 bytes - X position (in characters)
+	2 bytes - Y position (in characters)
+	2 bytes - maximum number of characters per lines
+	2 bytes - maximum number of lines
+20 - ??
+	2 bytes - ??
+21 - ?? (graphics related)
+	?? bytes - list of indices of loaded graphics, terminated with an FF byte
+22 - clear graphic-related memory
+	no parameters
+23 - set "erase type"
+	1 byte - 01/02/03 (must be a valid graphic ID)
+24 - ?? (sets graphics-related position offsets)
+	2 bytes - X position offset
+	2 bytes - Y position offset
+25 - ?? (sets some graphics-related flag (word_13667))
+	no parameters
+26 - ?? (clears some graphics-related flag (word_13667))
+	no parameters
+27 - set LCD palette file name
+	? bytes - null-terminated text string
+	The game uses an empty string in non-LCD mode.
+28 - load LCD palette
+	1 byte - palette ID (must be 01 or higher)
+29 - set palette
+	20h bytes - palette data (10h colours, 2 bytes per colour)
+		1 byte - high nibble = red, low nibble = blue
+		1 byte - high nibble = unused, low nibble = green
+2A - show system text
+	? bytes - null-terminated text string
+2B - set "animation mode"
+	1 byte - 00 = fullly automatic, 01 = semi-automatic
+2C - ?? (sets some graphics-related flag (word_13689))
+	no parameters
+2D - ?? (graphics-related)
+	no parameters
+2E - ?? (graphics-related)
+	no parameters
+2F - set "smooth scroll mode"
+	1 byte - 00 = off, 01 = on

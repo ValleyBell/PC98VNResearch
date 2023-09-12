@@ -16,12 +16,15 @@
 
 [^1]: format documentation is at the top of the source file
 
-## Hatchake Ayayo-san 2
+## Hatchake Ayayo-san 2/3
 
-I was helping *danham* from the PC-9800 Series Central Discord server by researching this game a bit.
+I was helping *danham* from the PC-9800 Series Central Discord server by researching these games a bit.
 
-- [Aya2MesTool.py](Aya2MesTool.py) - converts MES.DAT to/from text file
-- [MES.DAT format documentation](Aya2MesFormat.txt)
+- [aya_mes_tool.py](aya_mes_tool.py) - converts `AYA2MES.DAT` and `AYA3MES.DAT` to/from a text file
+- [MES.DAT format documentation](aya_mes_format.txt) (covers Ayayo 2 and 3)
 - [AYA2-ASCII.EXE](AYA2-ASCII.EXE) - patched `AYA2.EXE` file that displays ASCII characters properly
 - [notes and description for AYA2.EXE ASCII patch](Aya2-ASCII-Patch.md)
 - `AYA2.EXE` disassembly: [ASM file](AYA2-DEC.asm) / [IDB database](AYA2-DEC.idb)
+- `AYA3.EXE` disassembly: [ASM file](AYA3.asm) / [IDB database](AYA3.idb)
+- [aya3_extract-font.py](aya3_extract-font.py) - extracts Text RAM and font data from `AYA3.EXE`  
+  The dumped font.bin file can be used with the [Four･Nine/System-98 font2img tool](../four-nine_system98/font2img.py).

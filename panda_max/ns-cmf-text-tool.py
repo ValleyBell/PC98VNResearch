@@ -132,7 +132,7 @@ def decode_cmf_file(filepath_in: str, filepath_out: str) -> int:
                 if dbytes[-2] == 0 and dbytes[-1] == 0:
                     dbytes = dbytes[:-2]
                 cmdList.append([pos, data[0], data[1], data[2], data[4], dbytes])
-        pos += 0x02
+        pos += 0x01	# depending on earlier data in the file, the data byte may end up at odd offsets
 
     # generate text file with escaped text strings
     with open(filepath_out, "wt", encoding="utf-8") as f:
