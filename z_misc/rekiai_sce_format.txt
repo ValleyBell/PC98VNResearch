@@ -1,0 +1,119 @@
+Rekiai - SCE file format
+======
+
+File structure
+--------------
+20h bytes - header
+?? bytes - code data
+?? bytes - message table
+?? bytes - message data
+
+Header
+------
+4 bytes - signature (E9 EB 00 00)
+4 bytes - size of "code" data
+4 bytes - size of "message table"
+4 bytes - size of "message data"
+4 bytes - number of 2-byte words required for variable buffer
+0Ch bytes - unused (all 00)
+-> 20h bytes
+
+Code Data
+---------
+This consists of a list of commands in the format:
+2 bytes - command size (n)
+1 byte - command ID
+n-3 bytes - command data
+
+Command IDs:
+00 - end
+15 <p1> <p2> - set "var_buffer[p1] = p2" (used for choices ingame)
+70 <p1> <p2> .. <p10> <ofs1> .. <ofs9> - (used for menu selection)
+70 F2 <p1> <p2> .. <p10> <ofs1> .. <ofs9> - ??
+70 F3 <p1> <p2> .. <p10> <ofs1> .. <ofs9> - ??
+71 <param> - menu entry text [must be destination of jump in command 70]
+72 <p1> <p2> - conditional menu entry text [must be destination of jump in command 70]
+73 ?? - dummy [unused]
+80 - dummy
+81 - ?? [unused]
+82 - end
+83 <offset> - jump to offset
+84 <offset> - execute subroutine at offset
+85 - return from subroutine
+86 <param> aa bb cc dd - conditional jump to offset ddccbbaa
+	Jumps when the result of the parameter is 0.
+87 aa bb ... - do something based on ID bbaa
+8A aa bb cc dd - execute subroutine at offset ddccbbaa
+8B - return from subroutine
+8C <param> - set "var_buffer[1] = <param>", then reset the game
+90 <param> - display text
+	parameter type 11h: 4-byte ID of the text line to show
+	other parameter types: read the parameter (immediate value/variable/expression) and show the result as full-width number
+91 - wait for user input
+92 - wait for key press
+93 - ??
+94 <param> - display debug text to stdout? [unused]
+A0 D1 <param> - ??
+B0 90 <p1> <p2> <p3> <p4> - ?? (p4 = text ID)
+B0 91 <p1> <p2> - ??
+B0 B1 <p1> <p2> - load/display graphic <p2> (load into slot <p1>?)
+B0 B2 ?? - ??
+B0 B3 ?? - ??
+B0 B4 ?? - ??
+B0 B6 ?? - ??
+B0 B7 ?? - ??
+B0 B8 ?? - ??
+D0 D1 B8 F0 - ??
+D0 D1 B8 F1 - ??
+D0 D1 - ?? (yes, the command is shorter than the other variations)
+D0 F7 <param> - sets "var_buffer[param] = ??", the value depends on what key on the keyboard is currently held down
+D0 F8 - ??
+D2 <param> - ??
+E0 B3 <p1> <p2> - play sound effect
+E0 E1 F0 ?? - ??
+E0 E1 F1 <p1> <p2> - ??
+E0 F0 ?? - ??
+E0 F1 ?? - ??
+E0 F2 <param> - load/play song <param>
+E0 F4 D1 ?? - ??
+E0 F4 F5 ?? - ??
+F2 <param> - read user save, param = save slot ID (1..8)
+F3 <param> - write user save, param = save slot ID (1..8)
+	The save game contains the first 0A6h (166 decimal) variables.
+F9 F8 - when "var_buffer[3] == 0", write system save (rekiai_0.usr)
+FA F8 - when "var_buffer[4] == 0", write system save (rekiai_0.usr)
+
+
+Offsets are 4 bytes long and are relative to the beginning of the "code" section.
+
+"Parameters" begin with 1 byte that defines the type, followed by data describing it.
+10 aa bb - immediate value bbaa
+11 aa bb cc dd - immediate value ddccbbaa
+12 aa bb - variable bbaa (from "variable buffer)
+18 aa bb cc dd - immediate value/offset ddccbbaa
+20 ... - expression
+
+Message Table
+-------------
+This is just a list of offsets, pointing to the beginning of a message string.
+All of them are relative to the message data section.
+
+Message Data
+------------
+The message data section consists of a series of null-terminated strings.
+It contains message texts, as well as file names.
+
+The message section is encrypted using a bit rotation.
+To decode, rotate to the left by 2 bits:
+	r1 = (input >> 6) & 0x03
+	r2 = (input << 2) & 0xFC
+	output = r1 | r2
+To encode, rotate to the right by 2 bits:
+	r1 = (input >> 2) & 0x3F
+	r2 = (input << 6) & 0xC0
+	output = r1 | r2
+
+Decoded messages are Shift-JIS encoded.
+Text messages often end with a carriage-return byte (0Dh).
+
+The game apparently uses the same encryption for the texts in its save game.

@@ -39,7 +39,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - then select the last entry in the menu
     - During the ending screen, choose the option in the centre to progress.
     - Note 1: The script file for the main menu is called `IR01.SCC`. But it is LZSS-compressed, so it can't be edited directly.
-    - Note 2: When jumping to the ending directly, some graphics are garbled. In order to avoid this, load the first scene and patch `A:\IR03.SCC` to A:\B_BOSSB.SCC` + a `00` byte
+    - Note 2: When jumping to the ending directly, some graphics are garbled. In order to avoid this, load the first scene and patch `A:\IR03.SCC` to `A:\B_BOSSB.SCC` + a `00` byte
 - Kurayami
   - jump to ending from title screen
     - in `start.mdr` (decrypt by XORing with 0FFh)
@@ -129,6 +129,25 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         - `D` - dwarf
         - `L` - lizard
       - Playing the `OEREND_?` files directly doesn't work, but swapping them with `FGTTL.CMD` works just fine. (aside from the lack of music)
+- Rekiai
+  - skip "BLucky" logo
+    - in `MAINCON.SCE`, search for `83 18 80 00 00 00` and replace it with `83 18 78 00 00 00`
+  - enable "Bonus" menu entry
+    - in `MAINCON.SCE`, search for `72 20 12 03 00 10 00 00 2F 21 11 6B` and replace the `03` with `04`
+  - redirect "Opening" menu entry to the Staff Roll
+    - in `MAINCON.SCE`, search for `83 18 E4 00 00 00` and replace it with `83 18 A1 B3 01 00`
+    - Note: Offset 0xE4 is where the opening script starts, offset 0x01B3A1 refers to the staff roll.
+  - other script offsets:
+    - Ending with Shoko: 0x014C60 (use offset 0x014C1E for proper border layout)
+    - Ending with Mika: 0x014F88 (use offset 0x00FDE1 for proper background and take the 2nd choice)
+    - A recommended method of quickly getting to an ending is to search for `90 11 93 00 00 00` and replace it with `83 18 <offset>`.
+      Then just choose "From the beginning" in the main menu.
+- Rondo
+  - jump to ending from main menu
+    - Notes:
+      - The actions are to be performed by editing the PC-98 emulator RAM while at a certain location. The script files (`.SO3`) are compressed, so editing them directly is harder.
+    - while at the menu selection screen (file `A0_000.SO3`), search for `A:\START.SO3` and overwrite it with `A:\END.SO3` + a `00` byte  
+      This will jump directly to the credits screen after confirming the character name.
 - Street Mahjong 2
   - [StreetMahjong2_Patches.7z](StreetMahjong2_Patches.7z) contains a partial disassembly + various tiny patches for the main executable
     - `JANTAKU+BOB.EXE` - always trigger "Bob" easter egg cutscene before a match

@@ -2,7 +2,6 @@
 
 - [uk2DlbUnpack.py](uk2DlbUnpack.py) - `DLB` archive unpacker for the format used by the *AyPio UK2* engine [^1]
 - [dshellDlbUnpack.py](dshellDlbUnpack.py) - `DLB` archive unpacker for the format used by the *Four･Nine D-SHELL* engine [^1]
-- [rekiai_unpack.py](rekiai_unpack.py) - archive unpacker for `REKIAI.DAT` used by the game "Rekiai", published by Blucky ([format documentation](rekiai_dat.txt))
 - [lenam_packer.py](lenam_packer.py) - archive unpacker and repacker for "Lenam: Sword of Legend", published by Hertz [^1]
 - [forest_packer.py](forest_packer.py) - archive unpacker and repacker for `.FA1` archives used by games published by Forest [^1]
 - [mgr_packer.py](mgr_packer.py) - archive unpacker for `DISK#.NDX/LIB` archives used by the game "Merry Go Round", published by Mischief [^1]
@@ -28,3 +27,17 @@ I was helping *danham* from the PC-9800 Series Central Discord server by researc
 - `AYA3.EXE` disassembly: [ASM file](AYA3.asm) / [IDB database](AYA3.idb)
 - [aya3_extract-font.py](aya3_extract-font.py) - extracts Text RAM and font data from `AYA3.EXE`  
   The dumped font.bin file can be used with the [Four･Nine/System-98 font2img tool](../four-nine_system98/font2img.py).
+
+## Rekiai
+
+I only wanted to be able to hack my way to the staff roll ...  
+... and I eventually ended up reverse-engineering large parts of the script format, because this is one of the few games where file swapping doesn't work.
+
+The fact that the developer Blucky decided to add a text encryption (using bit rotation) just made things more annoying.
+
+So here is what I've got:
+
+- `SCE.EXE` disassembly: [ASM file](rekiai_SCE.asm) / [IDB database](rekiai_SCE.idb) (The code looks like an unoptimized debug build, btw.)
+- [MAINCON.SCE format documentation](rekiai_sce_format.txt)
+- [rekiai_sce_decode.py](rekiai_sce_decode.py) - converts `MAINCON.SCE` into two text files, one with text strings and one with the script code (mostly a hex dump with labels, but with optional text strings as comments)
+- [rekiai_dat_unpack.py](rekiai_dat_unpack.py) - archive unpacker for `REKIAI.DAT` ([format documentation](rekiai_dat.txt))
