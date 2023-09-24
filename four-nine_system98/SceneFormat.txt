@@ -1,5 +1,8 @@
 System-98 Scene Format
 ----------------------
+The first 100h bytes appear to be reserved for comments and are unencrypted.
+The actual script data begins at offset 100h and is encrypted with a simple "XOR 01h" algorithm.
+
 [loop]
 2 bytes - command ID
 	0000h..008Eh are valid
@@ -516,7 +519,7 @@ Commands
 
 File names
 ----------
-- The first byte of a file name seems to be the disk drive ID and is usually ignored by the game engine. Aside from that, file names are usual null-terminated strings.
+- The first byte of a file name seems to be the disk drive or data archive ID and is usually ignored by the game engine. Aside from that, file names are usual null-terminated strings.
 
 Text box strings
 ----------------

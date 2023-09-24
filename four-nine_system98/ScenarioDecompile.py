@@ -231,9 +231,13 @@ def load_scene_binary(fn_in: str) -> bytes:
 		return data[:0x100] + bytes([x ^ 0x01 for x in data[0x100:]])
 
 def scene_read_array(scenedata: bytes, usage_mask: list, pos: int, array_size: int) -> bytes:
-	for ofs in range(array_size):
-		usage_mask[pos + ofs] |= 0x01
-	return scenedata[pos : pos + array_size]
+	try:
+		for ofs in range(array_size):
+			usage_mask[pos + ofs] |= 0x01
+		return scenedata[pos : pos + array_size]
+	except Exception as e:
+		print(f"Error in scene_read_array(pos 0x{pos:04X}, array size 0x{array_size:04X}, file size 0x{len(scenedata):04X}): {e}")
+		raise e
 
 def scene_read_int(scenedata: bytes, usage_mask: list, pos: int) -> int:
 	usage_mask[pos + 0x00] |= 0x01
@@ -276,7 +280,7 @@ def guess_data_type(scenedata: bytes, startpos: int, endpos: int) -> int:
 	nullpos = data.find(0)
 	if nullpos > 1:	# need at least 1 character
 		dstr = data[0 : nullpos]
-		if dstr[0] == 0 or dstr[0] == 1:	# first character of file names
+		if dstr[0] < 10:	# first character of file names
 			if sum([1 for c in dstr[1:] if not (c >= 0x20 and c <= 0x7E)]) == 0:
 				return SCPT_FNAME
 		if is_sjis_str(dstr):
@@ -480,13 +484,30 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						if curpos in label_list:
 							break
 						ptrval = scene_read_int(scenedata, file_usage, curpos)
+						if ptrval < 0x100:
+							# Note: Some tables begin with a "dummy" value in the range 0x00..0xFF.
+							# (Most files in Canaan use 0x80..0x8F, but there are also 0x70..0x7F used in a few files.)
+							# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" commadn.
+							# In this case, we have to just accept the pointer.
+							# In all other cases, we probably want to exit, so that we don't accidentally interpret code as a pointer.
+							if curpos > cmd_pos:
+								ptrval = 0xFFFF	# finish reading
+							else:
+								print(f"Warning: Jump table dummy value 0x{ptrval:04X} at offset 0x{cmd_pos:04X}!")
+						if ptrval >= len(scenedata):
+							# remove usage mask (-> assume that we didn't process this value)
+							# important for unused code
+							file_usage[curpos + 0x00] &= ~0x01
+							file_usage[curpos + 0x01] &= ~0x01
+							break
 						params += [ptrval]
 						curpos += 0x02
 						
-						label_list[ptrval] = (SCPT_JUMP, 0x00, None)
-						remaining_code_locs.append(ptrval)
-						if ptrval > cmd_pos and ptrval < endpos:
-							endpos = ptrval
+						if ptrval >= 0x100:
+							label_list[ptrval] = (SCPT_JUMP, 0x00, None)
+							remaining_code_locs.append(ptrval)
+							if ptrval > cmd_pos and ptrval < endpos:
+								endpos = ptrval
 					cmd_list += [(cmd_pos, -3, params)]
 					curpos = None	# stop processing here
 				elif cmd_id == 0x40:	# menu
@@ -512,6 +533,8 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		endpos = find_next_label(label_list, curpos + 1)
 		if endpos < 0:
 			endpos = len(scenedata)
+		elif endpos >= len(scenedata):
+			endpos = len(scenedata)
 		
 		cmd_mode = -1	# default to 1-byte data
 		if mode == MODE_UNKNOWN:
@@ -522,8 +545,8 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 					label_list[curpos] = (dtype, LBLFLG_UNUSED, None)
 			if curpos in label_list:
 				if label_list[curpos][0] == SCPT_JUMP:
-					mode = MODE_CMD
-					print("Warning: found unparsed code section at 0x{curpos:04X}!")
+					#mode = MODE_CMD
+					print(f"Warning: found unparsed code section at 0x{curpos:04X}!")
 				elif label_list[curpos][0] in [SCPT_STR, SCPT_FNAME]:
 					mode = MODE_STR
 				elif label_list[curpos][0] == SCPT_DATA2:
@@ -662,7 +685,7 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 				c_add = c
 		else:
 			new_mode = 0
-			c_add = f"0x{c:02X}" if c > 1 else f"{c}"
+			c_add = f"0x{c:02X}" if c >= 10 else f"{c}"
 		if new_mode == 0 and mode == 0:
 			res_items.append(c_add)
 		elif new_mode == 0 and mode == 1:
@@ -701,7 +724,7 @@ def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 	return result
 
 def get_filename(params: list) -> typing.Union[str, None]:
-	if params[0] > 0x01:
+	if params[0] > 9:	# first byte is the disk number
 		return None
 	dataarr = params[1:]
 	strend = dataarr.find(0x00)
@@ -810,8 +833,11 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 							data_str = label_list[par_val][2]	# replace pointer value with label string
 							if label_list[par_val][0] == SCPT_FNAME:
 								# add comment with file name
-								dcmd = cmd_list[cmd_pos_map[par_val]]
-								comment = get_filename(dcmd[2])
+								try:
+									dcmd = cmd_list[cmd_pos_map[par_val]]
+									comment = get_filename(dcmd[2])
+								except:
+									pass	# catch invalid offsets
 					elif (par_type & SCPT_MASK) == SCPTM_REG:
 						if par_type == SCPT_REG_IL:
 							# int/long register (depends on ID)

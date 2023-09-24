@@ -38,7 +38,7 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 
 - The engine's image format is the [Pi image format](https://mooncore.eu/bunny/txt/pi-pic.htm), but with stripped header.
 - Scenario files use a simple `XOR 01h` scrambling algorithm that is applied to all "payload" bytes, which begin at offset 100h.
-- A LZSS is used to compress the data inside archives. The nametable is initialized with all `00` bytes.
+- LZSS is used to compress the data inside archives. The nametable is initialized with all `00` bytes.
 - Archive files, when used, consist of a pair of `.CAT` and `.LIB` files.
   - `.CAT` (catalogue) contains the file list
   - `.LIB` (library) contains the actual file data
