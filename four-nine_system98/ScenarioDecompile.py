@@ -339,9 +339,9 @@ def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
 					break
 	return True
 
-def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict) -> int:
+def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, start_ofs: int) -> int:
 	# --- scan all unreferenced data sections and return the position of a potential (unused) code section ---
-	curpos = 0x100
+	curpos = start_ofs
 	while True:
 		# search for next unparsed section
 		while (curpos < len(scenedata)) and (file_usage[curpos] != 0x00):
@@ -376,12 +376,18 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict) -> 
 	return -1
 
 def parse_scene_binary(scenedata: bytes) -> tuple:
+	start_ofs = 0x100	# start at offset 0x100
+	if config.base_ofs > 0:
+		scenedata = bytes([0] * config.base_ofs) + scenedata
+		start_ofs += config.base_ofs
+	
 	cmd_list = []	# list[ tuple(file offset, command ID, list[params] ) ]
 	file_usage = [0x00] * len(scenedata)
 	label_list = {}	# dict{ file offset: (label type, flags, label name) }
 	
 	# --- parse code sections ---
-	remaining_code_locs = [0x100]	# start at offset 0x100
+	label_list[start_ofs] = (SCPT_JUMP, 0x00, f"start_{start_ofs:04X}")
+	remaining_code_locs = [start_ofs]
 	curpos = None
 	while True:
 		# Note: The code for deciding what to parse next is a bit complex,
@@ -393,7 +399,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				curpos = remaining_code_locs.pop(0)
 			else:
 				# This part is for finding unreferenced code sections.
-				curpos = find_possible_code(scenedata, file_usage, label_list)
+				curpos = find_possible_code(scenedata, file_usage, label_list, start_ofs)
 				if curpos >= 0:
 					label_list[curpos] = (SCPT_JUMP, LBLFLG_UNUSED, None)
 				else:
@@ -454,10 +460,14 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			
 			if (par_type & SCPT_MASK) == SCPTM_PTR:
 				# pointer parameters: add label for them
-				label_list[par_val] = (par_type, 0x00, None)
+				if par_val >= start_ofs:
+					label_list[par_val] = (par_type, 0x00, None)
 			if par_type == SCPT_JUMP:
 				# add jump destination to list of locations to be processed
-				remaining_code_locs.append(par_val)
+				if par_val >= start_ofs:
+					remaining_code_locs.append(par_val)
+				else:
+					print(f"Warning: Found invalid jump to invalid offset 0x{par_val:04X} at offset 0x{cmd_pos:04X}!")
 			
 			if (first_reg_type is None) and (par_type & SCPT_MASK) == SCPTM_REG:
 				# remember first parameter's register type
@@ -484,7 +494,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						if curpos in label_list:
 							break
 						ptrval = scene_read_int(scenedata, file_usage, curpos)
-						if ptrval < 0x100:
+						if ptrval < start_ofs:
 							# Note: Some tables begin with a "dummy" value in the range 0x00..0xFF.
 							# (Most files in Canaan use 0x80..0x8F, but there are also 0x70..0x7F used in a few files.)
 							# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" commadn.
@@ -492,18 +502,18 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 							# In all other cases, we probably want to exit, so that we don't accidentally interpret code as a pointer.
 							if curpos > cmd_pos:
 								ptrval = 0xFFFF	# finish reading
-							else:
+							elif not (ptrval == 0 or (ptrval >= 0x70 and ptrval <= 0x8F)):
 								print(f"Warning: Jump table dummy value 0x{ptrval:04X} at offset 0x{cmd_pos:04X}!")
 						if ptrval >= len(scenedata):
 							# remove usage mask (-> assume that we didn't process this value)
 							# important for unused code
-							file_usage[curpos + 0x00] &= ~0x01
-							file_usage[curpos + 0x01] &= ~0x01
+							file_usage[curpos+0] &= ~0x01
+							file_usage[curpos+1] &= ~0x01
 							break
 						params += [ptrval]
 						curpos += 0x02
 						
-						if ptrval >= 0x100:
+						if ptrval >= start_ofs:
 							label_list[ptrval] = (SCPT_JUMP, 0x00, None)
 							remaining_code_locs.append(ptrval)
 							if ptrval > cmd_pos and ptrval < endpos:
@@ -522,7 +532,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 	MODE_STR = 0x11
 	
 	mode = MODE_UNKNOWN
-	curpos = 0x100
+	curpos = start_ofs
 	while True:
 		# search for next unparsed section
 		while (curpos < len(scenedata)) and (file_usage[curpos] != 0x00):
@@ -838,6 +848,8 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 									comment = get_filename(dcmd[2])
 								except:
 									pass	# catch invalid offsets
+						else:
+							data_str = f"0x{par_val:04X}"
 					elif (par_type & SCPT_MASK) == SCPTM_REG:
 						if par_type == SCPT_REG_IL:
 							# int/long register (depends on ID)
@@ -891,12 +903,17 @@ def decompile_scene(fn_in: str, fn_out: str) -> int:
 		return 1
 	return 0
 
+def auto_int(x):
+	return int(x, 0)
+
 def main(argv):
 	global config
 	global necjis
 	
 	print("four-nine/Izuho Saruta System-98 Scenario Decompiler")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-b", "--base-ofs", type=auto_int, help="set base/load offset of the scenario file", default=0x0000)
+	# for LILITH/DISK_A/li_sub.s, use "-b 0x4000"
 	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
 	aparse.add_argument("-e", "--use-emojis", action="store_true", help="decode custom font into emojis")
 	aparse.add_argument("-u", "--unscrambled", action="store_true", help="assume descrambled input data")
