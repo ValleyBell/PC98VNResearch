@@ -25,3 +25,8 @@ A list of various games and their known engine versions can be found in [game-li
 
 - [unsorted tools/documentation](z_misc/README.md)
 - [various small game hacks](z_hacks/README.md)
+
+## License
+
+- Source code is licensed under GNU General Public License v2.0 or later ([GPL-2.0-or-later](gpl-2.0.txt)).
+- Documents are licensed under Creative Commons Attribution Share Alike 4.0 International ([CC-BY-SA-4.0](cc-by-sa-4.0.txt)).
