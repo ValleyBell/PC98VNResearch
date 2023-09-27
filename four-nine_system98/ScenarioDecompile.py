@@ -182,6 +182,7 @@ SCENE_CMD_LIST = {
 JISCHR_COMMENTS = {}
 necjis = nec_jis_conv.JISConverter()
 config = {}
+MOD_DESC_LEN = 0x100	# first 0x100 bytes are reserved for the module description
 
 
 def load_additional_font_table(filepath: str) -> int:
@@ -228,7 +229,7 @@ def load_scene_binary(fn_in: str) -> bytes:
 	else:
 		# remove the "encryption":
 		#   The game engine skips the first 0x100 bytes and XORs all remaining ones with 0x01.
-		return data[:0x100] + bytes([x ^ 0x01 for x in data[0x100:]])
+		return data[:MOD_DESC_LEN] + bytes([x ^ 0x01 for x in data[MOD_DESC_LEN:]])
 
 def scene_read_array(scenedata: bytes, usage_mask: list, pos: int, array_size: int) -> bytes:
 	try:
@@ -376,10 +377,12 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 	return -1
 
 def parse_scene_binary(scenedata: bytes) -> tuple:
-	start_ofs = 0x100	# start at offset 0x100
 	if config.base_ofs > 0:
+		# Just adding padding at the beginning to do the offset is not efficient. But
+		# it is the simplest way to do so, considering that many parts of the analysis
+		# code make no difference between "code pointer" offset and "real file offset".
 		scenedata = bytes([0] * config.base_ofs) + scenedata
-		start_ofs += config.base_ofs
+	start_ofs = config.base_ofs + MOD_DESC_LEN	# code starts right after the module description text
 	
 	cmd_list = []	# list[ tuple(file offset, command ID, list[params] ) ]
 	file_usage = [0x00] * len(scenedata)
@@ -504,7 +507,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						if ptrval < start_ofs:
 							# Note: Some tables begin with a "dummy" value in the range 0x00..0xFF.
 							# (Most files in Canaan use 0x80..0x8F, but there are also 0x70..0x7F used in a few files.)
-							# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" commadn.
+							# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" command.
 							# In this case, we have to just accept the pointer.
 							# In all other cases, we probably want to exit, so that we don't accidentally interpret code as a pointer.
 							if curpos > cmd_pos:

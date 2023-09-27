@@ -214,6 +214,7 @@ for cdata in SCENE_CMD_LIST.values():
 JISCHR_COMMENTS = {}
 necjis = nec_jis_conv.JISConverter()
 config = {}
+MOD_DESC_LEN = 0x100	# first 0x100 bytes are reserved for the module description
 
 
 def load_additional_font_table(filepath: str) -> int:
@@ -434,8 +435,9 @@ def generate_binary(cmd_list, label_list) -> bytes:
 			KEYWORD2CMD[cmd_name] = key
 	
 	# generate byte stream with placeholders for labels
-	data = bytearray([0x00]*0x100)	# first 0x100 bytes are reserved for the module description
 	mod_desc = bytearray()
+	data = bytearray()
+	start_ofs = config.base_ofs + MOD_DESC_LEN
 	cmd_ofs_list = []
 	lbl_write_list = []	# list[ tuple(file_pos, label_name, line_id) ]
 	for (lid, keyword, params) in cmd_list:
@@ -604,10 +606,9 @@ def generate_binary(cmd_list, label_list) -> bytes:
 		else:
 			print(f"Error in line {1+lid}: Unknown keyword '{keyword}'")
 			return None
-	# insert module description
-	if len(mod_desc) > 0:
-		mod_desc = mod_desc[0:0x100]
-		data[0:len(mod_desc)] = mod_desc
+	
+	# pad module description with 00s
+	mod_desc = mod_desc[:MOD_DESC_LEN].ljust(MOD_DESC_LEN, b'\x00')
 	
 	# Now write all pointers that reference labels. (Their exact offsets were previously unknown.)
 	for (srcofs, lblname, lid) in lbl_write_list:
@@ -616,11 +617,11 @@ def generate_binary(cmd_list, label_list) -> bytes:
 			print(f"Error in line {1+lid}: Label {lblname} is undefined!")
 			return None
 		cmd_id = label_list[lncf][0]
-		dstofs = cmd_ofs_list[cmd_id]
+		dstofs = start_ofs + cmd_ofs_list[cmd_id]
 		#print(f"Cmd {cmd_id} Name {lblname} -> ptr at 0x{srcofs:04X} = 0x{dstofs:04X}")
 		struct.pack_into("<H", data, srcofs, dstofs)
 	
-	return data
+	return mod_desc + data
 
 def load_asm(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
@@ -628,12 +629,12 @@ def load_asm(fn_in: str) -> typing.List[str]:
 
 def write_scene_binary(fn_out: str, data: bytes) -> None:
 	with open(fn_out, "wb") as f:
-		f.write(data[:0x100])	# first 0x100 bytes are unencrypted
+		f.write(data[:MOD_DESC_LEN])	# the module description is unencrypted
 		if config.unscrambled:
-			f.write(data[0x100:])
+			f.write(data[MOD_DESC_LEN:])
 		else:
 			# The rest is encrypted using XOR 0x01
-			f.write(bytes([x ^ 0x01 for x in data[0x100:]]))
+			f.write(bytes([x ^ 0x01 for x in data[MOD_DESC_LEN:]]))
 	return
 
 def compile_scene(fn_in: str, fn_out: str) -> int:
@@ -658,12 +659,16 @@ def compile_scene(fn_in: str, fn_out: str) -> int:
 		return 1
 	return 0
 
+def auto_int(x):
+	return int(x, 0)
+
 def main(argv):
 	global config
 	global necjis
 	
 	print("four-nine/Izuho Saruta System-98 Scenario Compiler")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-b", "--base-ofs", type=auto_int, help="set base/load offset of the scenario file", default=0x0000)
 	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
 	aparse.add_argument("-u", "--unscrambled", action="store_true", help="output the file unscrambled")
 	aparse.add_argument("in_file", help="input assembly file (.ASM)")
