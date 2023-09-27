@@ -202,6 +202,7 @@ TOKEN_ALPHABET = [chr(x) for x in \
 	[x for x in range(0x41, 0x5B)] + \
 	[x for x in range(0x61, 0x7B)]] + ["_"]
 KEYWORDS = {
+	"DESC",	# module description: UTF-8 string to be encoded as Shift-JIS
 	"DB",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
 	"DW",	# data: words
 	"DSJ",	# data: JIS code words, to be encoded as Shift-JIS
@@ -433,12 +434,33 @@ def generate_binary(cmd_list, label_list) -> bytes:
 			KEYWORD2CMD[cmd_name] = key
 	
 	# generate byte stream with placeholders for labels
-	data = bytearray([0x00]*0x100)	# first 0x100 bytes are unused, but part of the offset calculations
+	data = bytearray([0x00]*0x100)	# first 0x100 bytes are reserved for the module description
+	mod_desc = bytearray()
 	cmd_ofs_list = []
 	lbl_write_list = []	# list[ tuple(file_pos, label_name, line_id) ]
 	for (lid, keyword, params) in cmd_list:
 		cmd_ofs_list += [len(data)]
-		if keyword == "DB":
+		if keyword == "DESC":
+			for (ttype, tdata, linepos) in params:
+				if ttype == TKTP_INT:
+					try:
+						if tdata < 0:
+							mod_desc += struct.pack("<b", tdata)
+						else:
+							mod_desc += struct.pack("<B", tdata)
+					except:
+						print(f"Error in line {1+lid}, column {1+linepos}: value doesn't fit into 8 bits!")
+						return None
+				elif ttype == TKTP_STR:
+					value = necjis.sjis_encode_str(tdata)
+					if type(value) is not bytes:
+						print(f"Error in line {1+lid}, column {1+linepos}: Unable to convert string to Shift-JIS!")
+						return None
+					mod_desc += value
+				else:
+					print(f"Error in line {1+lid}, column {1+linepos}: expected integer or string!")
+					return None
+		elif keyword == "DB":
 			for (ttype, tdata, linepos) in params:
 				if ttype == TKTP_INT:
 					try:
@@ -527,8 +549,11 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						print(e)
 						return None
 				elif cptmask == SCPTM_PTR:
-					lbl_write_list += [(len(data), tdata, lid)]
-					data += struct.pack("<H", 0xAAAA)
+					if ttype == TKTP_NAME: # set to TKTP_NAME for labels
+						lbl_write_list += [(len(data), tdata, lid)]
+						data += struct.pack("<H", 0xAAAA)
+					else:
+						data += struct.pack("<H", tdata)
 				elif cptmask == SCPTM_REG:
 					if ttype == TKTP_NAME:
 						ttype = get_nametoken_type(tdata, label_list)
@@ -579,6 +604,10 @@ def generate_binary(cmd_list, label_list) -> bytes:
 		else:
 			print(f"Error in line {1+lid}: Unknown keyword '{keyword}'")
 			return None
+	# insert module description
+	if len(mod_desc) > 0:
+		mod_desc = mod_desc[0:0x100]
+		data[0:len(mod_desc)] = mod_desc
 	
 	# Now write all pointers that reference labels. (Their exact offsets were previously unknown.)
 	for (srcofs, lblname, lid) in lbl_write_list:

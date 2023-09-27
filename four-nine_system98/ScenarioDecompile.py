@@ -385,6 +385,13 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 	file_usage = [0x00] * len(scenedata)
 	label_list = {}	# dict{ file offset: (label type, flags, label name) }
 	
+	# --- parse description ---
+	mod_desc = scenedata[config.base_ofs : start_ofs]
+	if b'\x00' in mod_desc:
+		mod_desc = mod_desc[:mod_desc.find(b'\x00')]
+	if len(mod_desc) > 0:
+		cmd_list += [(config.base_ofs, -9, mod_desc)]
+	
 	# --- parse code sections ---
 	label_list[start_ofs] = (SCPT_JUMP, 0x00, f"start_{start_ofs:04X}")
 	remaining_code_locs = [start_ofs]
@@ -781,7 +788,11 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					lbl_flags = label_list[cmd_pos][1]
 					if lbl_flags & LBLFLG_MENU:
 						group_size = 5
-				if cmd_id == -3:
+				if cmd_id == -9:
+					cmd_name = "DESC"	# module description
+					data_strs = str2asm(params)
+					group_list = gen_string_groups(data_strs)	# intelligent line splitting
+				elif cmd_id == -3:
 					cmd_name = "DW"
 					group_size = 1
 					show_idx = True
