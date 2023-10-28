@@ -89,6 +89,9 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - then re-encrypt the file
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+- Mirror
+  - enable all scenarios
+    - open `SAVE.DAT` and set all 2-byte words to `01 00`
 - Night Slave
   - reach ending quickly
     - extract `NS_DSK_H.PCK/NSVS0E.MDR` and save it in the game's main folder as `NSVS7S.MDR`
@@ -129,6 +132,15 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         - `D` - dwarf
         - `L` - lizard
       - Playing the `OEREND_?` files directly doesn't work, but swapping them with `FGTTL.CMD` works just fine. (aside from the lack of music)
+- Pleria - The Royal Emblem
+  - jump to ending
+    - before booting the game, copy all files from the `_D` folder into the `_B` folder (works around an issue with a missed disk swap command when swapping file names)
+    - while in the main menu (file `PL00.SCC` loaded), search for `A:\PL01.SCC` and overwrite it with `A:\PL4401.SCC` + a `00` byte
+    - `PL45.SCC` jumps directly to the credits, but won't start the music
+- Present 2
+  - jump to Game Over screens
+    - while in the main menu (file `PR01.SCC` loaded), search for `A:\IN00.SCC` / `A\NE00.SCC` / `A:\MI00.SCC` and replace the `00` with `OV`
+    - Note: In case of the scenario "南十字星" / "Southern Cross", you need to enter the scenario's menu screen first (`MI00.SCC`) and then replace `A:\MI01.SCC` with `A:\MIOV.SCC` or the border will have corrupted graphics.
 - Rekiai
   - skip "BLucky" logo
     - in `MAINCON.SCE`, search for `83 18 80 00 00 00` and replace it with `83 18 78 00 00 00`
