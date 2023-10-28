@@ -17,6 +17,7 @@ SCPT_DATA2 = 0x11	# data pointer (2-byte groups)
 SCPT_STR = 0x12		# string pointer
 SCPT_FNAME = 0x13	# file path pointer
 SCPT_JUMP = 0x14	# jump destination pointer
+SCPT_TXTSEL = 0x15	# text/menu selection list
 SCPT_REG_INT = 0x80	# register: integer
 SCPT_REG_LNG = 0x81	# register: long
 SCPT_REG_IL = 0x82	# register: integer/long
@@ -31,7 +32,6 @@ SC_EXEC_END = 0x01	# terminate script execution here
 SC_EXEC_SPC = 0xFF	# special handling
 
 LBLFLG_UNUSED = 0x01
-LBLFLG_MENU = 0x10
 
 SCENE_CMD_LIST = {
 	0x00: ("DOSEXIT", [], SC_EXEC_END),
@@ -98,7 +98,7 @@ SCENE_CMD_LIST = {
 	0x3D: ("MULR"   , [SCPT_REG_IL, SCPT_REG_IL]),
 	0x3E: ("DIVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
 	0x3F: ("CMD3F"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_DATA2, SCPT_JUMP], SC_EXEC_SPC),
+	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_TXTSEL, SCPT_JUMP], SC_EXEC_SPC),
 	0x41: ("CMD41"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
 	0x42: ("CMD42"  , [SCPT_BYTE]),
 	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
@@ -278,6 +278,24 @@ def is_sjis_str(data: bytes) -> bool:
 def guess_data_type(scenedata: bytes, startpos: int, endpos: int) -> int:
 	# try to guess what type of data this is
 	data = scenedata[startpos : endpos]
+	if (len(data) % 2) == 0:
+		dlist = [v[0] for v in struct.iter_unpack("<H", data)]
+		exitIdx = -1
+		for i in range((len(dlist)+4) // 5):	# items: 1/6/11/16/... -> indices: 1/2/3/4
+			dentry = dlist[i*5 : (i+1)*5]
+			if dentry[0] == 0:
+				if i == 0:
+					exitIdx = i	# assume invalid for 1-element data
+				break
+			if dentry[0] != i+1:	# consecutive entries, starting with 1
+				exitIdx = i
+				break
+			if len(dentry) != 5 or max(dentry) > 640:
+				exitIdx = i
+				break
+		if exitIdx == -1:
+			return SCPT_TXTSEL
+	
 	nullpos = data.find(0)
 	if nullpos > 1:	# need at least 1 character
 		dstr = data[0 : nullpos]
@@ -362,6 +380,8 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 				endpos = len(scenedata)
 			if dtype in [SCPT_STR, SCPT_FNAME]:
 				strend = scenedata.find(0x00, curpos, endpos)
+				#while strend > 0 and (scenedata[strend - 1] >= 0x03 and scenedata[strend - 1] <= 0x0F):
+				#	strend = scenedata.find(0x00, strend + 1, endpos)
 				if strend >= 0:
 					endpos = strend + 1
 			curpos = endpos
@@ -530,11 +550,6 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 								endpos = ptrval
 					cmd_list += [(cmd_pos, -3, params)]
 					curpos = None	# stop processing here
-				elif cmd_id == 0x40:	# menu
-					lbl_pos = params[2][1]
-					(par_type, lbl_flags, lbl_name) = label_list[lbl_pos]
-					lbl_flags |= LBLFLG_MENU	# enforce 5 items per line
-					label_list[lbl_pos] = (par_type, lbl_flags, lbl_name)
 	
 	# --- parse data sections ---
 	MODE_UNKNOWN = 0x00
@@ -553,7 +568,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		endpos = find_next_label(label_list, curpos + 1)
 		if endpos < 0:
 			endpos = len(scenedata)
-		elif endpos >= len(scenedata):
+		elif endpos > len(scenedata):
 			endpos = len(scenedata)
 		
 		cmd_mode = -1	# default to 1-byte data
@@ -572,6 +587,9 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				elif label_list[curpos][0] == SCPT_DATA2:
 					mode = MODE_DATA
 					cmd_mode = -20	# 2-byte data
+				elif label_list[curpos][0] == SCPT_TXTSEL:
+					mode = MODE_DATA
+					cmd_mode = -21	# 2-byte data, text selection
 				else:
 					mode = MODE_DATA
 		
@@ -582,6 +600,21 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				endpos = strend + 1
 			str_arr = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
 			cmd_list += get_sjis_str_items(str_arr, curpos)
+		elif cmd_mode == -21:
+			# menu selection (2-byte words, 5 per entry, terminated with single value 0)
+			dend = curpos
+			while dend + 2 <= endpos:
+				val = struct.unpack_from("<H", scenedata, dend)[0]
+				if val == 0:
+					dend += 2
+					break
+				dend += 5 * 0x02
+			#print(f"0x{curpos:X} .. 0x{dend:X} .. 0x{endpos:X}")
+			if dend > curpos and dend < endpos:
+				endpos = dend
+			darray = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
+			iterat = struct.iter_unpack("<H", darray)
+			cmd_list += [(curpos, cmd_mode, [v[0] for v in iterat])]
 		elif (cmd_mode == -20) or (cmd_mode == -2):
 			# do 2-byte word parsing
 			darray = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
@@ -609,6 +642,8 @@ def generate_label_names(label_list: dict) -> None:
 			lbl_prefix = "file"
 		elif par_type == SCPT_JUMP:
 			lbl_prefix = "loc"
+		elif par_type == SCPT_TXTSEL:
+			lbl_prefix = "sel"
 		else:
 			lbl_prefix = "unk"
 		lbl_name = f"{lbl_prefix}_{lbl_pos:04X}"
@@ -789,8 +824,6 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 				comment = None
 				if cmd_pos in label_list:
 					lbl_flags = label_list[cmd_pos][1]
-					if lbl_flags & LBLFLG_MENU:
-						group_size = 5
 				if cmd_id == -9:
 					cmd_name = "DESC"	# module description
 					data_strs = str2asm(params)
@@ -812,6 +845,10 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					chrs = [JISCHR_COMMENTS[val] for val in params if val in JISCHR_COMMENTS]
 					if len(chrs) > 0:
 						comment = ", ".join(chrs)
+				elif cmd_id == -21:
+					cmd_name = "DW"	# Data: word (decimal)
+					data_strs = [f"{val}" for val in params]
+					group_size = 5
 				elif cmd_id == -20:
 					cmd_name = "DW"	# Data: word (decimal)
 					data_strs = [f"{val}" for val in params]
