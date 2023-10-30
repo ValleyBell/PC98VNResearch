@@ -14,7 +14,6 @@ class ParamToken:
 	pos: int	# start position on current line
 	cmdOfs: typing.Optional[int] = None	# relative command offset (for label references)
 
-#cmd_list = []	# list[ tuple(line ID, command name, list[params] ) ]
 @dataclasses.dataclass
 class CommandItem:
 	lineID: int	# line ID in original ASM file
@@ -22,182 +21,12 @@ class CommandItem:
 	params: list = dataclasses.field(default_factory=list)	# parameters
 	cmdNum: int = 0	# command number, with fused data blocks for a better comparision heuristic
 
-#label_list = {}	# dict{ label name [casefold]: (command ID, label name [original]) }
 @dataclasses.dataclass
 class LabelItem:
 	cmdID: int	# ID of the command (index into cmd_list) that the label points to
 	lineID: int	# line ID in original ASM file
 	lblName: str	# original label name
 
-
-# Scene Command Parameter Types
-SCPT_INT = 0x01		# 2-byte integer
-SCPT_BYTE = 0x02	# "byte" (2-byte parameter, high byte ignored)
-SCPT_LONG = 0x03	# 4-byte integer
-SCPT_ILVAR = 0x0F	# 2-byte/4-byte integer, based on previous register ID
-SCPT_DATA1 = 0x10	# data pointer (1-byte groups)
-SCPT_DATA2 = 0x11	# data pointer (2-byte groups)
-SCPT_STR = 0x12		# string pointer
-SCPT_FNAME = 0x13	# file path pointer
-SCPT_JUMP = 0x14	# jump destination pointer
-SCPT_REG_INT = 0x80	# register: integer
-SCPT_REG_LNG = 0x81	# register: long
-SCPT_REG_IL = 0x82	# register: integer/long
-SCPT_REG_STR = 0x83	# register: string
-
-SCPT_MASK = 0xF0
-SCPTM_VAL = 0x00	# immediate value
-SCPTM_PTR = 0x10	# pointer
-SCPTM_REG = 0x80	# register
-
-SC_EXEC_END = 0x01	# terminate script execution here
-SC_EXEC_SPC = 0xFF	# special handling
-
-SCENE_CMD_LIST = {
-	0x00: ("DOSEXIT", [], SC_EXEC_END),
-	0x01: (None     , []),
-	0x02: ("IMGLOAD", [SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_FNAME, SCPT_BYTE]),
-	0x03: ("TBOPEN" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x04: ("TBCLOSE", [SCPT_INT]),
-	0x05: ("TBCLEAR", [SCPT_INT]),
-	0x06: ("PALAPL" , []),
-	0x07: ("PALBW"  , [SCPT_INT, SCPT_INT]),
-	0x08: ("PALFADE", [SCPT_INT, SCPT_INT]),
-	0x09: ("PALLCKT", [SCPT_BYTE]),
-	0x0A: ("JP"     , [SCPT_JUMP], SC_EXEC_END),
-	0x0B: ("CMPR"   , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x0C: ("CMPI"   , [SCPT_REG_INT, SCPT_INT]),
-	0x0D: ("JEQ"    , [SCPT_JUMP]),
-	0x0E: ("JLT"    , [SCPT_JUMP]),
-	0x0F: ("JGT"    , [SCPT_JUMP]),
-	0x10: ("JGE"    , [SCPT_JUMP]),
-	0x11: ("JLE"    , [SCPT_JUMP]),
-	0x12: ("JNE"    , [SCPT_JUMP]),
-	0x13: ("JTBL"   , [SCPT_REG_INT], SC_EXEC_SPC),
-	0x14: ("PCOLSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x15: ("PRINT"  , [SCPT_BYTE, SCPT_STR]),
-	0x16: ("CMD16"  , [SCPT_INT, SCPT_INT, SCPT_DATA1]),
-	0x17: (None     , []),
-	0x18: ("MOVI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x19: ("MOVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x1A: ("BGMPLAY", [SCPT_FNAME]),
-	0x1B: ("BGMFADE", []),
-	0x1C: ("BGMSTOP", []),
-	0x1D: ("BGMODEG", [SCPT_REG_INT]),
-	0x1E: ("CMD1E"  , [SCPT_REG_INT]),
-	0x1F: ("LDSCENE", [SCPT_FNAME], SC_EXEC_END),
-	0x20: ("GV02"   , []),
-	0x21: ("WAIT"   , [SCPT_REG_INT]),
-	0x22: ("GFX22"  , [SCPT_REG_INT]),
-	0x23: (None     , []),
-	0x24: ("ADDI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x25: ("SUBI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x26: ("TXCLR1" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
-	0x27: ("ADDR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x28: ("SUBR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x29: ("XYREAD" , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x2A: ("XYWRT"  , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x2B: (None     , []),
-	0x2C: (None     , []),
-	0x2D: ("REGCLR" , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x2E: (None     , []),
-	0x2F: ("CMD2F"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x30: (None     , []),
-	0x31: (None     , []),
-	0x32: ("PRINTR" , [SCPT_BYTE, SCPT_REG_INT]),
-	0x33: ("PA4GET" , [SCPT_REG_INT]),
-	0x34: ("PA4SET" , [SCPT_REG_INT]),
-	0x35: ("TXFILL" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x36: ("GFX36"  , []),
-	0x37: ("XYFLOAD", [SCPT_FNAME]),
-	0x38: ("ANDR"   , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x39: ("ORR"    , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x3A: ("GFX3A"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x3B: ("GFX3B"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x3C: ("TXCLR2" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
-	0x3D: ("MULR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x3E: ("DIVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x3F: ("CMD3F"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_DATA2, SCPT_JUMP], SC_EXEC_SPC),
-	0x41: ("CMD41"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
-	0x42: ("CMD42"  , [SCPT_BYTE]),
-	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x44: (None     , []),
-	0x45: (None     , []),
-	0x46: (None     , []),
-	0x47: (None     , []),
-	0x48: (None     , []),
-	0x49: (None     , []),
-	0x4A: ("REGFSAV", [SCPT_BYTE, SCPT_FNAME]),
-	0x4B: ("REGFLD" , [SCPT_BYTE, SCPT_FNAME]),
-	0x4C: ("CMD4C"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x4D: ("BGMMEAS", [SCPT_REG_INT]),
-	0x4E: ("SFXSSG" , [SCPT_BYTE]),
-	0x4F: ("SFXFM"  , [SCPT_BYTE]),
-	0x50: ("BGMSTAT", [SCPT_REG_INT]),
-	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INT]),
-	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INT]),
-	0x53: ("STRCAT" , [SCPT_REG_STR, SCPT_REG_STR]),
-	0x54: ("CALL"   , [SCPT_JUMP]),
-	0x55: ("RET"    , [], SC_EXEC_END),
-	0x56: ("STRCMPR", [SCPT_REG_STR, SCPT_REG_STR]),
-	0x57: ("STRNCPY", [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
-	0x58: ("STRCPYC", [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
-	0x59: ("STRCPYI", [SCPT_REG_STR, SCPT_STR]),
-	0x5A: ("STRCLR" , [SCPT_REG_STR]),
-	0x5B: ("STRCPY" , [SCPT_REG_STR, SCPT_REG_STR]),
-	0x5C: (None     , []),
-	0x5D: (None     , []),
-	0x5E: ("CMD5E"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x5F: ("STRTIME", [SCPT_REG_STR]),
-	0x60: ("FILETM" , [SCPT_REG_INT, SCPT_REG_STR, SCPT_FNAME]),
-	0x61: ("XYFSAVE", [SCPT_FNAME]),
-	0x62: ("CMD62"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x63: ("GFX63"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x64: ("GFX64"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x65: (None     , []),
-	0x66: (None     , []),
-	0x67: ("GFX67"  , [SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
-	0x68: ("GFX68"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x69: ("GFX69"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x6A: ("CMD6A"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x6B: ("CMD6B"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x6C: (None     , []),
-	0x6D: (None     , []),
-	0x6E: ("STRLEN" , [SCPT_REG_INT, SCPT_REG_STR]),
-	0x6F: (None     , []),
-	0x70: (None     , []),
-	0x71: (None     , []),
-	0x72: ("LOOPSTI", [SCPT_INT]),
-	0x73: ("LOOPGTR", [SCPT_REG_INT]),
-	0x74: ("LOOPJPI", [SCPT_INT, SCPT_JUMP]),
-	0x75: ("FONTCHR", [SCPT_INT, SCPT_DATA1]),
-	0x76: ("CMD76"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x77: ("CMD77"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x78: ("CMD78"  , [SCPT_INT, SCPT_INT]),
-	0x79: ("CMD79"  , [SCPT_INT]),
-	0x7A: ("LOOPSTR", [SCPT_REG_INT]),
-	0x7B: ("LOOPJPR", [SCPT_REG_INT, SCPT_JUMP]),
-	0x7C: (None     , []),
-	0x7D: (None     , []),
-	0x7E: (None     , []),
-	0x7F: ("DOSRETR", [SCPT_REG_INT], SC_EXEC_END),
-	0x80: ("STRFLD" , [SCPT_REG_STR, SCPT_FNAME]),
-	0x81: ("STRFSAV", [SCPT_REG_STR, SCPT_FNAME]),
-	0x82: ("GFX82"  , []),
-	0x83: ("GFX83"  , [SCPT_REG_INT]),
-	0x84: ("GFX84"  , []),
-	0x85: ("GFX85"  , []),
-	0x86: ("GFX86"  , [SCPT_DATA1]),
-	0x87: ("GFX87"  , [SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
-	0x88: ("GFX88"  , [SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x89: ("GFX89"  , [SCPT_DATA1]),
-	0x8A: ("GFX8A"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x8B: ("GFX8B"  , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x8C: ("GFX8C"  , []),
-	0x8D: ("GFX8D"  , []),
-	0x8E: ("GFX8E"  , []),
-}
 
 TKTP_INT = 0x01	# integer number (byte/word/dword)
 TKTP_STR = 0x02	# string
@@ -229,9 +58,6 @@ KEYWORDS = {
 	"DSJ",	# data: JIS code words, to be encoded as Shift-JIS
 }
 DATA_KEYWORDS = ["DB", "DW", "DSJ"]
-for cdata in SCENE_CMD_LIST.values():
-	if cdata[0] is not None:
-		KEYWORDS.add(cdata[0])
 
 config = {}
 
@@ -343,7 +169,7 @@ def get_nametoken_type(token: str, label_list: list) -> int:
 		return None
 
 def parse_asm(lines: typing.List[str]):
-	cmd_list = []	# list[ CommandItem ) ]
+	cmd_list = []	# list[ CommandItem ]
 	label_list = {}	# dict{ label name [casefold]: LabelItem }
 	
 	cmdNum = -1	# we will do pre-increment below
@@ -374,22 +200,21 @@ def parse_asm(lines: typing.List[str]):
 			continue
 		
 		(_, keyword, pos) = get_token_name(line, startpos, True)
-		if keyword.upper() not in KEYWORDS:
-			print(f"Error in line {1+lid}: Unknown keyword '{keyword}'")
-			return None
+		# We accept any sort of keyword in this tool.
+		#if keyword.upper() not in KEYWORDS:
+		#	print(f"Error in line {1+lid}: Unknown keyword '{keyword}'")
+		#	return None
 		pos = find_next_token(line, pos)
 		
-		citem = CommandItem(lineID = lid, cmdName = keyword.upper())
-		citem.params = []
+		citem = CommandItem(lineID=lid, cmdName=keyword.upper(), params=[])
 		while pos < len(line):
-			tpos = pos
 			res = get_token(line, pos)
 			if res is None:
 				print(f"Error in line {1+lid}: Parsing error!")	# TODO: print details
 				return None
-			(ttype, tdata, pos) = res
-			citem.params += [ParamToken(ttype, tdata, tpos)]
-			pos = find_next_token(line, pos)	# skip spaces
+			(ttype, tdata, endpos) = res
+			citem.params += [ParamToken(ttype, tdata, pos)]
+			pos = find_next_token(line, endpos)	# skip spaces
 			if pos >= len(line):
 				break
 			if line[pos] == ';':	# comment
@@ -412,7 +237,7 @@ def parse_asm(lines: typing.List[str]):
 			citem.cmdNum = cmdNum
 		lastCmdIsData = isDataCmd
 		
-		cmd_list += [citem]
+		cmd_list.append(citem)
 	
 	for (cid, citem) in enumerate(cmd_list):
 		for (pid, pitem) in enumerate(citem.params):
@@ -429,10 +254,9 @@ def parse_asm(lines: typing.List[str]):
 					return None
 				lbl_cid = label_list[lncf].cmdID
 				if lbl_cid < len(cmd_list):
-					lbl_cmd = cmd_list[lbl_cid]
-					pitem.cmdOfs = lbl_cmd.cmdNum - citem.cmdNum
+					pitem.cmdOfs = cmd_list[lbl_cid].cmdNum - citem.cmdNum
 				else:
-					pitem.cmdOfs = cmd_list[-1].cmdNum + 1 - citem.cmdNum
+					pitem.cmdOfs = (cmd_list[-1].cmdNum + 1) - citem.cmdNum
 				citem.params[pid] = pitem
 	
 	return (cmd_list, label_list)
@@ -451,6 +275,8 @@ def check_for_cmd_match(src_cmds: tuple, src_cmd: int, inc_cmds: tuple) -> tuple
 		ic = inc_cmds[cid]
 		sc = src_cmds[src_cmd + cid]
 		if ic.cmdName != sc.cmdName:
+			if cid >= 50:
+				print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to command mismatch!")
 			return False
 		
 		for (pid, ip) in enumerate(ic.params):
@@ -459,12 +285,18 @@ def check_for_cmd_match(src_cmds: tuple, src_cmd: int, inc_cmds: tuple) -> tuple
 				if ip.type == TKTP_NAME or sp.type == TKTP_NAME:
 					# unresolved name (-> unreferenced label)
 					continue # just assume it matches
+				if cid >= 50:
+					print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to data type mismatch!")
 				return False	# mismatching types
 			if ip.type == TKTP_LBL:
 				if (ip.cmdOfs is not None) and (ip.cmdOfs != sp.cmdOfs):
+					if cid >= 50:
+						print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to pointer mismatch!")
 					return False	# label references to different (relative) offset
 				continue	# assume that labels
 			if ip.data != sp.data:
+				if cid >= 50:
+					print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to data mismatch!")
 				return False	# non-matching data
 	return True
 
@@ -546,10 +378,10 @@ def insert_code_include(fn_in: str, fn_out: str, fn_inc: str) -> int:
 		inc_lines = load_asm(fn_inc)
 	except IOError:
 		print(f"Error loading {fn_inc}")
-		return 1
+		return 2
 	ret = parse_asm(inc_lines)
 	if ret is None:
-		return 1
+		return 2
 	(inc_cmd_list, inc_label_list) = ret
 	fn_inc_title = os.path.basename(fn_inc)
 	
@@ -557,10 +389,10 @@ def insert_code_include(fn_in: str, fn_out: str, fn_inc: str) -> int:
 		asm_lines = load_asm(fn_in)
 	except IOError:
 		print(f"Error loading {fn_in}")
-		return 1
+		return 2
 	ret = parse_asm(asm_lines)
 	if ret is None:
-		return 1
+		return 2
 	(cmd_list, label_list) = ret
 	
 	#with open("data_dump.txt", "wt", encoding="utf-8") as f:
@@ -571,7 +403,7 @@ def insert_code_include(fn_in: str, fn_out: str, fn_inc: str) -> int:
 	match_cmd = search_for_match((cmd_list, label_list), (inc_cmd_list, inc_label_list))
 	if match_cmd is None:
 		print("No match found.")
-		return 0
+		return 1
 	
 	lbl_replace_tbl = build_label_replacement_table((cmd_list, label_list), (inc_cmd_list, inc_label_list), match_cmd)
 	inc_range = get_include_range((cmd_list, label_list), (inc_cmd_list, inc_label_list), match_cmd)
@@ -595,7 +427,7 @@ def insert_code_include(fn_in: str, fn_out: str, fn_inc: str) -> int:
 		print("Done.")
 	except IOError:
 		print(f"Error writing {fn_out}")
-		return 1
+		return 2
 	return 0
 
 def main(argv):

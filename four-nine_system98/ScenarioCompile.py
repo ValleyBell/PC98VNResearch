@@ -1,10 +1,31 @@
 #!/usr/bin/env python3
 import sys
 import os
+import dataclasses
 import struct
 import typing
 import argparse
 import nec_jis_conv
+
+
+@dataclasses.dataclass
+class ParamToken:
+	type: int	# token type
+	data: typing.Union[int, str]	# token data
+	pos: int	# start position on current line
+	cmdOfs: typing.Optional[int] = None	# relative command offset (for label references)
+
+@dataclasses.dataclass
+class CommandItem:
+	lineID: int	# line ID in original ASM file
+	cmdName: str	# command name (uppercase)
+	params: list = dataclasses.field(default_factory=list)	# parameters
+
+@dataclasses.dataclass
+class LabelItem:
+	cmdID: int	# ID of the command (index into cmd_list) that the label points to
+	lineID: int	# line ID in original ASM file
+	lblName: str	# original label name
 
 
 # Scene Command Parameter Types
@@ -369,9 +390,9 @@ def read_token_reg(token: str) -> typing.Tuple[str, int]:	# returns tuple(reg ty
 	else:
 		return None
 
-def parse_asm(lines: typing.List[str]):
-	cmd_list = []	# list[ tuple(line ID, command name, list[params] ) ]
-	label_list = {}	# dict{ label name [casefold]: (command ID, label name [original]) }
+def parse_asm(lines: typing.List[str]) -> typing.Tuple[list, list]:
+	cmd_list = []	# list[ CommandItem ]
+	label_list = {}	# dict{ label name [casefold]: LabelItem }
 	
 	for (lid, line) in enumerate(lines):
 		line = line.rstrip()
@@ -391,7 +412,7 @@ def parse_asm(lines: typing.List[str]):
 			if lbl_nm_cf in label_list:
 				print(f"Error in line {1+lid}: Label '{label_name}' is already defined")
 				return None
-			label_list[lbl_nm_cf] = (len(cmd_list), label_name)	# just store command index
+			label_list[lbl_nm_cf] = LabelItem(cmdID=len(cmd_list), lineID=lid, lblName=label_name)
 			startpos = pos + 1
 		startpos = find_next_token(line, startpos)
 		if startpos >= len(line) or line[startpos] == ';':
@@ -403,16 +424,15 @@ def parse_asm(lines: typing.List[str]):
 			return None
 		pos = find_next_token(line, pos)
 		
-		params = []
+		citem = CommandItem(lineID=lid, cmdName=keyword.upper(), params=[])
 		while pos < len(line):
-			tpos = pos
 			res = get_token(line, pos)
 			if res is None:
 				print(f"Error in line {1+lid}: Parsing error!")	# TODO: print details
 				return None
-			(ttype, tdata, pos) = res
-			params += [(ttype, tdata, tpos)]
-			pos = find_next_token(line, pos)	# skip spaces
+			(ttype, tdata, endpos) = res
+			citem.params += [ParamToken(ttype, tdata, pos)]
+			pos = find_next_token(line, endpos)	# skip spaces
 			if pos >= len(line):
 				break
 			if line[pos] == ';':	# comment
@@ -421,9 +441,9 @@ def parse_asm(lines: typing.List[str]):
 				print(f"Error in line {1+lid}: Expected comma at position {1+pos}")
 				return None
 			pos = find_next_token(line, pos+1)	# skip spaces
-		#print((lid, keyword, params))
+		#print((lid, keyword, citem.params))
 		
-		cmd_list += [(lid, keyword.upper(), params)]
+		cmd_list.append(citem)
 	
 	return (cmd_list, label_list)
 
@@ -440,94 +460,94 @@ def generate_binary(cmd_list, label_list) -> bytes:
 	start_ofs = config.base_ofs + MOD_DESC_LEN
 	cmd_ofs_list = []
 	lbl_write_list = []	# list[ tuple(file_pos, label_name, line_id) ]
-	for (lid, keyword, params) in cmd_list:
+	for citem in cmd_list:
 		cmd_ofs_list += [len(data)]
-		if keyword == "DESC":
-			for (ttype, tdata, linepos) in params:
-				if ttype == TKTP_INT:
+		if citem.cmdName == "DESC":
+			for pitem in citem.params:
+				if pitem.type == TKTP_INT:
 					try:
-						if tdata < 0:
-							mod_desc += struct.pack("<b", tdata)
+						if pitem.data < 0:
+							mod_desc += struct.pack("<b", pitem.data)
 						else:
-							mod_desc += struct.pack("<B", tdata)
+							mod_desc += struct.pack("<B", pitem.data)
 					except:
-						print(f"Error in line {1+lid}, column {1+linepos}: value doesn't fit into 8 bits!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
-				elif ttype == TKTP_STR:
-					value = necjis.sjis_encode_str(tdata)
+				elif pitem.type == TKTP_STR:
+					value = necjis.sjis_encode_str(pitem.data)
 					if type(value) is not bytes:
-						print(f"Error in line {1+lid}, column {1+linepos}: Unable to convert string to Shift-JIS!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
 						return None
 					mod_desc += value
 				else:
-					print(f"Error in line {1+lid}, column {1+linepos}: expected integer or string!")
+					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
 					return None
-		elif keyword == "DB":
-			for (ttype, tdata, linepos) in params:
-				if ttype == TKTP_INT:
+		elif citem.cmdName == "DB":
+			for pitem in citem.params:
+				if pitem.type == TKTP_INT:
 					try:
-						if tdata < 0:
-							data += struct.pack("<b", tdata)
+						if pitem.data < 0:
+							data += struct.pack("<b", pitem.data)
 						else:
-							data += struct.pack("<B", tdata)
+							data += struct.pack("<B", pitem.data)
 					except:
-						print(f"Error in line {1+lid}, column {1+linepos}: value doesn't fit into 8 bits!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
-				elif ttype == TKTP_STR:
-					value = necjis.sjis_encode_str(tdata)
+				elif pitem.type == TKTP_STR:
+					value = necjis.sjis_encode_str(pitem.data)
 					if type(value) is not bytes:
-						print(f"Error in line {1+lid}, column {1+linepos}: Unable to convert string to Shift-JIS!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
 						return None
 					data += value
 				else:
-					print(f"Error in line {1+lid}, column {1+linepos}: expected integer or string!")
+					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
 					return None
-		elif keyword == "DW":
-			for (ttype, tdata, linepos) in params:
-				if ttype == TKTP_NAME:
-					ttype = get_nametoken_type(tdata, label_list)
-				if ttype == TKTP_INT:
+		elif citem.cmdName == "DW":
+			for pitem in citem.params:
+				if pitem.type == TKTP_NAME:
+					pitem.type = get_nametoken_type(pitem.data, label_list)
+				if pitem.type == TKTP_INT:
 					try:
-						if tdata < 0:
-							data += struct.pack("<h", tdata)
+						if pitem.data < 0:
+							data += struct.pack("<h", pitem.data)
 						else:
-							data += struct.pack("<H", tdata)
+							data += struct.pack("<H", pitem.data)
 					except:
-						print(f"Error in line {1+lid}, column {1+linepos}: value doesn't fit into 16 bits!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 16 bits!")
 						return None
-				elif ttype == TKTP_LBL:
-					lbl_write_list += [(len(data), tdata, lid)]
+				elif pitem.type == TKTP_LBL:
+					lbl_write_list += [(len(data), pitem.data, citem.lineID)]
 					data += struct.pack("<H", 0xAAAA)
 				else:
-					print(f"Error in line {1+lid}, column {1+linepos}: expected integer or label!")
+					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer or label!")
 					return None
-		elif keyword == "DSJ":
-			for (ttype, tdata, linepos) in params:
-				if ttype != TKTP_INT:
-					print(f"Error in line {1+lid}, column {1+linepos}: expected integer!")
+		elif citem.cmdName == "DSJ":
+			for pitem in citem.params:
+				if pitem.type != TKTP_INT:
+					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 					return None
 				try:
-					value = necjis.jis2sjis(tdata)
+					value = necjis.jis2sjis(pitem.data)
 					data += struct.pack(">H", value)	# value must be written in Big Endian order
 				except:
-					print(f"Error in line {1+lid}, column {1+linepos}: Unable to JIS code to Shift-JIS!")
+					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Unable to JIS code to Shift-JIS!")
 					return None
-		elif keyword in KEYWORD2CMD:
-			cmd_id = KEYWORD2CMD[keyword]
+		elif citem.cmdName in KEYWORD2CMD:
+			cmd_id = KEYWORD2CMD[citem.cmdName]
 			cmd_item = SCENE_CMD_LIST[cmd_id]
 			cmd_params = cmd_item[1]
-			if len(params) != len(cmd_params):
-				print(f"Error in line {1+lid}: parameters: {len(params)}, requires {len(cmd_params)}")
+			if len(citem.params) != len(cmd_params):
+				print(f"Error in line {1+citem.lineID}: parameters: {len(citem.params)}, requires {len(cmd_params)}")
 				return None
 			
 			data += struct.pack("<H", cmd_id)
 			cur_reg_type = SCPT_INT	# default to 16-bit integer
-			for (par_id, (ttype, tdata, linepos)) in enumerate(params):
+			for (par_id, pitem) in enumerate(citem.params):
 				cptype = cmd_params[par_id]
 				cptmask = cptype & SCPT_MASK
 				if cptmask == SCPTM_VAL:
-					if ttype != TKTP_INT:
-						print(f"Error in line {1+lid}, column {1+linepos}: expected integer!")
+					if pitem.type != TKTP_INT:
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 						return None
 					if cptype == SCPT_ILVAR:
 						cptype = cur_reg_type	# expected type base on previously accessed register
@@ -539,49 +559,49 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						val_fmt = "I"
 					else:
 						return None
-					if tdata < 0:
+					if pitem.data < 0:
 						val_fmt = val_fmt.lower()	# write signed value
 					try:
 						if cptype == SCPT_BYTE:
-							data += struct.pack("<" + val_fmt, tdata) + b'\x00'	# byte values needs 2-byte alignment
+							data += struct.pack("<" + val_fmt, pitem.data) + b'\x00'	# byte values needs 2-byte alignment
 						else:
-							data += struct.pack("<" + val_fmt, tdata)
+							data += struct.pack("<" + val_fmt, pitem.data)
 					except Exception as e:
-						print(f"Error in line {1+lid}, column {1+linepos}: value too large!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value too large!")
 						print(e)
 						return None
 				elif cptmask == SCPTM_PTR:
-					if ttype == TKTP_NAME: # set to TKTP_NAME for labels
-						lbl_write_list += [(len(data), tdata, lid)]
+					if pitem.type == TKTP_NAME: # set to TKTP_NAME for labels
+						lbl_write_list += [(len(data), pitem.data, citem.lineID)]
 						data += struct.pack("<H", 0xAAAA)
 					else:
-						data += struct.pack("<H", tdata)
+						data += struct.pack("<H", pitem.data)
 				elif cptmask == SCPTM_REG:
-					if ttype == TKTP_NAME:
-						ttype = get_nametoken_type(tdata, label_list)
-					if ttype != TKTP_REG:
-						print(f"Error in line {1+lid}, column {1+linepos}: expected register name!")
+					if pitem.type == TKTP_NAME:
+						pitem.type = get_nametoken_type(pitem.data, label_list)
+					if pitem.type != TKTP_REG:
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected register name!")
 						return None
-					reg_info = read_token_reg(tdata)
+					reg_info = read_token_reg(pitem.data)
 					if reg_info is None:
-						print(f"Error in line {1+lid}, column {1+linepos}: Invalid register {tdata}!")
+						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Invalid register {pitem.data}!")
 						return None
 					
 					(reg_type, reg_id) = reg_info
 					if cptype == SCPT_REG_INT:
 						if reg_type != 'i':
-							print(f"Error in line {1+lid}, column {1+linepos}: Require integer register!")
+							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require integer register!")
 							return None
 						cur_reg_type = SCPT_INT
 						if reg_id >= 0x400+20:
-							print(f"Warning in line {1+lid}: using out-of-range register {tdata}")
+							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
 					elif cptype == SCPT_REG_LNG:
 						if reg_type != 'l':
-							print(f"Error in line {1+lid}, column {1+linepos}: Require long-int register!")
+							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require long-int register!")
 							return None
 						cur_reg_type = SCPT_LNG
 						if reg_id >= 10:
-							print(f"Warning in line {1+lid}: using out-of-range register {tdata}")
+							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
 					elif cptype == SCPT_REG_IL:
 						if reg_type == 'i':
 							cur_reg_type = SCPT_INT
@@ -589,22 +609,22 @@ def generate_binary(cmd_list, label_list) -> bytes:
 							cur_reg_type = SCPT_REG_LNG
 							reg_id += 0x400
 						else:
-							print(f"Error in line {1+lid}, column {1+linepos}: Require int/long register!")
+							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require int/long register!")
 							return None
 						if reg_id >= 0x400+20:
-							print(f"Warning in line {1+lid}: using out-of-range register {tdata}")
+							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
 					elif cptype == SCPT_REG_STR:
 						if reg_type != 's':
-							print(f"Error in line {1+lid}, column {1+linepos}: Require string register!")
+							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require string register!")
 							return None
 						if reg_id >= 50:
-							print(f"Warning in line {1+lid}: using out-of-range register {tdata}")
+							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
 					data += struct.pack("<H", reg_id)
 				else:
-					print(f"Internal error in line {1+lid}: Unknown parameter type 0x{cptype:02X}!")
+					print(f"Internal error in line {1+citem.lineID}: Unknown parameter type 0x{cptype:02X}!")
 					return None
 		else:
-			print(f"Error in line {1+lid}: Unknown keyword '{keyword}'")
+			print(f"Error in line {1+citem.lineID}: Unknown keyword '{citem.cmdName}'")
 			return None
 	
 	# pad module description with 00s
@@ -616,7 +636,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 		if lncf not in label_list:
 			print(f"Error in line {1+lid}: Label {lblname} is undefined!")
 			return None
-		cmd_id = label_list[lncf][0]
+		cmd_id = label_list[lncf].cmdID
 		dstofs = start_ofs + cmd_ofs_list[cmd_id]
 		#print(f"Cmd {cmd_id} Name {lblname} -> ptr at 0x{srcofs:04X} = 0x{dstofs:04X}")
 		struct.pack_into("<H", data, srcofs, dstofs)
