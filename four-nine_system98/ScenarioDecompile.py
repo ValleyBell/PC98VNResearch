@@ -179,6 +179,7 @@ SCENE_CMD_LIST = {
 	0x8E: ("GFX8E"  , []),
 }
 
+MODULE_PATH = os.path.dirname(__file__)
 JISCHR_COMMENTS = {}
 necjis = nec_jis_conv.JISConverter()
 config = {}
@@ -973,7 +974,7 @@ def main(argv):
 	
 	config = aparse.parse_args(argv[1:])
 	
-	necjis.load_from_pickle("NEC-C-6226-lut.pkl")
+	necjis.load_from_pickle(os.path.join(MODULE_PATH, "NEC-C-6226-lut.pkl"))
 	if config.font_file:
 		load_additional_font_table(config.font_file)
 	return decompile_scene(config.in_file, config.out_file)

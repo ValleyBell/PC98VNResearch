@@ -235,7 +235,7 @@ for cdata in SCENE_CMD_LIST.values():
 	if cdata[0] is not None:
 		KEYWORDS.add(cdata[0])
 
-JISCHR_COMMENTS = {}
+MODULE_PATH = os.path.dirname(__file__)
 necjis = nec_jis_conv.JISConverter()
 config = {}
 MOD_DESC_LEN = 0x100	# first 0x100 bytes are reserved for the module description
@@ -243,7 +243,6 @@ MOD_DESC_LEN = 0x100	# first 0x100 bytes are reserved for the module description
 
 def load_additional_font_table(filepath: str) -> int:
 	global necjis
-	global JISCHR_COMMENTS
 	
 	with open(filepath, "rt", encoding="utf-8") as f:
 		for line in f:
@@ -271,8 +270,6 @@ def load_additional_font_table(filepath: str) -> int:
 			else:
 				print(f"Error in line: {line}")
 				continue
-			if len(items) > 2:
-				JISCHR_COMMENTS[jis_code] = items[2]
 	necjis.recalc_decode_lut()
 
 def find_next_token(line: str, startpos: int) -> int:
@@ -811,7 +808,7 @@ def main(argv):
 	
 	config = aparse.parse_args(argv[1:])
 	
-	necjis.load_from_pickle("NEC-C-6226-lut.pkl")
+	necjis.load_from_pickle(os.path.join(MODULE_PATH, "NEC-C-6226-lut.pkl"))
 	if config.font_file:
 		load_additional_font_table(config.font_file)
 	return compile_scene(config.in_file, config.out_file)
