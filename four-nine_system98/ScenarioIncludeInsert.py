@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import posixpath	# for constructing "include" paths with forward slashes
 import dataclasses
 import typing
 import argparse
@@ -412,9 +413,10 @@ def insert_code_include(fn_in: str, fn_out: str, fn_inc: str) -> int:
 	# do the actual replacement
 	lbl_replace_re = {}
 	for (srclbl, dstlbl) in lbl_replace_tbl.items():
-		lbl_replace_re[srclbl] = re.compile(re.escape(label_list[srclbl].lblName), re.IGNORECASE)
+		lbl_replace_re[srclbl] = re.compile("\\b" + re.escape(label_list[srclbl].lblName) + "\\b", re.IGNORECASE)
 	
-	asm_new_lines = asm_lines[: inc_range[0]] + [f'\tinclude "{fn_inc_title}"\n'] + asm_lines[inc_range[1] :]
+	inc_filepath = posixpath.join(config.prefix, fn_inc_title)
+	asm_new_lines = asm_lines[: inc_range[0]] + [f'\tinclude "{inc_filepath}"\n'] + asm_lines[inc_range[1] :]
 	for (lid, line) in enumerate(asm_new_lines):
 		for (srclbl, dstlbl) in lbl_replace_tbl.items():
 			# the keys are casefolded - here I want to use the original label names
@@ -435,6 +437,7 @@ def main(argv):
 	
 	print("System-98 Scenario Include File Inserter")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-p", "--prefix", type=str, help="directory prefix prepended to include file paths", default="")
 	aparse.add_argument("-i", "--include", type=str, required=True, help="assembly file (.ASM) with common code that should be included")
 	aparse.add_argument("in_file", help="input assembly file (.ASM)")
 	aparse.add_argument("out_file", help="output assembly file (.ASM) with include data removed")

@@ -17,14 +17,16 @@ class ParamToken:
 
 @dataclasses.dataclass
 class CommandItem:
-	lineID: int	# line ID in original ASM file
+	asmFile: str	# file name of the original ASM file
+	lineID: int		# line ID in original ASM file
 	cmdName: str	# command name (uppercase)
 	params: list = dataclasses.field(default_factory=list)	# parameters
 
 @dataclasses.dataclass
 class LabelItem:
-	cmdID: int	# ID of the command (index into cmd_list) that the label points to
-	lineID: int	# line ID in original ASM file
+	cmdID: int		# ID of the command (index into cmd_list) that the label points to
+	asmFile: str	# file name of the original ASM file
+	lineID: int		# line ID in original ASM file
 	lblName: str	# original label name
 
 
@@ -223,6 +225,7 @@ TOKEN_ALPHABET = [chr(x) for x in \
 	[x for x in range(0x41, 0x5B)] + \
 	[x for x in range(0x61, 0x7B)]] + ["_"]
 KEYWORDS = {
+	"INCLUDE",	# include other ASM file
 	"DESC",	# module description: UTF-8 string to be encoded as Shift-JIS
 	"DB",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
 	"DW",	# data: words
@@ -390,7 +393,7 @@ def read_token_reg(token: str) -> typing.Tuple[str, int]:	# returns tuple(reg ty
 	else:
 		return None
 
-def parse_asm(lines: typing.List[str]) -> typing.Tuple[list, list]:
+def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, list]:
 	cmd_list = []	# list[ CommandItem ]
 	label_list = {}	# dict{ label name [casefold]: LabelItem }
 	
@@ -405,14 +408,14 @@ def parse_asm(lines: typing.List[str]) -> typing.Tuple[list, list]:
 			# label
 			pos = line.find(':')
 			if pos < 0:
-				print(f"Error in line {1+lid}: Label without colon")
+				print(f"Parse error in {asm_filename}:{1+lid}: Label without colon")
 				return None
 			label_name = line[0:pos]
 			lbl_nm_cf = label_name.casefold()
 			if lbl_nm_cf in label_list:
-				print(f"Error in line {1+lid}: Label '{label_name}' is already defined")
+				print(f"Parse error in {asm_filename}:{1+lid}: Label '{label_name}' is already defined")
 				return None
-			label_list[lbl_nm_cf] = LabelItem(cmdID=len(cmd_list), lineID=lid, lblName=label_name)
+			label_list[lbl_nm_cf] = LabelItem(cmdID=len(cmd_list), asmFile=asm_filename, lineID=lid, lblName=label_name)
 			startpos = pos + 1
 		startpos = find_next_token(line, startpos)
 		if startpos >= len(line) or line[startpos] == ';':
@@ -420,15 +423,15 @@ def parse_asm(lines: typing.List[str]) -> typing.Tuple[list, list]:
 		
 		(_, keyword, pos) = get_token_name(line, startpos, True)
 		if keyword.upper() not in KEYWORDS:
-			print(f"Error in line {1+lid}: Unknown keyword '{keyword}'")
+			print(f"Parse error in {asm_filename}:{1+lid}: Unknown keyword '{keyword}'")
 			return None
 		pos = find_next_token(line, pos)
 		
-		citem = CommandItem(lineID=lid, cmdName=keyword.upper(), params=[])
+		citem = CommandItem(asmFile=asm_filename, lineID=lid, cmdName=keyword.upper(), params=[])
 		while pos < len(line):
 			res = get_token(line, pos)
 			if res is None:
-				print(f"Error in line {1+lid}: Parsing error!")	# TODO: print details
+				print(f"Parse error in {asm_filename}:{1+lid}, column {1+pos}: Parsing error!")	# TODO: print details
 				return None
 			(ttype, tdata, endpos) = res
 			citem.params += [ParamToken(ttype, tdata, pos)]
@@ -438,7 +441,7 @@ def parse_asm(lines: typing.List[str]) -> typing.Tuple[list, list]:
 			if line[pos] == ';':	# comment
 				break
 			if line[pos] != ',':
-				print(f"Error in line {1+lid}: Expected comma at position {1+pos}")
+				print(f"Parse error in {asm_filename}:{1+lid}: Expected comma at position {1+pos}")
 				return None
 			pos = find_next_token(line, pos+1)	# skip spaces
 		#print((lid, keyword, citem.params))
@@ -459,7 +462,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 	data = bytearray()
 	start_ofs = config.base_ofs + MOD_DESC_LEN
 	cmd_ofs_list = []
-	lbl_write_list = []	# list[ tuple(file_pos, label_name, line_id) ]
+	lbl_write_list = []	# list[ tuple(file_pos, label_name, line_id, asm_filename) ]
 	for citem in cmd_list:
 		cmd_ofs_list += [len(data)]
 		if citem.cmdName == "DESC":
@@ -471,16 +474,16 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						else:
 							mod_desc += struct.pack("<B", pitem.data)
 					except:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
 				elif pitem.type == TKTP_STR:
 					value = necjis.sjis_encode_str(pitem.data)
 					if type(value) is not bytes:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
 						return None
 					mod_desc += value
 				else:
-					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
+					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
 					return None
 		elif citem.cmdName == "DB":
 			for pitem in citem.params:
@@ -491,16 +494,16 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						else:
 							data += struct.pack("<B", pitem.data)
 					except:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
 				elif pitem.type == TKTP_STR:
 					value = necjis.sjis_encode_str(pitem.data)
 					if type(value) is not bytes:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
 						return None
 					data += value
 				else:
-					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
+					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
 					return None
 		elif citem.cmdName == "DW":
 			for pitem in citem.params:
@@ -513,31 +516,31 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						else:
 							data += struct.pack("<H", pitem.data)
 					except:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 16 bits!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 16 bits!")
 						return None
 				elif pitem.type == TKTP_LBL:
-					lbl_write_list += [(len(data), pitem.data, citem.lineID)]
+					lbl_write_list += [(len(data), pitem.data, citem.lineID, citem.asmFile)]
 					data += struct.pack("<H", 0xAAAA)
 				else:
-					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer or label!")
+					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or label!")
 					return None
 		elif citem.cmdName == "DSJ":
 			for pitem in citem.params:
 				if pitem.type != TKTP_INT:
-					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer!")
+					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 					return None
 				try:
 					value = necjis.jis2sjis(pitem.data)
 					data += struct.pack(">H", value)	# value must be written in Big Endian order
 				except:
-					print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Unable to JIS code to Shift-JIS!")
+					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Unable to JIS code to Shift-JIS!")
 					return None
 		elif citem.cmdName in KEYWORD2CMD:
 			cmd_id = KEYWORD2CMD[citem.cmdName]
 			cmd_item = SCENE_CMD_LIST[cmd_id]
 			cmd_params = cmd_item[1]
 			if len(citem.params) != len(cmd_params):
-				print(f"Error in line {1+citem.lineID}: parameters: {len(citem.params)}, requires {len(cmd_params)}")
+				print(f"Error in {citem.asmFile}:{1+citem.lineID}: parameters: {len(citem.params)}, requires {len(cmd_params)}")
 				return None
 			
 			data += struct.pack("<H", cmd_id)
@@ -547,7 +550,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 				cptmask = cptype & SCPT_MASK
 				if cptmask == SCPTM_VAL:
 					if pitem.type != TKTP_INT:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected integer!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 						return None
 					if cptype == SCPT_ILVAR:
 						cptype = cur_reg_type	# expected type base on previously accessed register
@@ -567,12 +570,12 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						else:
 							data += struct.pack("<" + val_fmt, pitem.data)
 					except Exception as e:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: value too large!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value too large!")
 						print(e)
 						return None
 				elif cptmask == SCPTM_PTR:
 					if pitem.type == TKTP_NAME: # set to TKTP_NAME for labels
-						lbl_write_list += [(len(data), pitem.data, citem.lineID)]
+						lbl_write_list += [(len(data), pitem.data, citem.lineID, citem.asmFile)]
 						data += struct.pack("<H", 0xAAAA)
 					else:
 						data += struct.pack("<H", pitem.data)
@@ -580,28 +583,28 @@ def generate_binary(cmd_list, label_list) -> bytes:
 					if pitem.type == TKTP_NAME:
 						pitem.type = get_nametoken_type(pitem.data, label_list)
 					if pitem.type != TKTP_REG:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: expected register name!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected register name!")
 						return None
 					reg_info = read_token_reg(pitem.data)
 					if reg_info is None:
-						print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Invalid register {pitem.data}!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Invalid register {pitem.data}!")
 						return None
 					
 					(reg_type, reg_id) = reg_info
 					if cptype == SCPT_REG_INT:
 						if reg_type != 'i':
-							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require integer register!")
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require integer register!")
 							return None
 						cur_reg_type = SCPT_INT
 						if reg_id >= 0x400+20:
-							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
+							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
 					elif cptype == SCPT_REG_LNG:
 						if reg_type != 'l':
-							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require long-int register!")
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require long-int register!")
 							return None
 						cur_reg_type = SCPT_LNG
 						if reg_id >= 10:
-							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
+							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
 					elif cptype == SCPT_REG_IL:
 						if reg_type == 'i':
 							cur_reg_type = SCPT_INT
@@ -609,32 +612,32 @@ def generate_binary(cmd_list, label_list) -> bytes:
 							cur_reg_type = SCPT_REG_LNG
 							reg_id += 0x400
 						else:
-							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require int/long register!")
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require int/long register!")
 							return None
 						if reg_id >= 0x400+20:
-							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
+							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
 					elif cptype == SCPT_REG_STR:
 						if reg_type != 's':
-							print(f"Error in line {1+citem.lineID}, column {1+pitem.pos}: Require string register!")
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require string register!")
 							return None
 						if reg_id >= 50:
-							print(f"Warning in line {1+citem.lineID}: using out-of-range register {pitem.data}")
+							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
 					data += struct.pack("<H", reg_id)
 				else:
-					print(f"Internal error in line {1+citem.lineID}: Unknown parameter type 0x{cptype:02X}!")
+					print(f"Internal error in {citem.asmFile}:{1+citem.lineID}: Unknown parameter type 0x{cptype:02X}!")
 					return None
 		else:
-			print(f"Error in line {1+citem.lineID}: Unknown keyword '{citem.cmdName}'")
+			print(f"Compile error in {citem.asmFile}:{1+citem.lineID}: Unknown keyword '{citem.cmdName}'")
 			return None
 	
 	# pad module description with 00s
 	mod_desc = mod_desc[:MOD_DESC_LEN].ljust(MOD_DESC_LEN, b'\x00')
 	
 	# Now write all pointers that reference labels. (Their exact offsets were previously unknown.)
-	for (srcofs, lblname, lid) in lbl_write_list:
+	for (srcofs, lblname, lid, asm_filename) in lbl_write_list:
 		lncf = lblname.casefold()
 		if lncf not in label_list:
-			print(f"Error in line {1+lid}: Label {lblname} is undefined!")
+			print(f"Error in {asm_filename}:{1+lid}: Label {lblname} is undefined!")
 			return None
 		cmd_id = label_list[lncf].cmdID
 		dstofs = start_ofs + cmd_ofs_list[cmd_id]
@@ -657,16 +660,128 @@ def write_scene_binary(fn_out: str, data: bytes) -> None:
 			f.write(bytes([x ^ 0x01 for x in data[MOD_DESC_LEN:]]))
 	return
 
-def compile_scene(fn_in: str, fn_out: str) -> int:
+def load_parse_asm(fn_in: str) -> tuple:
 	try:
 		asm_lines = load_asm(fn_in)
 	except IOError:
 		print(f"Error loading {fn_in}")
 		return 1
-	ret = parse_asm(asm_lines)
+	ret = parse_asm(asm_lines, fn_in)
 	if ret is None:
-		return 1
+		return 2
 	(cmd_list, label_list) = ret
+	
+	inc_files = []
+	for (cid, citem) in enumerate(cmd_list):
+		if citem.cmdName == "INCLUDE":
+			if len(citem.params) != 1:
+				print(f"Error in {citem.asmFile}:{1+citem.lineID}: The 'include' statement needs exactly 1 parameter!")
+				return 2
+			pitem = citem.params[0]
+			if pitem.type != TKTP_STR:
+				print(f"Error in {citem.asmFile}:{1+citem.lineID}: The 'include' statement needs a file name as parameter!")
+				return 2
+			inc_files += [(pitem.data, cid)]
+	
+	return (cmd_list, label_list, inc_files)
+
+def resolve_includes(parsed_files: dict, root_filepath: str) -> None:
+	root_dir = os.path.dirname(root_filepath)
+	root_key = os.path.relpath(root_filepath, root_dir).casefold()
+	(cmd_list, label_list, inc_files) = parsed_files[root_key]
+	
+	cid = 0
+	while cid < len(cmd_list):
+		citem = cmd_list[cid]
+		if citem.cmdName == "INCLUDE":
+			pitem = citem.params[0]
+			
+			ffolder = os.path.dirname(citem.asmFile)
+			inc_fpath = os.path.abspath(os.path.join(ffolder, pitem.data))
+			inckey = os.path.relpath(inc_fpath, root_dir).casefold()
+			
+			(inc_cmds, inc_labels, _) = parsed_files[inckey]
+			# move command references of existing labels
+			for lblkey in label_list:
+				if label_list[lblkey].cmdID > cid:
+					label_list[lblkey].cmdID += len(inc_cmds) - 1
+			
+			# insert included commands
+			cmd_list = cmd_list[: cid] + inc_cmds + cmd_list[cid+1 :]
+			# copy included labels with adjusted command ID
+			for lblkey in inc_labels:
+				if lblkey in label_list:
+					ilitem = inc_labels[lblkey]
+					slitem = label_list[lblkey]
+					inc_ftitle = os.path.relpath(ilitem.asmFile, root_dir)
+					src_ftitle = os.path.relpath(slitem.asmFile, root_dir)
+					print(f'Error in {inc_ftitle}:{1+ilitem.lineID}: Label "{ilitem.lblName}" is ' \
+						f'already defined in {src_ftitle}:{1+slitem.lineID}')
+					# TODO: analyze and print include stack here
+					return 2
+				label_list[lblkey] = dataclasses.replace(inc_labels[lblkey])
+				label_list[lblkey].cmdID += cid
+			
+			# do NOT adjust cid here
+		else:
+			cid += 1
+	
+	parsed_files[root_key] = (cmd_list, label_list, inc_files)
+	return
+
+def compile_scene(fn_in: str, fn_out: str) -> int:
+	parsed_files = {}
+	
+	root_path = os.path.abspath(fn_in)
+	root_dir = os.path.dirname(fn_in)
+	root_key = os.path.relpath(root_path, root_dir).casefold()
+	
+	# load main ASM file + all "include" files
+	files2parse = [(os.path.realpath(fn_in), set())]
+	while len(files2parse) > 0:
+		(fpath, inc_parents) = files2parse[0]
+		files2parse = files2parse[1:]
+		
+		ffolder = os.path.dirname(fpath)
+		filekey = os.path.relpath(fpath, root_dir).casefold()
+		if filekey in parsed_files:
+			continue	# we already loaded this
+		
+		ret = load_parse_asm(fpath)
+		if type(ret) is not tuple:
+			return ret
+		
+		# Include Constraints:
+		# - including the same file twice in the same file may be okay (e.g. DB/DW statements)
+		# - prevent recursive includes (A includes B includes A) by traversing the tree
+		inc_new_parents = {*inc_parents, filekey}
+		for (inc_fn, cid) in ret[2]:
+			inc_fpath = os.path.abspath(os.path.join(ffolder, inc_fn))
+			inckey = os.path.relpath(inc_fpath, root_dir).casefold()
+			if inckey in inc_new_parents:	# detect recursive inclusions
+				citem = ret[0][cid]
+				print(f'Error in {inc_fpath}:{1+citem.lineID}: Recursive include of "{inc_fn}" detected!')
+				return 2
+			
+			# walk through all files in the "to process" list and check whether or not the file is already in the list
+			didFind = False
+			for (f2p_id, f2p_data) in enumerate(files2parse):
+				(f2p_fn, f2p_list) = f2p_data
+				f2pkey = os.path.relpath(f2p_fn, root_dir).casefold()
+				if f2pkey == inckey:
+					# allow for detection of "file A: include B, include C; file B: include C"
+					files2parse[f2p_id][1].update(inc_new_parents)
+					didFind = True
+					break
+			if not didFind:
+				files2parse += [(inc_fpath, inc_new_parents)]
+		parsed_files[filekey] = ret
+	
+	# resolve "include" statements
+	resolve_includes(parsed_files, root_path)
+	
+	# generate bytecode
+	(cmd_list, label_list, _) = parsed_files[root_key]
 	data = generate_binary(cmd_list, label_list)
 	if data is None:
 		return 2
