@@ -182,3 +182,15 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - `US02.BIN`/`US03.BIN`/`US04.BIN` - ?? (loads parts of the match, unuseable without loading data first, eventually redirects to CG scenes, assuming you have won)
       - `US05.BIN` - Continue Screen
       - `US06.BIN` - Staff Roll
+- Waku Waku Mahjong Panic! ~Shikigami Denshou~
+  - skip intro:
+    - while on tht title screen, search for `1500 08 BD0D` and overwrite it with `0A00 E70B 0D` (file `BEGINF.DSD`)
+  - jump to scene: (with 3C being the ending scene)
+    - while the opening dialogue is scrolling, search for `1700 5E01 0000 62` and replace with `1700 1E02 3C00 62` (file `BEGINF.DSD`)
+    - The intro dialogue has to finish in order to avoid graphical glitches.
+- Waku Waku Mahjong Panic! 2 ~Kokushi Musou~
+  - jump to ending scene
+    - Take `WMP2_JAN2FILE.1` and put it as `JAN2FILE.1` into the game's main folder.
+    - Then start the game from the beginning. Once you can reach the menu from ingame, load the save game.
+    - Loading the save game directly can result in graphical glitches.
+    - The "current scene" value is stored in the save file at offset 0x198. It is loaded by various scene files using `1700 9801 xx00` where `xx` can be 00..2F.

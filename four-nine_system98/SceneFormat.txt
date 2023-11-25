@@ -354,7 +354,7 @@ Commands
 	2 bytes - destination string ID
 	Gets the current date/time via DOS calls 2Ah/2Ch and prints it as "YYYY-MM-DD HH:MM:SS" into the destination string.
 60 - get file date/time
-	2 bytes - register ID, will get return code (0 = failure, 1 = success)
+	2 bytes - register ID, will get return code (0 = success, 1 = failure)
 	2 bytes - destination string ID
 	2 bytes - file offset of file name
 	Gets the date/time of a file and prints it to the destination string. (format as in command 5F)

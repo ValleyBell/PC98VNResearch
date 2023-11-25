@@ -1,0 +1,441 @@
+DIANA Scene Format
+------------------
+
+The format's basic structure is:
+[loop]
+2 bytes - command ID
+	0000h..006Fh are valid
+	0070h..FFFFh will show an "Unknown command" error message and then exit.
+? bytes - parameters
+[loop end]
+
+Unlike System-98, byte-sized parameters are NOT padded up to 2-byte words.
+
+Commands
+--------
+00 - invalid
+	no parameters
+	Prints the message "Don't come here.", then wait for a key press. The program will get stuck here.
+01 - exit
+	2 bytes - register ID
+	Copies the value stored in the specified register around and then exits DIANA.
+02 - load image
+	2 bytes - destination column (X/8)
+	2 bytes - destination row (Y)
+	1 bytes - draw mode?
+	1 byte  - write vv to I/O register 0A6h (when value is 01, ignored for others)
+	2 bytes - file offset of image file name to load
+	-> 08h bytes total
+03 - open text box
+	1 byte  - text box ID (00h..0Fh)
+	2 bytes - ??, sets bx+00h
+	2 bytes - ??, sets bx+06h
+	1 byte  - ??, sets bx+02h
+	1 byte  - ??, sets bx+03h
+	1 byte  - ??, sets bx+04h
+	2 bytes - ??, sets bx+0Ah
+	-> 0Ah bytes total
+04 - close text box
+	1 byte  - text box ID (00h..0Fh)
+05 - clear text box
+	1 byte  - text box ID (00h..0Fh)
+06 - apply palette
+	no parameters
+07 - palette fade: black/white
+	1 byte  - direction: 0 = fade black -> white, 1 = fade white -> black
+	1 byte  - frames per step
+08 - palette fade out/in
+	1 byte  - direction: 0 = fade black -> white, 1 = fade white -> black
+	1 byte  - frames per step
+09 - toggle Palette Colour Lock Mask
+	1 byte  - colour ID to lock/unlock (can be 00h to 0Fh)
+0A - jump to offset
+	2 bytes - destination file offset to continue execution at
+0B - compare registers
+	2 bytes - register ID of reg1
+	2 bytes - register ID of reg2
+	reg1 == reg2 -> byte_18DC3 = 0
+	reg1 < reg2 -> byte_18DC3 = 1
+	reg1 > reg2 -> byte_18DC3 = 2
+0C - compare register and value
+	2 bytes - register ID of "reg"
+	2 bytes - value val
+	reg == val -> byte_18DC3 = 0
+	reg < val -> byte_18DC3 = 1
+	reg > val -> byte_18DC3 = 2
+0D - conditional jump: equal (checks byte_18DC3 == 0)
+	2 bytes - destination file offset to continue execution at
+0E - conditional jump: less than (checks byte_18DC3 == 1)
+	2 bytes - destination file offset to continue execution at
+0F - conditional jump: greater than (checks byte_18DC3 == 2)
+	2 bytes - destination file offset to continue execution at
+10 - conditional jump: greater or equal (checks byte_18DC3 != 1)
+	2 bytes - destination file offset to continue execution at
+11 - conditional jump: less or equal (checks byte_18DC3 != 2)
+	2 bytes - destination file offset to continue execution at
+12 - conditional jump: not equal (checks byte_18DC3 != 0)
+	2 bytes - destination file offset to continue execution at
+13 - execute jump table
+	2 bytes - register ID
+	There is a table of absolute file offsets (2 bytes each) following the command.
+	It takes the Nth entry (based on the content from the register) of the table and jumps there.
+	dest. offset = *([table offset] + [register content] * 2)
+14 - set palette colour
+	2 bytes - register ID: palette colour ID (00h..0Fh)
+	2 bytes - register ID: red component (00h..0Fh)
+	2 bytes - register ID: green component (00h..0Fh)
+	2 bytes - register ID: blue component (00h..0Fh)
+	-> 08h bytes total
+15 - show text
+	1 byte  - text box ID
+	2 bytes - file offset of text to be printed
+16 - ??
+	1 byte  - text box ID
+	2 bytes - ??
+17 - set register = value
+	2 bytes - register ID
+	2 bytes - value
+18 - set registers = values
+	2 bytes - start register ID
+	[loop]
+		2 bytes - value
+		exit when value == 0xFFF0
+	[end loop]
+	This initializes registers with a set of values. There is one value for each consecutive register.
+19 - set register = other register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+1A - play music
+	2 bytes - file offset of file name
+1B - fade music out
+	no parameters
+1C - stop music
+	no parameters
+1D - get music mode
+	2 bytes - register ID where the music mode will be stored in
+1E - ??
+	2 bytes - register ID (some value is written to it)
+1F - load new scene file
+	2 bytes - file offset of file name
+	Note: This terminates execution of the current scene.
+20 - fill GVRAM
+	no parameters
+	writes a pattern of "00 02" to 64 KB from offset 0A8000 on (GVRAM Plane 0)
+21 - delay script execution by N frames
+	2 bytes - register ID that contains number of frames to wait
+22 - ?? (related to GFX effects)
+	2 bytes - register ID
+	Reads a value from the specified register and stores it in word_1D17C.
+23 - enable step-by-step mode?
+	1 byte  - value, written to byte_136DE
+24 - add values to registers
+	2 bytes - start register ID
+	[loop]
+		2 bytes - value to be added
+		exit when value == 0xFFF0
+	[end loop]
+25 - subtract values from registers
+	2 bytes - start register ID
+	[loop]
+		2 bytes - value to be subtracted
+		exit when value == 0xFFF0
+	[end loop]
+26 - ??
+	1 byte  - value, calls INT 18h, AH = 00 or 01
+27 - add value to destination register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+28 - subtract value from destination register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+29 - multiply source with destination register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+2A - divide destination by source register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+2B - "AND" source with destination register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+2C - "AND" source with destination register
+	2 bytes - destination register ID
+	2 bytes - source register ID
+	same as 2C
+2D - clear registers
+	2 bytes - register ID 1
+	2 bytes - register ID 2
+	Sets all registers from reg1 to reg2 (inclusive) to 0.
+2E - ??
+	1 byte  - value
+	broken, reads the value also as register index
+2F - ??
+	2 bytes - ??
+30 - ??
+	2 bytes - file offset
+	2 bytes - register ID 1
+	2 bytes - register ID 2
+	The value is stored byte-swapped.
+31 - ?? (related to number printing?)
+	1 bytes - text box ID
+	2 bytes - register ID
+32 - print register as text
+	1 bytes - text box ID
+	2 bytes - ID of register to be printed
+33 - set Port A4 state
+	2 bytes - register ID
+	Reads value from the register and writes the lowest bit to I/O port A4h.
+	Stores the written value in a separate register.
+34 - get Port A4 state
+	2 bytes - register ID
+	Puts the last value that was written to I/O port A4h into the register.
+35 - text buffer fill
+	1 byte  - destination column (X)
+	1 byte  - destination row (Y)
+	1 byte  - columns to fill (width)
+	1 byte  - rows to fill (height)
+	1 byte  - text mode?
+	2 bytes - Shift-JIS character
+	-> 07h bytes total
+36 - ??
+	1 byte  - ??
+	1 byte  - ??
+	2 bytes - ??
+37 - set register from indexed register
+	2 bytes - destination register ID
+	2 bytes - index
+	2 bytes - source register ID
+	destination = source[index]
+	Note: The register, as well as the index, are given in *bytes* and thus must be multiples of 2.
+38 - set indexed register from register
+	2 bytes - source register ID
+	2 bytes - index
+	2 bytes - destination register ID
+	destination = source[index]
+	Note: The register, as well as the index, are given in *bytes* and thus must be multiples of 2.
+39 - ?? (GFX related)
+	1 byte  - ??
+	1 byte  - ?? (X offset)
+	2 bytes - ?? (Y offset)
+	1 byte  - ??
+	2 bytes - ??
+	1 byte  - ??
+	1 byte  - ?? (X offset)
+	2 bytes - ?? (Y offset)
+	-> 0Bh bytes
+3A - ?? (GFX related)
+	2 bytes - register ID
+	2 bytes - register ID (X offset)
+	2 bytes - register ID (Y offset)
+	2 bytes - register ID
+	2 bytes - register ID
+	2 bytes - register ID
+	2 bytes - register ID (X offset)
+	2 bytes - register ID (Y offset)
+	-> 10h bytes
+	Note: Same as 39, except that parameters are read from registers.
+3B - ?? (GFX related)
+	1 byte  - ??
+	1 byte  - ?? (X offset)
+	2 bytes - ?? (Y offset)
+	1 byte  - ??
+	2 bytes - ??
+	1 byte  - ??
+	1 byte  - ?? (X offset)
+	2 bytes - ?? (Y offset)
+	-> 0Bh bytes
+3C - ?? (GFX related)
+	2 bytes - register ID
+	2 bytes - register ID (X offset)
+	2 bytes - register ID (Y offset)
+	2 bytes - register ID
+	2 bytes - register ID
+	2 bytes - register ID
+	2 bytes - register ID (X offset)
+	2 bytes - register ID (Y offset)
+	-> 10h bytes
+	Note: Same as 3B, except that parameters are read from registers.
+3D - ?? (GFX related)
+	1 byte  - ??
+	2 bytes - ??
+	1 byte  - ?? (X offset)
+	2 bytes - ?? (Y offset)
+	-> 06h bytes
+3E - ?? (GFX related)
+	2 bytes - register ID (Y offset)
+3F - ?? (screen resolution related?)
+	2 bytes - register ID
+	2 bytes - register ID
+40 - run menu selection
+	2 bytes - register ID, receives selected menu entry
+	2 bytes - register ID, receives user action
+	2 bytes - file offset to menu data
+	2 bytes - destination file offset to continue execution at
+41 - ??
+	[v1] ?? parameters (code reads words at +08h and byte at +0Ah)
+	[v2] ?? parameters (code reads words at +04h/+08h and byte at +0Ah)
+42 - ??
+	1 byte  - ??, for INT 58h, AH=2
+43 - ?? (screen resolution related?)
+	gets results of INT 58h, AH=3
+	2 bytes - register ID
+	2 bytes - register ID
+44 - ??
+	for INT 58h, AH=11h
+	2 bytes - value
+	2 bytes - value
+45 - ??
+	for INT 58h, AH=0Bh
+	1 byte  - value
+46 - ??
+	1 byte  - value
+	2 bytes - value
+47 - ??
+	1 byte  - value
+	2 bytes - register ID
+48 - save character name (to "NAME.TXT")
+49 - load character name (from "NAME.TXT")
+4A - save register buffer to file
+	1 byte  - buffer ID (unused)
+	2 bytes - file offset of file name
+4B - load register buffer from file
+	1 byte  - buffer ID (unused)
+	2 bytes - file offset of file name
+4C - ?? (screen resolution related?)
+	for INT 58h, AH=6
+	2 bytes - value
+	2 bytes - value
+[v1] 4D - invalid (same as command 00)
+[v2] 4D - load "common" scene file
+	2 bytes - file offset of file name
+	This loads the scenario to a separate memory area, which is later referenced by command 56.
+	DIANA v1 has this "common scenario data" stored in the executable itself.
+4E - invalid
+	dummied out, will result in the program freezing due to an infinite loop
+4F - play FM sound effect
+	1 byte  - FM sound effect number
+50 - get BGM status
+	2 bytes - register ID that will receive the value
+51 - "AND" value with destination register
+	2 bytes - destination register ID
+	2 bytes - value
+	Note: assumes 2-byte addressing mode.
+52 - "OR" value with destination register
+	2 bytes - destination register ID
+	2 bytes - value
+	Note: assumes 2-byte addressing mode.
+53 - ??
+	1 byte  - ??
+	2 bytes - ??
+54 - subroutine call
+	2 bytes - file offset of the subroutine to execute
+	The file offset of the next command is pushed to an internal stack for use with the return command.
+	The stack allows for 6 levels of nesting.
+55 - subroutine return
+	no parameters
+	The return address is popped from an internal stack.
+56 - call common subroutine
+	2 bytes - file offset of the subroutine to execute
+	This calls into a special "scene" file that is embedded into the EXE file. Used for doing common actions.
+57 - set script loop counter
+	2 bytes - value for script loop counter
+58 - get script loop counter
+	2 bytes - register ID
+	The script loop counter is put into the specified register.
+59 - conditional jump based on script loop counter
+	2 bytes - value
+	2 bytes - destination file offset to continue execution at
+	The conditional jump is taken when (loop counter < value).
+5A - set script loop counter from register
+	2 bytes - register ID
+5B - conditional jump based on script loop counter
+	2 bytes - register ID
+	2 bytes - destination file offset to continue execution at
+	The conditional jump is taken when (loop counter < register contents).
+5C - call load scene file
+	2 bytes - file offset of file name
+	It first makes a backup of the current scene file name.
+	Then it pushes the file offset of the next command to the stack used by commands 54/55/56/5C/5D.
+	Finally it loads the scene file and continues execution at its beginning.
+5D - return from scene file
+	no parameters
+	It loads the "initial" scene file and then pops the return address from the stack used by commands 54/55/56/5C/5D.
+5E - ??
+	1 byte  - ?? (for I/O port 0A6h)
+	2 bytes - destination column (X)
+	2 bytes - destination row (Y)
+	2 bytes - columns to fill (width)
+	2 bytes - rows to fill (height)
+	-> 09h bytes total
+	Clears some lines in GVRAM Plane 0 (offset 0A8000) by writing 00s to it.
+5F - set string to current date/time
+	2 bytes - memory offset
+	Gets the current date/time via DOS calls 2Ah/2Ch and prints it as "YYYY-MM-DD HH:MM:SS" into a global buffer.
+60 - get file date/time
+	2 bytes - register ID, will get return code (0 = success, 1 = failure)
+	2 bytes - destination memory offset
+	2 bytes - file offset of file name
+	Gets the date/time of a file and prints it to the destination offset. (format as in command 5F)
+	The register is set to 0/1 to indicate failure/success.
+61 - load some file
+	2 bytes - file offset of file name
+[v1] 62 - invalid (same as command 00)
+[v2] 62 - ?? (GFX related)
+	2 bytes - register ID
+	2 bytes - register ID
+[v1] 63 - invalid (same as command 00)
+[v2] 63 - open text box
+	1 byte  - text box ID (00h..0Fh)
+	2 bytes - register ID
+	2 bytes - register ID
+	1 byte  - ??, sets bx+02h
+	1 byte  - ??, sets bx+03h
+	1 byte  - ??, sets bx+04h
+	2 bytes - ??, sets bx+0Ah
+	-> 0Ah bytes total
+	same as command 03, except that 2 parameters are read from registers
+[v1] 64 - invalid (same as command 00)
+[v2] 64 - ??
+	?? parameters (code reads register at +04h, word at +08h and byte at +0Ah)
+	same as command 41, except that parameter +04h is read from a register
+[v1] 65 - invalid (same as command 00)
+[v2] 65 - ??
+	2 bytes - file offset
+	2 bytes - register ID 1
+	2 bytes - register ID 2
+	Same as command 30, except that the value is NOT byte-swapped before it is stored.
+66 - invalid (same as command 00)
+67 - invalid (same as command 00)
+68 - ?? (GFX related)
+	2 bytes - register ID
+	2 bytes - register ID
+69 - ??
+	2 bytes - some file offset
+6A - ?? (calls INT 58h with AH=7 and AH=8)
+	2 bytes - value
+	2 bytes - value
+	2 bytes - value
+	2 bytes - value
+	-> 08h bytes total
+6B - ??
+	2 bytes - register ID
+	2 bytes - register ID
+	2 bytes - register ID
+	2 bytes - register ID
+	-> 08h bytes total
+	same as 6A, but with registers instead of raw values
+6C - invalid (same as command 00)
+6D - ??
+	1 byte  - value
+6E - ??
+	10h bytes - list of 8 words (2 bytes)
+6F - ??
+	10h bytes - list of 8 words (2 bytes)
+	Note: Broken and results in an infinite loop.
+
+
+"Invalid" commands (such as command 00) will prints the message "Don't come here." and then wait for a key press. The program will then process the same command again and thus get stuck in a loop.
+
+File names
+----------
+- If the first byte of a file name is 0..32, it is treated as disk or data archive ID. The disk ID is optional.
+- Aside from the optional disk ID, file names are usual null-terminated strings.

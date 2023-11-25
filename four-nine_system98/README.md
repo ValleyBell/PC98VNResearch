@@ -2,12 +2,15 @@
 
 Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaan ~Yakusoku no Chi~".
 
+There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjong Panic! 1/2.
+
 ## Folder contents
 
 - [list of games using the engine](game-list.md)
 - [an archive with all known game executables](executables.7z)
 - [archive unpacking tool](Unpack.py) for `DISK_#.LIB/CAT` files
 - decompression tool for the game's LZSS-packed data: [cleaned up version](Decompress.py), [original disassembly translation](Decompress.py.bak)
+- [scenario format description](SceneFormat.txt)
 - [scenario descrambler](ScenarioDecode.py)
 - [scenario decompiler](ScenarioDecompile.py)
 - [scenario compiler](ScenarioCompile.py)
@@ -16,7 +19,7 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
   When a match is found, the matching part is replaced with an "include" statement and labels are renamed according to the include file.
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
-- `SYS98.COM` disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
+- `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
 - Python tool to convert a four･nine font file (`.FNT`) to an image: [font2img.py](font2img.py) (supports BMP/PNG/... through Pillow library)
 - Gaogao 4 font:
   - an [image conversion of GAO4.FNT](GAO4_FNT.PNG)
@@ -55,6 +58,29 @@ Research on the System-98 engine, using the version used by "Gao Gao! 4th: Canaa
 - The four･nine font file (`.FNT`) stores the 8x8 character parts of the 16x16 font in a *different* order compared to the PC-98 font ROM.
   - PC-98 font ROM 8x8 character order: upper left, lower left, upper right, lower right
   - four･nine font 8x8 character order: upper left, upper right, lower left, lower right
+
+## DIANA engine
+
+- The DIANA engine used by Waku Waku Mahjong Panic! 1 and 2 is probably based on System-98.  
+  Its scenario format uses largely the same command IDs as System-98.  
+  The formats are not compatible though: Byte-sized values are not padded to words anymore, some commands were moved (e.g. string-related commands), others were added.
+- DIANA [scenario format description](Diana_SceneFormat.txt)
+- Waku Waku Mahjong Panic! 1 [decompression tool](wmp1_decompress.py)
+- Waku Waku Mahjong Panic! 2 [scenario descrambler](wmp2_dsd_decode.py)
+- Waku Waku Mahjong Panic! 2 [archive (un-)packer](wmp2_packer.py)
+- `DIANA.EXE` v1 disassembly ([IDB file](DIANA_v1.idb), [ASM file](DIANA_v1.asm))
+- `DIANA.EXE` v2 disassembly ([IDB file](DIANA_v2.idb), [ASM file](DIANA_v2.asm))
+- "Waku Waku Mahjong Panic!" games usually consist of multiple executables.
+  - NAVAL: program loader (also seems to be in control of memory shared between the various sub-applications)
+  - DIANA: adventure engine
+  - SONNET: 2-player mahjong engine
+  - PYTHON: 4-player mahjong engine
+  - MAKEG: "external character file maker"
+  - AE: "Auto Expander" (WMP 1 only), handles decompression of "eLZ0" files
+- Most executables and data files in WMP 1 are compressed. For some reason, WMP 2 did away with any sort of compression in both, executables and data files.
+  The only exception is MAKEG, which was uncompressed in WMP 1 but is LZ91-compressed in WMP 2.
+- Although only Waku Waku Mahjong Panic! 2 uses encrypted scenario files, WMP 1 seems to support scenario encryption as well. (Maybe it is used on uncompressed files only?)
+  Interestingly, WMP 1 does `INC [ofs+0] / DEC [ofs+1]` while WMP 2 does the reverse: `DEC [ofs+0] / INC [ofs+1]`
 
 ## Thanks
 
