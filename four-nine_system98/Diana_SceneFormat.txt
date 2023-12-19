@@ -309,6 +309,7 @@ Commands
 	2 bytes - file offset of file name
 	This loads the scenario to a separate memory area, which is later referenced by command 56.
 	DIANA v1 has this "common scenario data" stored in the executable itself.
+	DIANA v2 loads it with a base offset of 4650h.
 4E - invalid
 	dummied out, will result in the program freezing due to an infinite loop
 4F - play FM sound effect
