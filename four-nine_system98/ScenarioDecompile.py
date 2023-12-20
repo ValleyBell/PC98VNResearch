@@ -8,25 +8,30 @@ import nec_jis_conv
 
 
 # Scene Command Parameter Types
-SCPT_INT = 0x01		# 2-byte integer
-SCPT_BYTE = 0x02	# "byte" (2-byte parameter, high byte ignored)
+SCPT_MASK = 0xF0
+SCPTM_VAL = 0x00	# immediate value
+SCPTM_PTR = 0x10	# pointer
+SCPTM_REG = 0x80	# register
+
+SCPT_BYTE = 0x01	# "byte" (2-byte parameter, high byte ignored)
+SCPT_INT = 0x02		# 2-byte integer
 SCPT_LONG = 0x03	# 4-byte integer
-SCPT_ILVAR = 0x0F	# 2-byte/4-byte integer, based on previous register ID
+SCPT_ILVAR = 0x04	# 2-byte/4-byte integer, based on previous register ID
+SCPT_HEX = 0x08		# integer, output as hexadecimal
+SCPT_INTH = SCPT_INT | SCPT_HEX
+
 SCPT_DATA1 = 0x10	# data pointer (1-byte groups)
 SCPT_DATA2 = 0x11	# data pointer (2-byte groups)
 SCPT_STR = 0x12		# string pointer
 SCPT_FNAME = 0x13	# file path pointer
 SCPT_JUMP = 0x14	# jump destination pointer
 SCPT_TXTSEL = 0x15	# text/menu selection list
+SCPT_FONTDAT = 0x16	# font data
+
 SCPT_REG_INT = 0x80	# register: integer
 SCPT_REG_LNG = 0x81	# register: long
 SCPT_REG_IL = 0x82	# register: integer/long
 SCPT_REG_STR = 0x83	# register: string
-
-SCPT_MASK = 0xF0
-SCPTM_VAL = 0x00	# immediate value
-SCPTM_PTR = 0x10	# pointer
-SCPTM_REG = 0x80	# register
 
 SC_EXEC_END = 0x01	# terminate script execution here
 SC_EXEC_SPC = 0xFF	# special handling
@@ -54,21 +59,21 @@ SCENE_CMD_LIST = {
 	0x11: ("JLE"    , [SCPT_JUMP]),
 	0x12: ("JNE"    , [SCPT_JUMP]),
 	0x13: ("JTBL"   , [SCPT_REG_INT], SC_EXEC_SPC),
-	0x14: ("PCOLSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x14: ("PALCSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
 	0x15: ("PRINT"  , [SCPT_BYTE, SCPT_STR]),
-	0x16: ("CMD16"  , [SCPT_INT, SCPT_INT, SCPT_DATA1]),
+	0x16: ("PRINTXY", [SCPT_INT, SCPT_INT, SCPT_STR]),
 	0x17: (None     , []),
 	0x18: ("MOVI"   , [SCPT_REG_IL, SCPT_ILVAR]),
 	0x19: ("MOVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
 	0x1A: ("BGMPLAY", [SCPT_FNAME]),
 	0x1B: ("BGMFADE", []),
 	0x1C: ("BGMSTOP", []),
-	0x1D: ("BGMODEG", [SCPT_REG_INT]),
+	0x1D: ("BGMMODE", [SCPT_REG_INT]),
 	0x1E: ("CMD1E"  , [SCPT_REG_INT]),
 	0x1F: ("LDSCENE", [SCPT_FNAME], SC_EXEC_END),
 	0x20: ("GV02"   , []),
 	0x21: ("WAIT"   , [SCPT_REG_INT]),
-	0x22: ("GFX22"  , [SCPT_REG_INT]),
+	0x22: ("CHRDLY" , [SCPT_REG_INT]),
 	0x23: (None     , []),
 	0x24: ("ADDI"   , [SCPT_REG_IL, SCPT_ILVAR]),
 	0x25: ("SUBI"   , [SCPT_REG_IL, SCPT_ILVAR]),
@@ -115,8 +120,8 @@ SCENE_CMD_LIST = {
 	0x4E: ("SFXSSG" , [SCPT_BYTE]),
 	0x4F: ("SFXFM"  , [SCPT_BYTE]),
 	0x50: ("BGMSTAT", [SCPT_REG_INT]),
-	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INT]),
-	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INT]),
+	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INTH]),
+	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INTH]),
 	0x53: ("STRCAT" , [SCPT_REG_STR, SCPT_REG_STR]),
 	0x54: ("CALL"   , [SCPT_JUMP]),
 	0x55: ("RET"    , [], SC_EXEC_END),
@@ -151,10 +156,10 @@ SCENE_CMD_LIST = {
 	0x72: ("LOOPSTI", [SCPT_INT]),
 	0x73: ("LOOPGTR", [SCPT_REG_INT]),
 	0x74: ("LOOPJPI", [SCPT_INT, SCPT_JUMP]),
-	0x75: ("FONTCHR", [SCPT_INT, SCPT_DATA1]),
-	0x76: ("CMD76"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x77: ("CMD77"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x78: ("CMD78"  , [SCPT_INT, SCPT_INT]),
+	0x75: ("FONTCHR", [SCPT_INTH, SCPT_FONTDAT]),
+	0x76: ("IDLECHR", [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
+	0x77: ("IDLEDLY", [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x78: ("IDLEXY" , [SCPT_INT, SCPT_INT]),
 	0x79: ("CMD79"  , [SCPT_INT]),
 	0x7A: ("LOOPSTR", [SCPT_REG_INT]),
 	0x7B: ("LOOPJPR", [SCPT_REG_INT, SCPT_JUMP]),
@@ -300,7 +305,7 @@ def guess_data_type(scenedata: bytes, startpos: int, endpos: int) -> int:
 	nullpos = data.find(0)
 	if nullpos > 1:	# need at least 1 character
 		dstr = data[0 : nullpos]
-		if dstr[0] < 10:	# first character of file names
+		if dstr[0] < 0x20:	# first character of file names = archive ID
 			if sum([1 for c in dstr[1:] if not (c >= 0x20 and c <= 0x7E)]) == 0:
 				return SCPT_FNAME
 		if is_sjis_str(dstr):
@@ -325,14 +330,14 @@ def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
 		# parse/skip all parameters
 		first_reg_type = None
 		for par_type in cmd_info[1]:
-			if par_type == SCPT_ILVAR:
+			if (par_type & ~SCPT_HEX) == SCPT_ILVAR:
 				# variable-size parameter
 				if first_reg_type == SCPT_REG_STR:
 					par_type = SCPT_STR
 				elif first_reg_type == SCPT_REG_LNG:
-					par_type = SCPT_LONG
+					par_type = SCPT_LONG | (par_type & SCPT_HEX)
 				else:
-					par_type = SCPT_INT
+					par_type = SCPT_INT | (par_type & SCPT_HEX)
 			
 			if par_type == SCPT_LONG:
 				par_val = struct.unpack_from("<I", scenedata, curpos)[0]
@@ -359,6 +364,35 @@ def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
 					break
 	return True
 
+def get_string_size(scenedata: bytes, startpos: int, endpos: int, dtype: int) -> int:
+	pos = startpos
+	if dtype == SCPT_FNAME:
+		if scenedata[pos] < 0x20:	# archive ID
+			pos += 1
+		while (pos < endpos) and (scenedata[pos] != 0x00):
+			pos += 1
+		pos += 1	# also count terminator character
+	elif dtype == SCPT_STR:
+		while pos < endpos:
+			c = scenedata[pos]
+			pos += 1
+			if c == 0x00:	# end
+				break
+			elif c in [0x01, 0x02, 0x07, 0x09, 0x0A, 0x0B, 0x0C, 0x0D]:
+				pass	# no parameters
+			elif c in [0x03, 0x04, 0x06, 0x08, 0x0E]:
+				pos += 1	# 1 parameter byte
+			elif c == 0x05:
+				pos += 2	# 2 parameter bytes
+			elif c == 0x0F:	# special control code
+				if pos >= endpos:
+					break
+				c = scenedata[pos]
+				pos += 1
+				if c == 0x00:
+					pos += 1
+	return min([pos, endpos]) - startpos
+
 def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, start_ofs: int) -> int:
 	# --- scan all unreferenced data sections and return the position of a potential (unused) code section ---
 	curpos = start_ofs
@@ -380,11 +414,9 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 			if endpos < 0:
 				endpos = len(scenedata)
 			if dtype in [SCPT_STR, SCPT_FNAME]:
-				strend = scenedata.find(0x00, curpos, endpos)
-				#while strend > 0 and (scenedata[strend - 1] >= 0x03 and scenedata[strend - 1] <= 0x0F):
-				#	strend = scenedata.find(0x00, strend + 1, endpos)
-				if strend >= 0:
-					endpos = strend + 1
+				strsize = get_string_size(scenedata, curpos, endpos, dtype)
+				if strsize > 0:
+					endpos = curpos + strsize
 			curpos = endpos
 		else:
 			is_code = test_for_code(scenedata, file_usage, curpos)
@@ -471,15 +503,15 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		params = []
 		first_reg_type = None
 		for par_type in cmd_info[1]:
-			if par_type == SCPT_ILVAR:
+			if (par_type & ~SCPT_HEX) == SCPT_ILVAR:
 				# variable-size parameter
 				# The size (2 or 4 bytes) of the parameter depends on destination register.
 				if first_reg_type == SCPT_REG_STR:
 					par_type = SCPT_STR
 				elif first_reg_type == SCPT_REG_LNG:
-					par_type = SCPT_LONG
+					par_type = SCPT_LONG | (par_type & SCPT_HEX)
 				else:
-					par_type = SCPT_INT
+					par_type = SCPT_INT | (par_type & SCPT_HEX)
 			
 			if par_type == SCPT_LONG:
 				par_data = scene_read_array(scenedata, file_usage, curpos, 0x04)
@@ -577,8 +609,8 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			if curpos not in label_list:
 				# try to detect data type for unused data
 				dtype = guess_data_type(scenedata, curpos, endpos)
-				if dtype >= 0:
-					label_list[curpos] = (dtype, LBLFLG_UNUSED, None)
+				# Note: accept "-1" as dtype to indicate unknown data types that are also labelled
+				label_list[curpos] = (dtype, LBLFLG_UNUSED, None)
 			if curpos in label_list:
 				if label_list[curpos][0] == SCPT_JUMP:
 					#mode = MODE_CMD
@@ -591,14 +623,21 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				elif label_list[curpos][0] == SCPT_TXTSEL:
 					mode = MODE_DATA
 					cmd_mode = -21	# 2-byte data, text selection
+				elif label_list[curpos][0] == SCPT_FONTDAT:
+					mode = MODE_DATA
+					endpos = min([curpos + 0x20, endpos])	# font data is usually 0x20 bytes
 				else:
 					mode = MODE_DATA
 		
 		if mode == MODE_STR:
 			# terminate strings at '\0'
-			strend = scenedata.find(0x00, curpos, endpos)
-			if strend >= 0:
-				endpos = strend + 1
+			if curpos in label_list:
+				dtype = label_list[curpos][0]
+			else:
+				dtype = SCPT_STR
+			strsize = get_string_size(scenedata, curpos, endpos, dtype)
+			if strsize > 0:
+				endpos = curpos + strsize
 			str_arr = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
 			cmd_list += get_sjis_str_items(str_arr, curpos)
 		elif cmd_mode == -21:
@@ -645,6 +684,8 @@ def generate_label_names(label_list: dict) -> None:
 			lbl_prefix = "loc"
 		elif par_type == SCPT_TXTSEL:
 			lbl_prefix = "sel"
+		elif par_type == SCPT_FONTDAT:
+			lbl_prefix = "font"
 		else:
 			lbl_prefix = "unk"
 		lbl_name = f"{lbl_prefix}_{lbl_pos:04X}"
@@ -757,10 +798,12 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 	return res_items
 
 def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
-	# generate "groups" of string items to be places on the same line
+	# generate "groups" of string items to be placed on the same line
 	# splits after 0D (new line) and 01 (wait for key press)
 	chr_mode = None
 	new_chr_mode = None
+	rem_param_bytes = 0
+	meta_ctrl_code = None
 	result = []
 	for (idx, itm) in enumerate(data_items):
 		if itm.startswith('"'):
@@ -769,10 +812,25 @@ def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 			chr_id = int(itm, 0)
 		# ignore first character (disk drive in file names)
 		# but split at 0D/01 -> text
-		if (idx > 0) and (chr_id in [0x01, 0x0D]):
+		if meta_ctrl_code is not None:
+			if meta_ctrl_code == 0x0F:
+				if chr_id == 0x00:
+					rem_param_bytes = 1
+			meta_ctrl_code = None
+		elif rem_param_bytes > 0:
+			rem_param_bytes -= 1
+		elif (idx > 0) and (chr_id in [0x01, 0x0D]):
 			new_chr_mode = 1
 		elif chr_id != 0x00:	# don't split at terminator characters
 			new_chr_mode = 0
+			# handle special character codes
+			if chr_id in [0x03, 0x04, 0x06, 0x08, 0x0E]:
+				rem_param_bytes = 1	# 1 parameter byte
+			elif chr_id == 0x05:
+				rem_param_bytes = 2	# 2 parameter bytes
+			elif chr_id == 0x0F:	# special control code
+				meta_ctrl_code = chr_id
+
 		if new_chr_mode == 0 and chr_mode == 1:
 			result.append(idx)
 		chr_mode = new_chr_mode
@@ -917,6 +975,19 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 							data_str = f"l{par_val}"
 						elif par_type == SCPT_REG_STR:
 							data_str = f"s{par_val}"
+					elif (par_type & SCPT_MASK) == SCPTM_VAL:
+						if (par_type & SCPT_HEX):
+							if (par_type & ~SCPT_HEX) == SCPT_BYTE:
+								digits = 2
+							elif (par_type & ~SCPT_HEX) == SCPT_INT:
+								digits = 4
+							elif (par_type & ~SCPT_HEX) == SCPT_LONG:
+								digits = 8
+							else:
+								digits = 0
+							data_str = f"0x{par_val:0{digits}X}"
+						else:
+							data_str = f"{par_val}"
 					if data_str is None:
 						data_str = f"{par_val}"
 					data_strs.append(data_str)
@@ -981,3 +1052,4 @@ def main(argv):
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))
+# vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab:

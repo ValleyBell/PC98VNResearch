@@ -35,6 +35,10 @@ TKTP_NAME = 0x80	# register or label name
 TKTP_REG = 0x81	# register
 TKTP_LBL = 0x82	# label name
 
+DTYPE_NONE = 0
+DTYPE_STR = 1
+DTYPE_FNAME = 2
+
 UNESCAPE_TBL = {
 	'\\': '\\',	# backslash (5C)
 	"'": "'",	# single quote (27)
@@ -238,10 +242,6 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 	
 	return (cmd_list, label_list)
 
-DTYPE_NONE = 0
-DTYPE_STR = 1
-DTYPE_FNAME = 2
-
 def add_ref_label(refdata: dict, label_name: str, mode: int, cmd_id: int):
 	lname = label_name.casefold()
 	if not lname in refdata:
@@ -295,10 +295,7 @@ def generate_message_table(cmd_list, label_list) -> list:
 	textbox_info = [None] * 0x10
 	for (cid, citem) in enumerate(cmd_list):
 		if cid in cmd_lbl_list:
-			new_label = True
 			print_before_label = None
-		else:
-			new_label = False
 		
 		cmdName = citem.cmdName.upper()
 		if cmdName == "PRINT":
@@ -307,6 +304,12 @@ def generate_message_table(cmd_list, label_list) -> list:
 			add_ref_label(ref_labels, lname, 0x01, cid)	# referenced by "print" -> good
 			if textbox_info[tb_id] is not None:
 				label_tboxes[lname] = textbox_info[tb_id]
+			print_before_label = lname
+		elif cmdName == "PRINTXY":
+			# params[0] = X position
+			# params[1] = Y position
+			lname = citem.params[2].data.casefold()
+			add_ref_label(ref_labels, lname, 0x01, cid)	# referenced by "print" -> good
 			print_before_label = lname
 		elif cmdName == "TBOPEN":
 			tb_id = citem.params[0].data
@@ -372,12 +375,9 @@ def generate_message_table(cmd_list, label_list) -> list:
 	last_dtype = DTYPE_NONE
 	for (cid, citem) in enumerate(cmd_list):
 		if cid in cmd_lbl_list:
-			new_label = True
 			last_label_item = len(relevant_data)
 			last_dtype = DTYPE_NONE
 			lbl_key = cmd_lbl_list[cid]
-		else:
-			new_label = False
 		
 		cmdName = citem.cmdName.upper()
 		if cmdName == "DB":
@@ -407,6 +407,13 @@ def generate_message_table(cmd_list, label_list) -> list:
 			elif relevant_data[-1][0] != last_dtype:
 				relevant_data[-1][0] = last_dtype
 			relevant_data[-1][2].append(cid)
+
+			## enforce a new data item after a string that ends with terminator character 0
+			#if (citem.params[-1].type == TKTP_INT and citem.params[-1].data == 0):
+			#	# This might be useful, but also has a risk of mis-detecting the string terminator.
+			#	# If that happens, data would be missing, so we will rely on a good-labelled ASM file instead.
+			#	last_label_item = len(relevant_data)
+			#	last_dtype = DTYPE_NONE
 		elif cmdName == "DSJ":
 			last_dtype = DTYPE_STR
 			if last_label_item == len(relevant_data):
@@ -463,6 +470,7 @@ def generate_message_table(cmd_list, label_list) -> list:
 			had_end = False
 			if cmdName == "DB":
 				last_chr = None
+				meta_ctrl_code = False
 				for pitem in citem.params:
 					if pitem.type == TKTP_INT or pitem.type == TKTP_STR:
 						if pitem.type == TKTP_INT:
@@ -485,16 +493,26 @@ def generate_message_table(cmd_list, label_list) -> list:
 								continue
 
 							last_chr = cint
-							if cint == 0x0D:
+							if meta_ctrl_code:
+								text += "\\x{:02X}".format(cint)
+								if cint == 0x00:
+									rem_param_bytes = 1
+							elif cint == 0x0D:
 								text += "\\r"
 							elif cint == 0x01:
 								text += "\\w"
 							elif cint == 0x03:
 								text += "\\c"
 								rem_param_bytes = 1
-							elif cint == 0x04:
+							elif cint in [0x04, 0x06, 0x08, 0x0E]:
 								text += c
 								rem_param_bytes = 1
+							elif cint == 0x05:
+								text += c
+								rem_param_bytes = 2	# has 2 parameter bytes
+							elif cint in [0x04, 0x06, 0x08, 0x0E]:
+								text += c
+								meta_ctrl_code = True
 							else:
 								text += c
 					else:
@@ -514,7 +532,9 @@ def generate_message_table(cmd_list, label_list) -> list:
 						return None
 					text += f"\\j{pitem.data:04X}"
 			if do_flush:
-				if not had_end:
+				if had_end:
+					pass
+				else:
 					text += "\\"
 				msg_table += [(line_list, lastLbl, ref_line, msgtype, tbinfo, text)]
 				line_list = []
@@ -583,7 +603,7 @@ def main(argv):
 	global config
 	global necjis
 	
-	print("four-nine/Izuho Saruta System-98 Scenario to CSV")
+	print("four-nine/Izuho Saruta System-98 Scenario 2 CSV")
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-o", "--out_file", required=True, help="string table (.CSV)")
 	aparse.add_argument("in_files", nargs="+", help="input assembly files (.ASM)")

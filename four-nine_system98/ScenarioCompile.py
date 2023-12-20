@@ -31,24 +31,30 @@ class LabelItem:
 
 
 # Scene Command Parameter Types
-SCPT_INT = 0x01		# 2-byte integer
-SCPT_BYTE = 0x02	# "byte" (2-byte parameter, high byte ignored)
+SCPT_MASK = 0xF0
+SCPTM_VAL = 0x00	# immediate value
+SCPTM_PTR = 0x10	# pointer
+SCPTM_REG = 0x80	# register
+
+SCPT_BYTE = 0x01	# "byte" (2-byte parameter, high byte ignored)
+SCPT_INT = 0x02		# 2-byte integer
 SCPT_LONG = 0x03	# 4-byte integer
-SCPT_ILVAR = 0x0F	# 2-byte/4-byte integer, based on previous register ID
+SCPT_ILVAR = 0x04	# 2-byte/4-byte integer, based on previous register ID
+SCPT_HEX = 0x08		# integer, output as hexadecimal
+SCPT_INTH = SCPT_INT | SCPT_HEX
+
 SCPT_DATA1 = 0x10	# data pointer (1-byte groups)
 SCPT_DATA2 = 0x11	# data pointer (2-byte groups)
 SCPT_STR = 0x12		# string pointer
 SCPT_FNAME = 0x13	# file path pointer
 SCPT_JUMP = 0x14	# jump destination pointer
+SCPT_TXTSEL = 0x15	# text/menu selection list
+SCPT_FONTDAT = 0x16	# font data
+
 SCPT_REG_INT = 0x80	# register: integer
 SCPT_REG_LNG = 0x81	# register: long
 SCPT_REG_IL = 0x82	# register: integer/long
 SCPT_REG_STR = 0x83	# register: string
-
-SCPT_MASK = 0xF0
-SCPTM_VAL = 0x00	# immediate value
-SCPTM_PTR = 0x10	# pointer
-SCPTM_REG = 0x80	# register
 
 SC_EXEC_END = 0x01	# terminate script execution here
 SC_EXEC_SPC = 0xFF	# special handling
@@ -77,21 +83,21 @@ SCENE_CMD_LIST = {
 	0x11: ("JLE"    , [SCPT_JUMP]),
 	0x12: ("JNE"    , [SCPT_JUMP]),
 	0x13: ("JTBL"   , [SCPT_REG_INT], SC_EXEC_SPC),
-	0x14: ("PCOLSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x14: ("PALCSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
 	0x15: ("PRINT"  , [SCPT_BYTE, SCPT_STR]),
-	0x16: ("CMD16"  , [SCPT_INT, SCPT_INT, SCPT_DATA1]),
+	0x16: ("PRINTXY", [SCPT_INT, SCPT_INT, SCPT_STR]),
 	0x17: (None     , []),
 	0x18: ("MOVI"   , [SCPT_REG_IL, SCPT_ILVAR]),
 	0x19: ("MOVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
 	0x1A: ("BGMPLAY", [SCPT_FNAME]),
 	0x1B: ("BGMFADE", []),
 	0x1C: ("BGMSTOP", []),
-	0x1D: ("BGMODEG", [SCPT_REG_INT]),
+	0x1D: ("BGMMODE", [SCPT_REG_INT]),
 	0x1E: ("CMD1E"  , [SCPT_REG_INT]),
 	0x1F: ("LDSCENE", [SCPT_FNAME], SC_EXEC_END),
 	0x20: ("GV02"   , []),
 	0x21: ("WAIT"   , [SCPT_REG_INT]),
-	0x22: ("GFX22"  , [SCPT_REG_INT]),
+	0x22: ("CHRDLY" , [SCPT_REG_INT]),
 	0x23: (None     , []),
 	0x24: ("ADDI"   , [SCPT_REG_IL, SCPT_ILVAR]),
 	0x25: ("SUBI"   , [SCPT_REG_IL, SCPT_ILVAR]),
@@ -121,7 +127,7 @@ SCENE_CMD_LIST = {
 	0x3D: ("MULR"   , [SCPT_REG_IL, SCPT_REG_IL]),
 	0x3E: ("DIVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
 	0x3F: ("CMD3F"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_DATA2, SCPT_JUMP], SC_EXEC_SPC),
+	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_TXTSEL, SCPT_JUMP], SC_EXEC_SPC),
 	0x41: ("CMD41"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
 	0x42: ("CMD42"  , [SCPT_BYTE]),
 	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
@@ -138,8 +144,8 @@ SCENE_CMD_LIST = {
 	0x4E: ("SFXSSG" , [SCPT_BYTE]),
 	0x4F: ("SFXFM"  , [SCPT_BYTE]),
 	0x50: ("BGMSTAT", [SCPT_REG_INT]),
-	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INT]),
-	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INT]),
+	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INTH]),
+	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INTH]),
 	0x53: ("STRCAT" , [SCPT_REG_STR, SCPT_REG_STR]),
 	0x54: ("CALL"   , [SCPT_JUMP]),
 	0x55: ("RET"    , [], SC_EXEC_END),
@@ -174,10 +180,10 @@ SCENE_CMD_LIST = {
 	0x72: ("LOOPSTI", [SCPT_INT]),
 	0x73: ("LOOPGTR", [SCPT_REG_INT]),
 	0x74: ("LOOPJPI", [SCPT_INT, SCPT_JUMP]),
-	0x75: ("FONTCHR", [SCPT_INT, SCPT_DATA1]),
-	0x76: ("CMD76"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x77: ("CMD77"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x78: ("CMD78"  , [SCPT_INT, SCPT_INT]),
+	0x75: ("FONTCHR", [SCPT_INTH, SCPT_FONTDAT]),
+	0x76: ("IDLECHR", [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
+	0x77: ("IDLEDLY", [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x78: ("IDLEXY" , [SCPT_INT, SCPT_INT]),
 	0x79: ("CMD79"  , [SCPT_INT]),
 	0x7A: ("LOOPSTR", [SCPT_REG_INT]),
 	0x7B: ("LOOPJPR", [SCPT_REG_INT, SCPT_JUMP]),
@@ -546,6 +552,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 				cptype = cmd_params[par_id]
 				cptmask = cptype & SCPT_MASK
 				if cptmask == SCPTM_VAL:
+					cptmask &= ~SCPT_HEX
 					if pitem.type != TKTP_INT:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 						return None
@@ -815,3 +822,4 @@ def main(argv):
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))
+# vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab:

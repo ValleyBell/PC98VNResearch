@@ -86,13 +86,13 @@ Commands
 	2 bytes - register ID: green component (00h..0Fh)
 	2 bytes - register ID: blue component (00h..0Fh)
 	-> 08h bytes total
-15 - show text
+15 - show text in text box
 	2 bytes - [HB-pad] text box ID
 	2 bytes - file offset of text to be printed
-16 - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - [some file offset]
+16 - show text at screen position
+	2 bytes - X position
+	2 bytes - Y position
+	2 bytes - file offset of text to be printed
 17 - undefined
 18 - set register = value
 	2 bytes - register ID
@@ -122,9 +122,9 @@ Commands
 	writes a pattern of "00 02" to 64 KB from offset 0A8000 on (GVRAM Plane 0)
 21 - delay script execution by N frames
 	2 bytes - register ID that contains number of frames to wait
-22 - ?? (related to GFX effects)
+22 - set character print delay
 	2 bytes - register ID
-	Reads a value from the specified register and stores it in word_1D17C.
+	Setting the character print delay causes the game to wait for N frames between drawing each character.
 23 - undefined
 24 - add value to register
 	2 bytes - register ID
@@ -439,13 +439,16 @@ Commands
 		port 0A1h = [1st byte]
 		port A3h = [2nd byte]-20h
 	2 bytes - file offset of character data (data is 20h bytes long)
-76 - ??
-	10h bytes - 8 words (2 bytes each) written to word_1D1B0/B4/B8/...
-77 - ??
-	10h bytes - 8 words (2 bytes each) written to word_1D1B2/B6/BA/...
-78 - ??
-	2 bytes - ?? -> word_1D1AA
-	2 bytes - ?? -> word_1D1AC
+76 - set "idle animation" character IDs
+	10h bytes - 8 words (2 bytes each)
+	The game cycles through up to 8 characters (and then loops back) when asking the user to press a key to continue.
+77 - set "idle animation" delay times
+	10h bytes - 8 words (2 bytes each)
+	This specifies the number of frames each character set by command 76 is shown.
+	A delay value of 0 marks an early animation end and will cause the game to loop back to frame 0.
+78 - set "idle animation" X/Y position
+	2 bytes - X position
+	2 bytes - Y position
 79 - ?? (copies some script data around)
 	2 bytes - ??
 7A - set script loop counter from register
@@ -462,11 +465,11 @@ Commands
 80 - load strings from file
 	2 bytes - string ID
 	2 bytes - file offset of file name
-	Opens the file and reads two (!) lines (separated by 0D0A/CRLF) into [string ID+0] and [string ID+1].
+	Opens the file and reads two (!) lines (separated by 0Dh 0Ah (CRLF)) into [string ID+0] and [string ID+1].
 81 - write strings to file
 	2 bytes - string ID
 	2 bytes - file offset of file name
-	Opens the file and writes the two (!) strings [string ID+0] and [string ID+1] as two lines, separated by 0D0A/CRLF. Also adds an 1Ah (EOF) character.
+	Opens the file and writes the two (!) strings [string ID+0] and [string ID+1] as two lines, separated by 0Dh 0Ah (CRLF). Also adds an 1Ah (EOF) character.
 82 - ?? (writes to GVRAM Plane 0/1/2/3)
 	no parameters
 83 - ?? (GFX related)
@@ -524,11 +527,25 @@ File names
 Text box strings
 ----------------
 - Strings use Shift-JIS encoding. They may include non-standard NEC-specific JIS characters, as well as custom ones from GAO4.FNT.
+- Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
 - Special characters:
-  - 01h - wait for key press
-  - 03h xx - set text colour to xx
-  - 04h xx - insert text from string register xx
+  - 00h - end string
+  - 01h - wait for key press (shows idle animation)
+  - 02h - ??
+  - 03h cc - set text colour to cc
+  - 04h ii - print register string ii (00/01 = character names)
+  - 05h aa bb - print integer register bbaa (printed as decimal numbers, full-width Shift-JIS 854F..8558)
+  - 06h xx - ?? (xx can be 00..3F)
+  - 07h - some GFX effect
+  - 08h xx - ?? (sets byte_1E5C6)
+  - 09h - tab (print 8 spaces)
+  - 0Ah - no effect
+  - 0Bh - ?? (xx can be 00..3F)
+  - 0Ch - ?? (xx can be 00..3F)
   - 0Dh - next line
+  - 0Eh xx - no effect (parameter is ignored)
+  - 0Fh cc - special code
+  - 0Fh 00h xx - sets some flag (value can be 00 or 01)
 
 Menu Data
 ---------

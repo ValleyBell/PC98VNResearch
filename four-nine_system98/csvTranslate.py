@@ -9,7 +9,6 @@ import html
 import time
 
 DEBUG_OUTPUT_PATH = None
-DEBUG_OUTPUT_PATH = "/tmp/csvtrans_"
 
 def load_csv(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
@@ -233,7 +232,7 @@ def process_data(csv_data: list) -> list:
 				f.write(str(tdat) + "\n")
 	
 	# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
-	SENTENCE_END_CHRS = ".?!\"。？！❢‼」"
+	SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼❢。？！〉》」』"
 	for tdat in textitem_list:
 		text = tdat["text"]
 		pos = text.find("\\r")
@@ -439,6 +438,12 @@ def translate_items(texts: list) -> list:
 	return [txt for grp in text_groups for txt in grp]
 
 def translate_text(text: str) -> str:
+	text = text.translate(str.maketrans({
+		'「': '“',
+		'」': '”'
+		'『': '‘',
+		'』': '’'
+	}))
 	#return unicodedata.normalize("NFKC", text)
 	
 	req = requests.get("https://translate.google.com/m",

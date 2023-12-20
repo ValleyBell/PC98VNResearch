@@ -177,13 +177,13 @@ cloc_0BBC:	; entry point
 
 cloc_0BC6:	; entry point
 	MOVI	i0, 0
-	PCOLSET	i0, i578, i577, i576
+	PALCSET	i0, i578, i577, i576
 	MOVI	i0, 2
-	PCOLSET	i0, i581, i580, i579
+	PALCSET	i0, i581, i580, i579
 	MOVI	i0, 3
-	PCOLSET	i0, i584, i583, i582
+	PALCSET	i0, i584, i583, i582
 	MOVI	i0, 7
-	PCOLSET	i0, i599, i598, i597
+	PALCSET	i0, i599, i598, i597
 	RET
 
 cloc_0C08:
