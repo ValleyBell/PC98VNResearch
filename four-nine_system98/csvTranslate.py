@@ -9,6 +9,7 @@ import html
 import time
 
 DEBUG_OUTPUT_PATH = None
+#DEBUG_OUTPUT_PATH = "/tmp/csvtrans_"
 
 def load_csv(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
@@ -88,25 +89,25 @@ def get_last_tbox_size(csv_data: list, line: int) -> str:
 def textitems2csv(textitem_list: list, csv_data: list) -> list:
 	# reinsert text items into the CSV column list again
 	csv_new = csv_data.copy()
-	for tdat in textitem_list:
+	for txitm in textitem_list:
 		# count effective text lines
 		line_count = 0
-		for csv_lid in range(tdat["line_st"], tdat["line_end"] + 1):
+		for csv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
 			if type(csv_new[csv_lid]) is str:
 				continue	# don't count comment lines
 			line_count += 1
 		
-		tbox_size = get_last_tbox_size(csv_data, tdat["line_st"])
+		tbox_size = get_last_tbox_size(csv_data, txitm["line_st"])
 		(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
 		#tb_width += 2	# somehow my calculations were off by 1
 		
 		can_add_linebreaks = False
-		if tdat["mode"] == "txt":
+		if txitm["mode"] == "txt":
 			if tb_height > 1:
 				can_add_linebreaks = True
 		
 		# split text data into multiple lines for the CSV
-		text = tdat["text"]
+		text = txitm["text"]
 		pos = 0
 		xpos = 0
 		lines = [""]
@@ -180,9 +181,9 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 		if lines[-1] == "":
 			lines.pop(-1)
 		if len(lines) != line_count:
-			print(f"CSV line {1+tdat['line_st']}: New text has {len(lines)} line(s) when original one had {line_count}! (text box: {tbox_size})")
+			print(f"CSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) when original one had {line_count}! (text box: {tbox_size})")
 			old_txt = []
-			for csv_lid in range(tdat["line_st"], tdat["line_end"] + 1):
+			for csv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
 				if type(csv_data[csv_lid]) is str:
 					continue	# ignore comment lines
 				old_txt.append(csv_data[csv_lid][5])
@@ -200,9 +201,9 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 			lines.pop(-1)
 		
 		# now insert the lines into the CSV
-		line_count = tdat["line_end"] + 1 - tdat["line_st"]
+		line_count = txitm["line_end"] + 1 - txitm["line_st"]
 		txt_lid = 0
-		for csv_lid in range(tdat["line_st"], tdat["line_end"] + 1):
+		for csv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
 			if type(csv_new[csv_lid]) is str:
 				continue	# ignore comment lines
 			csv_new[csv_lid][5] = lines[txt_lid]
@@ -228,13 +229,13 @@ def process_data(csv_data: list) -> list:
 	textitem_list = csv2textitems(csv_data)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "01_textitems_org.log", "wt") as f:
-			for tdat in textitem_list:
-				f.write(str(tdat) + "\n")
+			for txitm in textitem_list:
+				f.write(str(txitm) + "\n")
 	
 	# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
 	SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼❢。？！〉》」』"
-	for tdat in textitem_list:
-		text = tdat["text"]
+	for txitm in textitem_list:
+		text = txitm["text"]
 		pos = text.find("\\r")
 		while pos >= 0:
 			next_pos = pos + 2
@@ -247,61 +248,66 @@ def process_data(csv_data: list) -> list:
 				pass	# keep when being followed by a space
 			elif (pos > 1) and (text[pos - 1] in SENTENCE_END_CHRS):
 				pass	# keep when the last character is a "sentence/paragraph end" character
-			elif tdat["mode"] == "txt":
+			elif txitm["mode"] == "txt":
 				# fuse lines
 				text = text[:pos] + text[next_pos:]
 				pos -= 1
-			elif tdat["mode"] == "sel":
+			elif txitm["mode"] == "sel":
 				pass	# keep
 			pos = text.find("\\r", pos+1)
-		tdat["text"] = text
+		txitm["text"] = text
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "02_textitems_clean.log", "wt") as f:
-			for tdat in textitem_list:
-				f.write(str(tdat) + "\n")
+			for txitm in textitem_list:
+				f.write(str(txitm) + "\n")
 	
 	# Extract "unique" lines and set references in the original list.
 	trans_data = []
 	unique_texts = []
-	for (tid, tdat) in enumerate(textitem_list):
-		for tline in tdat["text"].split('\n'):
-			titem = text2translitem(tline)
+	for (tid, txitm) in enumerate(textitem_list):
+		for tline in txitm["text"].split('\n'):
+			trdat = text2transdata(tline)
 			# Store text strings in a separate "unique texts" table.
 			# This allows us to remove duplicate instances of text lines.
 			try:
-				ut_idx = unique_texts.index(titem["data"])
+				if len(trdat["data"]) == 0:
+					ut_idx = -1	# special value for empty strings
+				else:
+					ut_idx = unique_texts.index(trdat["data"])
 			except ValueError:
 				ut_idx = len(unique_texts)
-				unique_texts.append(titem["data"])
-			titem.pop("data")
-			titem["tidx"] = ut_idx	# and save only a text reference
-			trans_data.append({"text_item": tid, **titem})
+				unique_texts.append(trdat["data"])
+			trdat.pop("data")
+			trdat["tidx"] = ut_idx	# and save only a text reference
+			trans_data.append({"text_item": tid, **trdat})
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "03_translate_texts.log", "wt") as f:
-			for tdat in trans_data:
-				f.write(str({**tdat, "text": unique_texts[tdat["tidx"]]}) + "\n")
+			for trdat in trans_data:
+				text = unique_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
+				f.write(str({**trdat, "text": text}) + "\n")
 	
 	# Translate the unique text strings.
 	translated_texts = translate_items(unique_texts)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "04_translated_texts.log", "wt") as f:
-			for tdat in trans_data:
-				f.write(str({**tdat, "text": translated_texts[tdat["tidx"]]}) + "\n")
+			for trdat in trans_data:
+				text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
+				f.write(str({**trdat, "text": text}) + "\n")
 	
 	# Reconstruct "textitem_list" using translated strings.
 	textitem_newlist = textitem_list.copy()
-	for tdat in textitem_newlist:
-		tdat["text"] = []
-	for titem in trans_data:
-		tdat = textitem_newlist[titem["text_item"]]
-		text = translitem2txt({**titem, "data": translated_texts[titem["tidx"]]})
-		tdat["text"].append(text)
-	for tdat in textitem_newlist:
-		tdat["text"] = '\n'.join(tdat["text"])
+	for txitm in textitem_newlist:
+		txitm["text"] = []
+	for trdat in trans_data:
+		txitm = textitem_newlist[trdat["text_item"]]
+		text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
+		txitm["text"].append(transdata2txt({**trdat, "data": text}))
+	for txitm in textitem_newlist:
+		txitm["text"] = '\n'.join(txitm["text"])
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "05_textitems_translated.log", "wt") as f:
-			for tdat in textitem_newlist:
-				f.write(str(tdat) + "\n")
+			for txitm in textitem_newlist:
+				f.write(str(txitm) + "\n")
 	
 	# Finally, reconstruct the CSV file.
 	csv_newdata = textitems2csv(textitem_newlist, csv_data)
@@ -311,7 +317,7 @@ def process_data(csv_data: list) -> list:
 				f.write(str(cols).rstrip() + "\n")
 	return csv_newdata
 
-def text2translitem(text: str) -> dict:
+def text2transdata(text: str) -> dict:
 	MODE_CTRL = 1
 	MODE_TEXT = 0
 	txt_begin = ""
@@ -392,7 +398,7 @@ def text2translitem(text: str) -> dict:
 		"keys": keys,
 	}
 
-def translitem2txt(tdata: dict) -> str:
+def transdata2txt(tdata: dict) -> str:
 	tnew = tdata["data"]
 	for (key, val) in tdata["keys"].items():
 		tnew = tnew.replace(key, val)
@@ -416,33 +422,48 @@ def translate_items(texts: list) -> list:
 	for (gid, grp) in enumerate(text_groups):
 		if True:
 			# translate the whole text group as one block
+			grptxt_count = len(grp)
 			grptext = TEXT_SEP.join(grp)
-			print(f"Translating lines {1+line_base}..{line_base+len(grp)} / {len(texts)} "
+			
+			print(f"Translating lines {1+line_base}..{line_base+grptxt_count} / {len(texts)} "
 				f"({len(grptext)} characters) ...", end="", flush=True)
 			t_start = time.time()
 			grp_translated = translate_text(grptext)
-			text_groups[gid] = grp_translated.split(TEXT_SEP)
-			line_base += len(grp)
 			t_end = time.time()
 			print(f"   {t_end - t_start:.2f} s", flush=True)
+			
+			if grp_translated is None:
+				print("Failed to call web service")
+			else:
+				grptrans = grp_translated.split(TEXT_SEP) if grp_translated is not None else []
+				if len(grptrans) == grptxt_count:
+					text_groups[gid] = grptrans
+				else:
+					print("Warning: Translation returned {len(text_groups[gid])} lines when only {grptxt_count} were expected - ignoring results.")
+			line_base += grptxt_count
 		else:
 			# translate each line separately
 			for (tid, txt) in enumerate(grp):
 				print(f"Translating line {1+line_base} / {len(texts)} ({len(txt)} characters) ...", end="", flush=True)
 				t_start = time.time()
-				grp[tid] = translate_text(txt)
-				line_base += 1
+				trans_text = translate_text(txt)
 				t_end = time.time()
 				print(f"   {t_end - t_start:.2f} s", flush=True)
+				
+				if trans_text is None:
+					print("Failed to call web service")
+				else:
+					grp[tid] = trans_text
+				line_base += 1
 	
 	return [txt for grp in text_groups for txt in grp]
 
 def translate_text(text: str) -> str:
 	text = text.translate(str.maketrans({
 		'「': '“',
-		'」': '”'
+		'」': '”',
 		'『': '‘',
-		'』': '’'
+		'』': '’',
 	}))
 	#return unicodedata.normalize("NFKC", text)
 	
