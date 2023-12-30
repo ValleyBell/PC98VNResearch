@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import sys
 import os
 import typing
@@ -92,6 +92,34 @@ def get_last_tbox_size(tsv_data: list, line: int) -> str:
 		line -= 1
 	return "999x999"
 
+def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, lines, text_size):
+	global config
+	
+	(tb_width, tb_height) = tb_size_int
+	if config.textsize_check == 1:
+		(xpos, ypos) = text_size
+		if xpos <= tb_width and ypos <= tb_height:
+			return
+		print(f"TSV line {1+txitm['line_st']}: New text ({xpos}x{ypos}) " \
+				f"exceeds text box! (text box: {tb_size_str})")
+	elif config.textsize_check == 2:
+		if len(lines) == line_count:
+			return
+		print(f"TSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) " \
+				f"when original one had {line_count}! (text box: {tb_size_str})")
+	else:
+		return
+	
+	# show line data
+	old_txt = []
+	for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
+		if type(tsv_data[tsv_lid]) is str:
+			continue	# ignore comment lines
+		old_txt.append(tsv_data[tsv_lid][5])
+	print("\told: " + str(old_txt))
+	print("\tnew: " + str(lines))
+	return
+
 def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 	# reinsert text items into the TSV column list again
 	tsv_new = tsv_data.copy()
@@ -116,13 +144,14 @@ def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 		
 		# split text data into multiple lines for the TSV
 		text = txitm["text"]
-		max_xpos = 0
 		pos = 0
 		xpos = 0
+		max_xpos = xpos
+		tbox_ybase = 0
 		lines = [""]
 		# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
-		last_word_lpos = 0	# character position (in *line*) of the beginning of the last "word"
-		last_word_xpos = 0	# text X position of the beginning of the last "word"
+		last_word_lpos = pos	# character position (in *line*) of the beginning of the last "word"
+		last_word_xpos = xpos	# text X position of the beginning of the last "word"
 		while pos < len(text):
 			chrlen = 1
 			chrwidth = 0
@@ -155,8 +184,18 @@ def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 				elif ctrl_chr == 'c':	# set colour
 					xpos -= 1	# This and the following byte don't affect the cursor.
 					# I can't modify chrlen here, because the following byte is a separate "token" of variable length.
-				elif ctrl_chr == 'w':	# wait
-					pass	# This byte doesn't affect the cursor.
+				elif ctrl_chr == 'w':	# wait + clear textbox
+					lines[-1] += text[pos : pos+chrlen]
+					pos += chrlen
+					do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
+					
+					# reset all coordinate data
+					tbox_ybase = len(lines)
+					xpos = 0
+					max_xpos = xpos
+					last_word_lpos = pos
+					last_word_xpos = xpos
+					continue
 			elif ord(text[pos]) >= 0x20:
 				chrwidth = get_cjk_char_width(text[pos])
 				if text[pos].isspace():
@@ -175,8 +214,6 @@ def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 					lines[-1] += "\\r\\"
 					lines.append("")	# start new line
 					xpos = 0
-					last_word_lpos = 0
-					last_word_xpos = 0
 				else:
 					# insert a line break at the beginning of the last word (and strip spaces)
 					#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - last_word_xpos}")
@@ -185,39 +222,15 @@ def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 					lines[-1] = lines[-1][:last_word_lpos] + "\\r\\"
 					lines.append(rem_line)
 					xpos -= last_word_xpos
-					last_word_lpos = 0
-					last_word_xpos = 0
+				last_word_lpos = 0
+				last_word_xpos = 0
 			
 			lines[-1] += text[pos : pos+chrlen]
 			if not text[pos : pos+chrlen].isspace():
 				max_xpos = max([xpos, max_xpos])
 			xpos += chrwidth
 			pos += chrlen
-		if lines[-1] == "":
-			lines.pop(-1)
-
-		if config.textsize_check == 1:
-			if max_xpos > tb_width or len(lines) > tb_height:
-				print(f"TSV line {1+txitm['line_st']}: New text ({max_xpos}x{len(lines)}) " \
-						f"exceeds text box! (text box: {tbox_size})")
-				old_txt = []
-				for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-					if type(tsv_data[tsv_lid]) is str:
-						continue	# ignore comment lines
-					old_txt.append(tsv_data[tsv_lid][5])
-				print("\told: " + str(old_txt))
-				print("\tnew: " + str(lines))
-		elif config.textsize_check == 2:
-			if len(lines) != line_count:
-				print(f"TSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) " \
-						f"when original one had {line_count}! (text box: {tbox_size})")
-				old_txt = []
-				for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-					if type(tsv_data[tsv_lid]) is str:
-						continue	# ignore comment lines
-					old_txt.append(tsv_data[tsv_lid][5])
-				print("\told: " + str(old_txt))
-				print("\tnew: " + str(lines))
+		do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
 		
 		# make sure that we can replace the lines exactly
 		while len(lines) < line_count:
@@ -333,6 +346,8 @@ def process_data(tsv_data: list) -> list:
 	for trdat in trans_data:
 		txitm = textitem_newlist[trdat["text_item"]]
 		text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
+		if not config.raw and txitm["mode"] == "sel":
+			text = text.title()
 		txitm["text"].append(transdata2txt({**trdat, "data": text}))
 	for txitm in textitem_newlist:
 		txitm["text"] = '\n'.join(txitm["text"])
@@ -490,7 +505,7 @@ def translate_items(texts: list) -> list:
 	
 	return [txt for grp in text_groups for txt in grp]
 
-translate_req_id = 0	# for debugging
+translate_req_id = 0
 def translate_text(text: str) -> str:
 	global config
 	global translate_req_id
@@ -505,6 +520,10 @@ def translate_text(text: str) -> str:
 		}))
 	#return unicodedata.normalize("NFKC", text)
 	
+	if (translate_req_id % 10) == 0 and translate_req_id > 0:
+		print("Waiting a bit ...")
+		time.sleep(60)
+
 	req = requests.get("https://translate.google.com/m",
 		params = {
 			"sl": LANGUAGE_SRC, # source language
@@ -541,6 +560,12 @@ def translate_text(text: str) -> str:
 	trans_text = html.unescape(html_data[start_pos : end_pos])
 	#print(f"Source text: {text}")
 	#print(f"Translated text: {trans_text}")
+
+	# do some cleanups
+	trans_text = trans_text.replace("``", "“")
+	trans_text = trans_text.replace("''", "”")
+	trans_text = trans_text.replace("\u200B", "")
+	trans_text = trans_text.replace("·", ".")
 	return trans_text
 
 def translate_tsv(fn_in: str, fn_out: str) -> int:

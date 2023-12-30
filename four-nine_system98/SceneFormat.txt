@@ -112,8 +112,8 @@ Commands
 	no parameters
 1D - get music mode
 	2 bytes - register ID where the music mode will be stored in
-1E - ??
-	2 bytes - register ID (some value is written to it)
+1E - wait for key press
+	2 bytes - register ID where the key code of the pressed key is written to
 1F - load new scene file
 	2 bytes - file offset of file name
 	Note: This terminates execution of the current scene.
@@ -308,7 +308,7 @@ Commands
 53 - concatenate source to the destination string
 	2 bytes - destination string ID
 	2 bytes - source string ID
-	Appends the source string to the destination register. The terminator byte is included.
+	Appends the source string (from register) to the destination register. The terminator byte is included.
 54 - subroutine call
 	2 bytes - file offset of the subroutine to execute
 	The file offset of the next command is pushed to an internal stack for use with the return command.
@@ -329,10 +329,10 @@ Commands
 	2 bytes - source string ID
 	2 bytes - index of character to be copied
 	Note: A terminator-byte (00) is appended.
-59 - set string to value
+59 - concatenate scenario string to the destination string
 	2 bytes - destination string ID
 	2 bytes - file offset of source string data
-	Copies a string from the scene file, including the terminator byte.
+	Appends a string from the scene file to the destination register, including the terminator byte.
 5A - clear string
 	2 bytes - destination string ID
 	Clears the string by setting the register's buffer (80 bytes) to all 00s.
@@ -530,8 +530,8 @@ Text box strings
 - Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
 - Special characters:
   - 00h - end string
-  - 01h - wait for key press (shows idle animation)
-  - 02h - ??
+  - 01h - wait for key press (shows idle animation), then clear text box
+  - 02h - wait for key press (shows idle animation), then continue in the current text box
   - 03h cc - set text colour to cc
   - 04h ii - print register string ii (00/01 = character names)
   - 05h aa bb - print integer register bbaa (printed as decimal numbers, full-width Shift-JIS 854F..8558)
