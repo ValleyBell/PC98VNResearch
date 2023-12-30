@@ -552,7 +552,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 				cptype = cmd_params[par_id]
 				cptmask = cptype & SCPT_MASK
 				if cptmask == SCPTM_VAL:
-					cptmask &= ~SCPT_HEX
+					cptype &= ~SCPT_HEX
 					if pitem.type != TKTP_INT:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 						return None
@@ -565,6 +565,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 					elif cptype == SCPT_LONG:
 						val_fmt = "I"
 					else:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Internal parameter conversion error!")
 						return None
 					if pitem.data < 0:
 						val_fmt = val_fmt.lower()	# write signed value

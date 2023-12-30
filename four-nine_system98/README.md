@@ -17,6 +17,10 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - [scenario include insertion tool](ScenarioIncludeInsert.py) - helper tool for factoring out common code between scenario files.  
   It takes two (decompiled) scenario files and tries to match find a match between the "include" and "source" file.
   When a match is found, the matching part is replaced with an "include" statement and labels are renamed according to the include file.
+- [scenario text dumping tool](ScenarioTsvDump.py) - takes multiple decompiled scenarios (`ASM` file), extracts all text and dumps it into a tab-separated (TSV) text table file  
+  The output is sorted by the order the scenario script references the text strings. (This seems to represent in-game order more accurately then the order of the strings, especially in the prologue.)
+- [scenario text reinsertion tool](ScenarioTsvReinsert.py) - takes a TSV text table file and reinserts the text into existing ASM files
+- [text table translation tool](tsvTranslate.py) - takes a TSV text table file and translates all text using Google Translate
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
 - `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
@@ -39,6 +43,10 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - NEC PC-9801 JIS ↔ Unicode mapping:
   - [Python Pickle file](NEC-C-6226-lut.pkl), generated from HarJIT's `NEC-C-6226-visual3.txt` (see [z\_misc folder](z_misc/README.md))
   - Shift JIS/JIS ↔ Unicode [Python converter module](nec_jis_conv.py) (used by the scenario decompiler)
+- The [ExampleFiles](ExampleFiles) folder contains various files related to scenario script (de-)compilation, extraction and translation
+  - `.asm` files contain code that is shared between many scenario files in Gaogao 4th Canaan
+  - `.sh` scripts are quick ways to performs common tasks like (de-)compilation, extraction/reinsertion and text translation
+  - [ExampleFiles/scripts.md](ExampleFiles/scripts.md) contains a short description of the general workflow
 
 ## Notes
 
@@ -74,7 +82,7 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
   - NAVAL: program loader (also seems to be in control of memory shared between the various sub-applications)
   - DIANA: adventure engine
   - SONNET: 2-player mahjong engine
-  - PYTHON: 4-player mahjong engine
+  - TYPHON: 4-player mahjong engine
   - MAKEG: "external character file maker"
   - AE: "Auto Expander" (WMP 1 only), handles decompression of "eLZ0" files
 - Most executables and data files in WMP 1 are compressed. For some reason, WMP 2 did away with any sort of compression in both, executables and data files.

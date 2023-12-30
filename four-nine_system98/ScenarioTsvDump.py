@@ -160,30 +160,6 @@ def get_token(line: str, startpos: int, space_split: bool = False) -> typing.Tup
 	else:
 		return None
 
-def get_nametoken_type(token: str, label_list: list) -> int:
-	if len(token) < 1:
-		return None
-	first_chr = token[0].casefold()
-	if first_chr in ['i', 'l', 's']:
-		if (len(token) >= 2) and token[1].isdecimal():
-			return TKTP_REG
-	if token.casefold() in label_list:
-		return TKTP_LBL
-	else:
-		return None
-
-def read_token_reg(token: str) -> typing.Tuple[str, int]:	# returns tuple(reg type, reg number)
-	if len(token) < 1:
-		return None
-	first_chr = token[0].casefold()
-	if first_chr in ['i', 'l', 's']:
-		try:
-			return (first_chr, int(token[1:], 10))
-		except:
-			return None
-	else:
-		return None
-
 def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, list]:
 	cmd_list = []	# list[ CommandItem ]
 	label_list = {}	# dict{ label name [casefold]: LabelItem }
@@ -561,11 +537,11 @@ def load_parse_asm(fn_in: str) -> tuple:
 		return 2
 	return ret
 
-def compile_scene(in_fns: str, fn_out: str) -> int:
+def asm2tsv(in_fns: str, fn_out: str) -> int:
 	result = 0
 	try:
 		with open(fn_out, "wt") as f:
-			f.write("file\tline (ref)\tlabel\ttype\ttextbox\tstring\n")
+			f.write("#file\tline (ref)\tlabel\ttype\ttextbox\tstring\n")
 
 			for fn_in in in_fns:
 				print(f"{fn_in} ...")
@@ -601,16 +577,15 @@ def compile_scene(in_fns: str, fn_out: str) -> int:
 
 def main(argv):
 	global config
-	global necjis
 	
-	print("four-nine/Izuho Saruta System-98 Scenario 2 CSV")
+	print("System-98 Scenario TSV Dumper")
 	aparse = argparse.ArgumentParser()
-	aparse.add_argument("-o", "--out_file", required=True, help="string table (.CSV)")
+	aparse.add_argument("-o", "--out_file", required=True, help="output tab-separated text table (.TSV)")
 	aparse.add_argument("in_files", nargs="+", help="input assembly files (.ASM)")
 	
 	config = aparse.parse_args(argv[1:])
 	
-	return compile_scene(config.in_files, config.out_file)
+	return asm2tsv(config.in_files, config.out_file)
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))

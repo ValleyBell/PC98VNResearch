@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 import sys
 import os
 import typing
@@ -9,22 +9,28 @@ import html
 import time
 
 DEBUG_OUTPUT_PATH = None
-#DEBUG_OUTPUT_PATH = "/tmp/csvtrans_"
+#DEBUG_OUTPUT_PATH = "/tmp/tsvtrans_"
 
-def load_csv(fn_in: str) -> typing.List[str]:
+LANGUAGE_SRC = "ja"	# Japanese
+LANGUAGE_TGT = "en"	# English
+TRANSLATE_MAX_CHARS = 500	# maximum characters that are translated per request
+
+config = {}
+
+def load_tsv(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
 		return f.readlines()
 
-def write_csv(fn_out: str, lines: list) -> None:
+def write_tsv(fn_out: str, lines: list) -> None:
 	with open(fn_out, "wt", encoding="utf-8") as f:
 		f.writelines(lines)
 	return
 
-def parse_csv(lines: list) -> list:
+def parse_tsv(lines: list) -> list:
 	if len(lines) > 0:
 		if lines[0].startswith("file\t"):
 			lines[0] = "#" + lines[0]	# enforce header to be a comment
-
+	
 	result = []
 	for (lid, line) in enumerate(lines):
 		ltrim = line.lstrip()
@@ -45,7 +51,7 @@ def get_cjk_char_width(c: str) -> int:
 def get_cjk_string_width(text: str) -> int:
 	return sum([get_cjk_char_width(c) for c in text])
 
-def csv2textitems(csv_data: list) -> list:
+def tsv2textitems(tsv_data: list) -> list:
 	textitem_list = []
 	
 	# collect "text groups" and fuse consecutive lines with the same "label"
@@ -53,7 +59,7 @@ def csv2textitems(csv_data: list) -> list:
 	tlid_start = None
 	tlid_end = None
 	tstr = None
-	for (lid, cols) in enumerate(csv_data):
+	for (lid, cols) in enumerate(tsv_data):
 		if type(cols) is str:
 			continue
 		#print(cols)
@@ -62,7 +68,7 @@ def csv2textitems(csv_data: list) -> list:
 		text = cols[5]
 		if last_label != lblname:
 			if tstr is not None:
-				textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": csv_data[tlid_start][3], "text": tstr}]
+				textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
 			last_label = lblname
 			tlid_start = lid
 			tstr = ""
@@ -71,53 +77,56 @@ def csv2textitems(csv_data: list) -> list:
 		if tstr.endswith('\\'):
 			tstr += '\n'
 		else:
-			textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": csv_data[tlid_start][3], "text": tstr}]
+			textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
 			tstr = None
 			last_label = None
 	if tstr is not None:
-		textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": csv_data[tlid_start][3], "text": tstr}]
+		textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
 	
 	return textitem_list
 
-def get_last_tbox_size(csv_data: list, line: int) -> str:
+def get_last_tbox_size(tsv_data: list, line: int) -> str:
 	while line >= 0:
-		if "x" in csv_data[line][4]:
-			return csv_data[line][4]
+		if "x" in tsv_data[line][4]:
+			return tsv_data[line][4]
 		line -= 1
 	return "999x999"
 
-def textitems2csv(textitem_list: list, csv_data: list) -> list:
-	# reinsert text items into the CSV column list again
-	csv_new = csv_data.copy()
+def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
+	# reinsert text items into the TSV column list again
+	tsv_new = tsv_data.copy()
 	for txitm in textitem_list:
 		# count effective text lines
 		line_count = 0
-		for csv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-			if type(csv_new[csv_lid]) is str:
+		for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
+			if type(tsv_new[tsv_lid]) is str:
 				continue	# don't count comment lines
 			line_count += 1
 		
-		tbox_size = get_last_tbox_size(csv_data, txitm["line_st"])
+		tbox_size = get_last_tbox_size(tsv_data, txitm["line_st"])
 		(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
 		#tb_width += 2	# somehow my calculations were off by 1
 		
 		can_add_linebreaks = False
 		if txitm["mode"] == "txt":
 			if tb_height > 1:
-				can_add_linebreaks = True
+				can_add_linebreaks = True	# line breaks may be added to longer text paragraphs
+		if config.keep_lines:
+			can_add_linebreaks = False	# The option enforces to keep the original line breaks.
 		
-		# split text data into multiple lines for the CSV
+		# split text data into multiple lines for the TSV
 		text = txitm["text"]
+		max_xpos = 0
 		pos = 0
 		xpos = 0
 		lines = [""]
 		# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
 		last_word_lpos = 0	# character position (in *line*) of the beginning of the last "word"
 		last_word_xpos = 0	# text X position of the beginning of the last "word"
-		had_space_since_word = False
 		while pos < len(text):
 			chrlen = 1
 			chrwidth = 0
+			no_linebreak_now = False
 			if (text[pos] == '\\') and (pos + 1 < len(text)):
 				ctrl_chr = text[pos + 1]
 				chrlen += 1
@@ -138,7 +147,7 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 					chrlen += 8
 				elif ctrl_chr == 'r':	# reset X position
 					xpos = 0
-				elif ctrl_chr == '\n':	# new CSV line
+				elif ctrl_chr == '\n':	# new TSV line
 					lines[-1] += "\\"
 					lines.append("")	# start new line
 					pos += chrlen
@@ -151,12 +160,16 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 			elif ord(text[pos]) >= 0x20:
 				chrwidth = get_cjk_char_width(text[pos])
 				if text[pos].isspace():
+					no_linebreak_now = True	# prevent line breaks before spaces
 					last_word_lpos = len(lines[-1]) + chrlen
 					last_word_xpos = xpos + chrwidth
-			if can_add_linebreaks and (xpos + chrwidth > tb_width):
+			if can_add_linebreaks and (xpos + chrwidth > tb_width) and not no_linebreak_now:
 				# add line breaks only in "txt" mode
-				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace() or (last_word_xpos < tb_width*0.7):
-					# (a) there were no spaces OR (b) the only spaces were indentation
+				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace() or \
+					(last_word_xpos < tb_width*0.7):
+					# (a) there were no spaces OR
+					# (b) the only spaces were indentation OR
+					# (c) the last word is very long (more than 30% of the line)
 					# -> just break in the middle of the word
 					#print(f"Line break after: {str(lines)}")
 					lines[-1] += "\\r\\"
@@ -176,19 +189,35 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 					last_word_xpos = 0
 			
 			lines[-1] += text[pos : pos+chrlen]
+			if not text[pos : pos+chrlen].isspace():
+				max_xpos = max([xpos, max_xpos])
 			xpos += chrwidth
 			pos += chrlen
 		if lines[-1] == "":
 			lines.pop(-1)
-		if len(lines) != line_count:
-			print(f"CSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) when original one had {line_count}! (text box: {tbox_size})")
-			old_txt = []
-			for csv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-				if type(csv_data[csv_lid]) is str:
-					continue	# ignore comment lines
-				old_txt.append(csv_data[csv_lid][5])
-			print("\told: " + str(old_txt))
-			print("\tnew: " + str(lines))
+
+		if config.textsize_check == 1:
+			if max_xpos > tb_width or len(lines) > tb_height:
+				print(f"TSV line {1+txitm['line_st']}: New text ({max_xpos}x{len(lines)}) " \
+						f"exceeds text box! (text box: {tbox_size})")
+				old_txt = []
+				for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
+					if type(tsv_data[tsv_lid]) is str:
+						continue	# ignore comment lines
+					old_txt.append(tsv_data[tsv_lid][5])
+				print("\told: " + str(old_txt))
+				print("\tnew: " + str(lines))
+		elif config.textsize_check == 2:
+			if len(lines) != line_count:
+				print(f"TSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) " \
+						f"when original one had {line_count}! (text box: {tbox_size})")
+				old_txt = []
+				for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
+					if type(tsv_data[tsv_lid]) is str:
+						continue	# ignore comment lines
+					old_txt.append(tsv_data[tsv_lid][5])
+				print("\told: " + str(old_txt))
+				print("\tnew: " + str(lines))
 		
 		# make sure that we can replace the lines exactly
 		while len(lines) < line_count:
@@ -200,15 +229,15 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 			lines[-2] += lines[-1]
 			lines.pop(-1)
 		
-		# now insert the lines into the CSV
+		# now insert the lines into the TSV
 		line_count = txitm["line_end"] + 1 - txitm["line_st"]
 		txt_lid = 0
-		for csv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-			if type(csv_new[csv_lid]) is str:
+		for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
+			if type(tsv_new[tsv_lid]) is str:
 				continue	# ignore comment lines
-			csv_new[csv_lid][5] = lines[txt_lid]
+			tsv_new[tsv_lid][5] = lines[txt_lid]
 			txt_lid += 1
-	return csv_new
+	return tsv_new
 
 # Fusioning rules:
 #	general:
@@ -219,47 +248,50 @@ def textitems2csv(textitem_list: list, csv_data: list) -> list:
 #		- after "terminator", do 2x \n
 #	mode "sel": replace \r at the end with normal newline
 
-def process_data(csv_data: list) -> list:
+def process_data(tsv_data: list) -> list:
+	global config
+
 	if DEBUG_OUTPUT_PATH:
-		with open(DEBUG_OUTPUT_PATH + "00_csvdata.log", "wt") as f:
-			for cols in csv_data:
+		with open(DEBUG_OUTPUT_PATH + "00_tsvdata.log", "wt") as f:
+			for cols in tsv_data:
 				f.write(str(cols).rstrip() + "\n")
 	
 	# At first, collect "text groups" and fuse consecutive lines.
-	textitem_list = csv2textitems(csv_data)
+	textitem_list = tsv2textitems(tsv_data)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "01_textitems_org.log", "wt") as f:
 			for txitm in textitem_list:
 				f.write(str(txitm) + "\n")
 	
-	# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
-	SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼❢。？！〉》」』"
-	for txitm in textitem_list:
-		text = txitm["text"]
-		pos = text.find("\\r")
-		while pos >= 0:
-			next_pos = pos + 2
-			if text[next_pos : next_pos+2] == '\\\n':
-				next_pos += 2	# skip line end marker
-			#print(f"Next: {text[next_pos : next_pos+2]}")
-			if pos == 0:
-				pass	# keep when the string starts with it
-			elif (len(text) <= next_pos) or text[next_pos].isspace():
-				pass	# keep when being followed by a space
-			elif (pos > 1) and (text[pos - 1] in SENTENCE_END_CHRS):
-				pass	# keep when the last character is a "sentence/paragraph end" character
-			elif txitm["mode"] == "txt":
-				# fuse lines
-				text = text[:pos] + text[next_pos:]
-				pos -= 1
-			elif txitm["mode"] == "sel":
-				pass	# keep
-			pos = text.find("\\r", pos+1)
-		txitm["text"] = text
-	if DEBUG_OUTPUT_PATH:
-		with open(DEBUG_OUTPUT_PATH + "02_textitems_clean.log", "wt") as f:
-			for txitm in textitem_list:
-				f.write(str(txitm) + "\n")
+	if not config.keep_lines:
+		# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
+		SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼❢。？！〉》」』"
+		for txitm in textitem_list:
+			text = txitm["text"]
+			pos = text.find("\\r")
+			while pos >= 0:
+				next_pos = pos + 2
+				if text[next_pos : next_pos+2] == '\\\n':
+					next_pos += 2	# skip line end marker
+				#print(f"Next: {text[next_pos : next_pos+2]}")
+				if pos == 0:
+					pass	# keep when the string starts with it
+				elif (len(text) <= next_pos) or text[next_pos].isspace():
+					pass	# keep when being followed by a space
+				elif (pos > 1) and (text[pos - 1] in SENTENCE_END_CHRS):
+					pass	# keep when the last character is a "sentence/paragraph end" character
+				elif txitm["mode"] == "txt":
+					# fuse lines
+					text = text[:pos] + text[next_pos:]
+					pos -= 1
+				elif txitm["mode"] == "sel":
+					pass	# keep
+				pos = text.find("\\r", pos+1)
+			txitm["text"] = text
+		if DEBUG_OUTPUT_PATH:
+			with open(DEBUG_OUTPUT_PATH + "02_textitems_clean.log", "wt") as f:
+				for txitm in textitem_list:
+					f.write(str(txitm) + "\n")
 	
 	# Extract "unique" lines and set references in the original list.
 	trans_data = []
@@ -289,7 +321,7 @@ def process_data(csv_data: list) -> list:
 	# Translate the unique text strings.
 	translated_texts = translate_items(unique_texts)
 	if DEBUG_OUTPUT_PATH:
-		with open(DEBUG_OUTPUT_PATH + "04_translated_texts.log", "wt") as f:
+		with open(DEBUG_OUTPUT_PATH + "05_translated_texts.log", "wt") as f:
 			for trdat in trans_data:
 				text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
 				f.write(str({**trdat, "text": text}) + "\n")
@@ -305,17 +337,18 @@ def process_data(csv_data: list) -> list:
 	for txitm in textitem_newlist:
 		txitm["text"] = '\n'.join(txitm["text"])
 	if DEBUG_OUTPUT_PATH:
-		with open(DEBUG_OUTPUT_PATH + "05_textitems_translated.log", "wt") as f:
+		with open(DEBUG_OUTPUT_PATH + "06_textitems_translated.log", "wt") as f:
 			for txitm in textitem_newlist:
 				f.write(str(txitm) + "\n")
 	
-	# Finally, reconstruct the CSV file.
-	csv_newdata = textitems2csv(textitem_newlist, csv_data)
+	# Finally, reconstruct the TSV file.
+	# This includes inserting line breaks again.
+	tsv_newdata = textitems2tsv(textitem_newlist, tsv_data)
 	if DEBUG_OUTPUT_PATH:
-		with open(DEBUG_OUTPUT_PATH + "06_csvdata.log", "wt") as f:
-			for cols in csv_newdata:
+		with open(DEBUG_OUTPUT_PATH + "07_tsvdata.log", "wt") as f:
+			for cols in tsv_newdata:
 				f.write(str(cols).rstrip() + "\n")
-	return csv_newdata
+	return tsv_newdata
 
 def text2transdata(text: str) -> dict:
 	MODE_CTRL = 1
@@ -406,12 +439,11 @@ def transdata2txt(tdata: dict) -> str:
 
 def translate_items(texts: list) -> list:
 	TEXT_SEP = '\n'
-	CHARACTER_LIMIT = 500
 	
 	text_groups = [[]]
 	tgrp_size = -len(TEXT_SEP)	# un-count separator for last line
 	for text in texts:
-		if tgrp_size + len(text) > CHARACTER_LIMIT:
+		if tgrp_size + len(text) > TRANSLATE_MAX_CHARS:
 			if tgrp_size > 0:
 				text_groups.append([])
 				tgrp_size = -len(TEXT_SEP)
@@ -458,26 +490,44 @@ def translate_items(texts: list) -> list:
 	
 	return [txt for grp in text_groups for txt in grp]
 
+translate_req_id = 0	# for debugging
 def translate_text(text: str) -> str:
-	text = text.translate(str.maketrans({
-		'「': '“',
-		'」': '”',
-		'『': '‘',
-		'』': '’',
-	}))
+	global config
+	global translate_req_id
+
+	if not config.raw:
+		text = text.translate(str.maketrans({
+			'「': '“',
+			'」': '”',
+			'『': '‘',
+			'』': '’',
+			'\uF87F': '',
+		}))
 	#return unicodedata.normalize("NFKC", text)
 	
 	req = requests.get("https://translate.google.com/m",
 		params = {
-			"sl": "ja", # source language
-			"tl": "en", # target language
-			"q": text,  # query
+			"sl": LANGUAGE_SRC, # source language
+			"tl": LANGUAGE_TGT, # target language
+			"q":  text,         # query
 		}
 	)
-
+	
 	CONTAINER_START_STR = 'result-container">'
 	CONTAINER_END_STR = '</div>'
 	html_data = req.text
+	if DEBUG_OUTPUT_PATH:
+		fname = DEBUG_OUTPUT_PATH + f"05-{translate_req_id:03}_translate-"
+		with open(fname + "request.txt", "wt") as f:
+			f.write(req.request.method + " " + req.request.url + "\n")
+			f.write(str(req.request.headers) + "\n\n")
+			tmp = req.request.url[req.request.url.find('?')+1 :]
+			tmp = requests.utils.unquote(tmp)
+			f.write(tmp + "\n")
+		with open(fname + "result.html", "wt") as f:
+			f.write(html_data)
+	translate_req_id += 1
+
 	start_pos = html_data.find(CONTAINER_START_STR)
 	if start_pos < 0:
 		print("Web service returned unparseable page!")
@@ -487,33 +537,33 @@ def translate_text(text: str) -> str:
 	if end_pos < 0:
 		print("Web service returned unparseable page!")
 		return None
-
+	
 	trans_text = html.unescape(html_data[start_pos : end_pos])
 	#print(f"Source text: {text}")
 	#print(f"Translated text: {trans_text}")
 	return trans_text
 
-def translate_csv(fn_in: str, fn_out: str) -> int:
+def translate_tsv(fn_in: str, fn_out: str) -> int:
 	try:
-		csv_lines = load_csv(fn_in)
+		tsv_lines = load_tsv(fn_in)
 	except IOError:
 		print(f"Error loading {fn_in}")
 		return 1
-	ret = parse_csv(csv_lines)
+	ret = parse_tsv(tsv_lines)
 	if ret is None:
 		return 2
-	csv_data = ret
+	tsv_data = ret
 	
-	csv_out = process_data(csv_data)
+	tsv_out = process_data(tsv_data)
 	
 	try:
 		lines = []
-		for line in csv_out:
+		for line in tsv_out:
 			if type(line) is str:
 				lines += [line]
 			else:
 				lines += ["\t".join(line) + "\n"]
-		write_csv(fn_out, lines)
+		write_tsv(fn_out, lines)
 		print("Done.")
 	except IOError:
 		print(f"Error writing {fn_out}")
@@ -523,14 +573,17 @@ def translate_csv(fn_in: str, fn_out: str) -> int:
 def main(argv):
 	global config
 	
-	print("CSV Translator")
+	print("TSV Translator")
 	aparse = argparse.ArgumentParser()
-	aparse.add_argument("in_file", help="input file (.CSV)")
-	aparse.add_argument("out_file", help="output file (.CSV)")
+	aparse.add_argument("-r", "--raw", action="store_true", help="no remapping of Japanese quotation marks")
+	aparse.add_argument("-l", "--keep-lines", action="store_true", help="do NOT remove + reinsert line breaks")
+	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default], 2 = check against previous text", default=1)
+	aparse.add_argument("in_file", help="input file (.TSV)")
+	aparse.add_argument("out_file", help="output file (.TSV)")
 	
 	config = aparse.parse_args(argv[1:])
 	
-	return translate_csv(config.in_file, config.out_file)
+	return translate_tsv(config.in_file, config.out_file)
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))
