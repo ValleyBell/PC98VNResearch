@@ -81,6 +81,354 @@ Notes:
 
 ARC_COUNT = 0x20
 
+class TwinkleDecompressor:
+	@staticmethod
+	def rot_left_8bit(value, shift):
+		return ((value << shift) | (value << shift >> 8)) & 0xFF
+
+	def __init__(self):
+		self.buf_657Dh = [0] * 0x3FB	# 16-bit values
+		self.buf_6D73h = [0] * 0x3FB	# 16-bit values
+		self.buf_7569h = [0] * 0x1000	# 16-bit values
+		self.buf_9569h = [0] * 0x100	# 16-bit values
+		self.buf_9769h = [0] * 0x1FE	# 8-bit values
+		self.buf_9967h = [0] * 0x60	# 8-bit values
+
+	def GetToken(self):	# sub_10552 (Decode Control Byte)
+		self.ds_657Bh -= 1
+		if self.ds_657Bh < 0:
+			# loc_10559
+			self.ds_657Bh = self.sub_107B3(16) - 1
+			self.sub_105F0(19, 5, 3)
+			self.sub_10666()
+			self.sub_105F0(14, 4, 0xFFFF)
+		# loc_1057D
+		bx = self.ds_99E7h >> 4
+		bx = self.buf_7569h[bx]	# 16-bit indexing
+		if bx >= 0x1FE:
+			bx = self.sub_1059E(bx, 4)
+		self.GetBits(self.buf_9769h[bx])
+		return bx
+
+	def sub_1059E(self, bx, cl):
+		al = (self.ds_99E7h << cl) & 0xFF
+		cx = 0x1FE
+		return self.sub_105A6(al, bx, cx)
+
+	def sub_105A6(self, al, bx, cx):
+		while True:
+			if (al & 0x80) != 0:
+				bx = self.buf_6D73h[bx//2]
+			else:
+				bx = self.buf_657Dh[bx//2]
+			al <<= 1
+			if bx < cx:
+				return bx
+
+	def sub_105B4(self, al, bx, cx):
+		while bx >= cx:
+			if (al & 0x80) != 0:
+				bx = self.buf_6D73h[bx//2]
+			else:
+				bx = self.buf_657Dh[bx//2]
+			al <<= 1
+		return bx
+
+	def GetCopyOffset(self):	# sub_105B9
+		bx = self.buf_9569h[self.ds_99E7h >> 8]	# 16-bit indexing
+		if bx >= 14:
+			bx = self.sub_105A6(self.ds_99E7h & 0xFF, bx, 14)
+		# loc_105D4
+		self.GetBits(self.buf_9967h[bx])
+		if bx > 1:
+			cl = bx - 1
+			bx = self.sub_107B3(cl)
+			bx |= (1 << cl)
+		return bx
+
+	def sub_105F0(self, si, dl, cx):
+		ax = self.sub_107B3(dl)
+		if ax > si:
+			# This really happens ingame with TWGD2.DAT / file 0x13.
+			raise Exception(f"sub_105F0: {ax} > {si}")	# the original code freezes here
+		if ax == 0:
+			# loc_10607
+			for i in range(si):
+				self.buf_9967h[i] = 0
+			ax = self.sub_107B3(dl)
+			for i in range(0x100):
+				self.buf_9569h[i] = ax
+			return
+		
+		# loc_10618
+		di_ofs = 0
+		dx_ofs = cx
+		si_ofs = ax
+		while True:
+			# loc_10620
+			ax = self.sub_107B3(3)
+			if ax == 7:
+				bx = self.ds_99E7h
+				while (bx & 0x8000) != 0:
+					bx <<= 1
+					ax += 1
+				# loc_10634
+				self.GetBits(ax - 6)	# result is discarded
+			# loc_1063B
+			self.buf_9967h[di_ofs] = ax & 0xFF
+			di_ofs += 1
+			if di_ofs == dx_ofs:
+				cx = self.sub_107B3(2)
+				for i in range(cx):
+					self.buf_9967h[di_ofs + i] = 0
+				di_ofs += cx
+			# loc_1064B
+			if di_ofs >= si_ofs:
+				break
+		
+		# loc_1064F
+		cx = si - di_ofs
+		for i in range(cx):
+			self.buf_9967h[di_ofs + i] = 0
+		di_ofs += cx
+		
+		self.sub_106F6(si, self.buf_9967h, 8, self.buf_9569h)
+		return
+
+	def sub_10666(self):
+		ax = self.sub_107B3(9)
+		if ax > 0x1FE:
+			raise Exception(f"sub_10666: 0x{ax:02X} > 0x{0x1FE:02X}")	# the original code freezes here
+		if ax == 0:
+			# loc_1067D
+			for i in range(0x1FE):
+				self.buf_9769h[i] = 0
+			ax = self.sub_107B3(9)
+			for i in range(0x100):
+				self.buf_7569h[i] = ax
+			return
+		
+		# loc_10690
+		di_ofs = 0
+		dx_ofs = ax
+		while True:
+			# loc_10695
+			bx = self.buf_9569h[self.ds_99E7h >> 8]	# 16-bit indexing
+			bx = self.sub_105B4(self.ds_99E7h & 0xFF, bx, 19)
+			# push BX
+			self.GetBits(self.buf_9967h[bx])
+			# pop AX
+			if bx <= 2:
+				if bx == 2:
+					cx = 20 + self.sub_107B3(9)
+				# loc_106C4
+				elif bx == 1:
+					cx = 3 + self.sub_107B3(4)
+				else:
+					cx = 1
+				# loc_106D6
+				for i in range(cx):
+					self.buf_9769h[di_ofs + i] = 0
+				di_ofs += cx
+			elif bx > 2:
+				# loc_106DC
+				self.buf_9769h[di_ofs] = (bx - 2) & 0xFFF
+				di_ofs += 1
+			# loc_106DD
+			if di_ofs >= dx_ofs:
+				break
+		
+		# loc_106E1
+		cx = 0x1FE - di_ofs
+		for i in range(cx):
+			self.buf_9769h[di_ofs + i] = 0
+		di_ofs += cx
+		
+		self.sub_106F6(0x1FE, self.buf_9769h, 12, self.buf_7569h)
+		return
+
+	def sub_106F6(self, ax, bp, cx, di):
+		# ax = count
+		# bp = byte array
+		# cx = bit count
+		# di = word array
+		self.ds_99EDh = ax	# source self.buffer size
+		self.ds_99EBh = ax * 2	# offset into tree structure
+		self.ds_99EFh = cx	# bit shift count
+		self.ds_99F1h = di	# destination self.buffer
+		self.ds_99F3h = 16 - cx	# inverse bit shift count
+		cx = 1 << cx
+		for i in range(cx):
+			self.ds_99F1h[i] = 0
+		
+		si = 0
+		bx = 0x8000
+		dx = 1
+		while True:
+			# loc_10720
+			di_ofs = 0
+			cx_rep = self.ds_99EDh
+			while True:
+				# loc_10726
+				al = dx
+				# emulation of "REPNE SCASB" start
+				result_eq = False
+				while cx_rep > 0:
+					result_eq = (bp[di_ofs] == al)
+					di_ofs += 1
+					cx_rep -= 1
+					if result_eq == True:
+						break
+				# "REPNE SCASB" end
+				if not result_eq:
+					break	# goto loc_10797
+				ax = di_ofs - 1
+				
+				di = self.ds_99F1h	# 16-bit indexing
+				di2_ofs = si >> self.ds_99F3h
+				if dx <= self.ds_99EFh:
+					cx = bx >> self.ds_99F3h
+					for i in range(cx):
+						di[di2_ofs + i] = ax
+				else:
+					# loc_10750
+					si2 = (si << self.ds_99EFh) & 0xFFFF
+					cx = dx - self.ds_99EFh
+					for i in range(cx):
+						# loc_1075B
+						if di[di2_ofs] == 0:
+							self.buf_6D73h[self.ds_99EBh//2] = 0	# //2 for offset->index conversion
+							self.buf_657Dh[self.ds_99EBh//2] = 0
+							di[di2_ofs] = self.ds_99EBh
+							self.ds_99EBh += 2
+						# loc_10777
+						di2_ofs = di[di2_ofs]//2	# //2 for offset->index conversion
+						if (si2 & 0x8000) != 0:
+							di = self.buf_6D73h
+						else:
+							di = self.buf_657Dh
+						si2 <<= 1
+					# loc_10789
+					di[di2_ofs] = ax
+				# loc_1078C
+				si += bx
+				if si >= 0x10000:
+					return
+				if cx == 0:
+					break
+			# loc_10797
+			dx += 1
+			if (bx & 0x0001) != 0:
+				break
+			bx >>= 1
+		return
+
+	def sub_107B3(self, bitsToRead):
+		remBits = 16 - bitsToRead
+		old_ds_99E7h = self.ds_99E7h
+		self.GetBits(bitsToRead)	# will modify self.ds_99E7h
+		return old_ds_99E7h >> remBits
+
+	def GetBits(self, bitsToRead):	# sub_107C4
+		remBits = self.ds_99EAh # register CL
+		dx = self.ds_99E7h
+		al = self.ds_99E9h
+		if bitsToRead > remBits:
+			bitsToRead -= remBits
+			dx <<= remBits
+			dh = (dx >> 8) & 0xFF
+			dl = (dx >> 0) & 0xFF
+			dl += TwinkleDecompressor.rot_left_8bit(al, remBits)
+			
+			remBits = 8
+			while True:
+				# loc_107E1
+				al = self.comprBuf[self.inPos]
+				self.inPos += 1
+				# loc_107FA
+				if bitsToRead <= remBits:
+					break
+				bitsToRead -= remBits
+				dh = dl
+				dl = al
+			dx = (dh << 8) | (dl << 0)
+		# loc_1080A
+		self.ds_99EAh = remBits - bitsToRead
+		ax = al << bitsToRead
+		self.ds_99E7h = ((dx << bitsToRead) + (ax >> 8)) & 0xFFFF
+		self.ds_99E9h = ax & 0xFF
+		return ax
+
+	def DecompressData(self, comprLen: int, decLen: int, comprBuffer: bytes) -> bytes:
+		# The 2 additional bytes are required for a dummy read at EOF.
+		# This is due to the bistream reader being up to 16 bits ahead of the data that is used.
+		self.comprBuf = comprBuffer + b'\x00\x00'
+		self.inPos = 0x0000	# ds:6579h
+		decBuf = bytearray(decLen)	# buffer ds:2579h..6578h
+		outPos = 0x0000	# register DI
+		remDecBytes = decLen	# ds:2575h
+		self.ds_657Bh = 0
+		self.ds_99E7h = 0
+		self.ds_99E9h = 0
+		self.ds_99EAh = 0
+		try:
+			self.GetBits(16)
+			while remDecBytes > 0:
+				# loc_104F0
+				ax = self.GetToken()
+				if ax < 0x100:
+					# loc_104F7
+					decBuf[outPos] = ax & 0xFF
+					outPos += 1
+					remDecBytes -= 1
+				else:
+					# loc_10518
+					copyLen = (ax - 0x100) + 3
+					srcPos = outPos - 1 - self.GetCopyOffset()
+					for i in range(copyLen):
+						# loc_10526
+						decBuf[outPos] = decBuf[srcPos]
+						srcPos += 1
+						outPos += 1
+						remDecBytes -= 1
+						if remDecBytes <= 0:
+							break
+			if outPos < len(decBuf):
+				decBuf = decBuf[0 : outPos]
+			return decBuf
+		except Exception as e:
+			return (decBuf, self.inPos, comprLen, outPos, decLen, e)
+
+def get_file_data(fArc, fpos, flen, config):
+	flags = 0x00
+	fArc.seek(fpos)
+	if flen < 8:
+		return (fArc.read(flen), flags)
+	
+	(compr_len, decomp_len) = struct.unpack("<II", fArc.read(0x08))
+	# heuristics detection for compressed data
+	if compr_len == (flen - 0x08):
+		flags = 0x01	# set 'compressed' flag
+	
+	fArc.seek(fpos)
+	fdata = fArc.read(flen)
+	if (flags & 0x01) and not config.raw:
+		twdec = TwinkleDecompressor()
+		res = twdec.DecompressData(compr_len, decomp_len, fdata[8:])
+		if type(res) is not tuple:
+			return (res, flags)
+		else:
+			flags &= ~0x01	# remove 'compression' flag again
+			if config.verbose:
+				(decBuf, srcPos, comprLen, decPos, decLen, e) = res
+				print(f"Decompression Error - {e}", file=sys.stderr)
+				print(f"InPos: 0x{srcPos:04X} / 0x{comprLen:04X}, " \
+					f"OutPos: 0x{decPos:04X} / 0x{decLen:04X}", file=sys.stderr)
+			else:
+				print(f"Decompression Error", file=sys.stderr)
+	
+	return (fdata, flags)
+	
 def arc_extract(config):
 	arcs = [{} for i in range(ARC_COUNT)]
 	# read archive file names
@@ -137,7 +485,10 @@ def arc_extract(config):
 			if (config.file_path / basepath).is_file():
 				basepath = basepath.with_suffix(".EXT")
 			arc["folder"] = basepath
-			arc["flist"] = basepath / "_fileList.txt"
+			if config.short_names:
+				arc["flist"] = basepath / "_fileList.txt"
+			else:
+				arc["flist"] = basepath / pathlib.Path(arc["fileName"]).with_suffix(".TXT")
 			fTxt.write(f"{arcIdx:02X}\t{arc['diskID']:02X}\t{arc['diskMode']:02X}" \
 				f"\t{arc['fileName']}\t{arc['flist']}\n")
 
@@ -146,6 +497,10 @@ def arc_extract(config):
 		if "files" not in arc:
 			continue
 		arcpath = config.arc_path / arc["fileName"]
+		if config.short_names:
+			basename = ""
+		else:
+			basename = pathlib.Path(arc["fileName"]).stem + "_"
 		print(f"Archive: {arc['fileName']}", flush=True)
 
 		with arcpath.open("rb") as fArc:
@@ -159,18 +514,11 @@ def arc_extract(config):
 				for (fileNum, tocEntry) in enumerate(arc["files"]):
 					(fileID, fpos, flen) = tocEntry
 					print(f"File {1 + fileNum:3}: ID 0x{fileID:02X}, pos 0x{fpos:06X}, len 0x{flen:06X}")
-					fTitle = f"{fileID:02X}.BIN"
+					fTitle = f"{basename}{fileID:02X}.BIN"
 					with (basepath / fTitle).open("wb") as fOut:
-						fArc.seek(fpos)
-						compr_len = struct.unpack("<I", fArc.read(0x04))[0]
-						# heuristics detection for compressed data
-						if compr_len == (flen - 0x08):
-							flags = 0x01
-						else:
-							flags = 0x00
+						(fData, flags) = get_file_data(fArc, fpos, flen, config)
 						fTxt.write(f"{fileID:02X}\t{flags:02X}\t{fTitle}\n")
-						fArc.seek(fpos)
-						fOut.write(fArc.read(flen))
+						fOut.write(fData)
 
 	print("Done.")
 	return 0
@@ -300,6 +648,9 @@ def arc_create(config):
 def main(argv):
 	print("Twilight PC-98 Archive (Un-)Packer")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-v", "--verbose", action="store_true", help="verbose error reporting for decompression")
+	aparse.add_argument("-r", "--raw", action="store_true", help="(un-)pack raw data, don't decompress")
+	aparse.add_argument("-s", "--short-names", action="store_true", help="extract with only digits as file names (default: prepend archive name)")
 	apgrp = aparse.add_mutually_exclusive_group(required=True)
 	apgrp.add_argument("-x", "--extract", action="store_true", help="extract archive")
 	apgrp.add_argument("-c", "--create", action="store_true", help="create archive (specify fileList.txt)")
@@ -315,6 +666,10 @@ def main(argv):
 	if config.extract:
 		return arc_extract(config)
 	elif config.create:
+		if not config.raw:
+			print("This tool is currently unable to recompress the data.")
+			print("Please add the --raw parameter to enforce raw packing.")
+			return 1
 		return arc_create(config)
 	else:
 		print("Please specify a mode!")
