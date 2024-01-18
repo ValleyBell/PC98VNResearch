@@ -30,8 +30,8 @@ overall structure
 
 archive info
 ------------
-1 byte - disk ID
-1 byte - may need disk swap (set to 1 for graphics archives, set to 0 for others)
+1 byte - disk ID (0 = disk A, ..., 3 = disk D)
+1 byte - disk drive (0 = drive A, 1 = drive B)
 2 bytes - offset of file name (absolute)
 -> 4 bytes
 
@@ -436,10 +436,10 @@ def arc_extract(config):
 	with config.dir_file.open("rb") as fDir:
 		tocData = fDir.read()
 		for (arcIdx, arc) in enumerate(arcs):
-			(diskID, diskMode, fnPos) = struct.unpack_from("<BBH", tocData, arcIdx * 0x04)
+			(diskID, diskDrive, fnPos) = struct.unpack_from("<BBH", tocData, arcIdx * 0x04)
 
 			arc["diskID"] = diskID
-			arc["diskMode"] = diskMode
+			arc["diskDrive"] = diskDrive
 			nullPos = tocData.find(b'\x00', fnPos)
 			fname_b = tocData[fnPos : nullPos]
 			arc["fileName"] = fname_b.decode("Shift-JIS")
@@ -476,7 +476,7 @@ def arc_extract(config):
 
 	# write list of archives
 	with (config.file_path / "_arcList.txt").open("wt") as fTxt:
-		fTxt.write("#arcID\tdiskID\tdskSwap\tarchive_file\tfileList\n")
+		fTxt.write("#arcID\tdiskID\tdriveID\tarchive_file\tfileList\n")
 		for (arcIdx, arc) in enumerate(arcs):
 			if "files" not in arc:
 				continue
@@ -489,7 +489,7 @@ def arc_extract(config):
 				arc["flist"] = basepath / "_fileList.txt"
 			else:
 				arc["flist"] = basepath / pathlib.Path(arc["fileName"]).with_suffix(".TXT")
-			fTxt.write(f"{arcIdx:02X}\t{arc['diskID']:02X}\t{arc['diskMode']:02X}" \
+			fTxt.write(f"{arcIdx:02X}\t{arc['diskID']:02X}\t{arc['diskDrive']:02X}" \
 				f"\t{arc['fileName']}\t{arc['flist']}\n")
 
 	# extract archives
@@ -542,7 +542,7 @@ def arc_create(config):
 				continue
 			arc = arcs[arcID]
 			arc["diskID"] = int(litems[1], 0x10)
-			arc["diskMode"] = int(litems[2], 0x10)
+			arc["diskDrive"] = int(litems[2], 0x10)
 			arc["fileName"] = litems[3]
 			arc["flist"] = pathlib.Path(litems[4])
 			arc["folder"] = arc["flist"].parent
@@ -580,7 +580,7 @@ def arc_create(config):
 	for (arcIdx, arc) in enumerate(arcs):
 		if "fileName" in arc:
 			filePos = len(tocData) + len(nameData)
-			struct.pack_into("<BBH", tocData, arcIdx * 0x04, arc["diskID"], arc["diskMode"], filePos)
+			struct.pack_into("<BBH", tocData, arcIdx * 0x04, arc["diskID"], arc["diskDrive"], filePos)
 			fname_b = arc["fileName"].encode("Shift-JIS") + b'\x00'
 			nameData += fname_b
 		else:

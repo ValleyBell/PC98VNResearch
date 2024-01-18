@@ -10,6 +10,7 @@
   (It is used in S05\_3, S09\_8 and S10\_4.)
 - [twilight_packer.py](twilight_packer.py) - archive (un-)packer for archives used by the game "Twilight", published by Studio Twinkle [^1]
   - [twilight_decompress.py](twilight_decompress.py) - original Python port of the Twilight decompression code
+- Twilight `TW.EXE` disassembly: [ASM file](TW.asm) / [IDB database](TW.idb)
 - [visitte_packer.py](visitte_packer.py) - archive (un-)packer for `DISK#.LBX` archives used by the game "Visitte", published by Mischief [^1]
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
