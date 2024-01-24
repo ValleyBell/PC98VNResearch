@@ -364,6 +364,16 @@ def encode_cmf_file(filepath_intxt: str, filepath_incmf: str, filepath_outcmf: s
         txtBufSize = endPos - startPos
         txtData = generate_data_bytes(ditems)
         txtSize = len(txtData)
+        if cmd == 0x4F and (endPos + 2 <= len(msgData)):
+            # Command 4F needs special treatment, as it looks ahead and
+            # checks, whether or not the text is followed by *another* 4F command.
+            # And if so, it assumes that the text continues at [endpos + 0x0A]
+            next_cmd = struct.unpack_from("<H", msgData, endPos)[0]
+            txtData += msgData[endPos : endPos + 0x02]
+            if next_cmd == 0x4F:
+                txtData += b'\x00' * 0x08
+            txtSize = len(txtData)
+            txtBufSize = 0  # enforce moving the block to the end of the file
         if txtSize <= txtBufSize:
             # new text has enough space in the original buffer - overwrite it
             txtPos = startPos

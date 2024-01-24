@@ -1,0 +1,37 @@
+Night Slave MDR format
+----------------------
+This is a series of commands that follow this pattern:
+
+- 2 bytes - command ID (2-byte Little Endian)
+- ? bytes - data
+
+Commands
+--------
+0000 - end of file
+	no parameters
+0001 - load graphics file
+	parameters: file name (e.g. C01.vdf), ends with a single 00 byte
+0002 - graphics effect
+	parameters: one 2-byte word (Little Endian): effect ID (valid: 01h..10h)
+	known effect IDs:
+		01h - palette related
+		02h - show loaded VDF image, with fade-in effect
+		07h - restore screen? + some additional effect
+		08h - show loaded VDF image
+		09h - save screen?
+		0Ah - fade screen in
+		0Bh - fade screen out to black
+0003 - print text, then wait for user keypress
+	parameters: Shift-JIS encoded text, ends with a two(!) 00 bytes
+	Note: Allows the user to cancel the cutscene with ESC.
+0004 - wait for user keypress
+	no parameters
+0005 - load music file
+	parameters: file name (e.g. nss01.uso), ends with a single 00 byte
+	Note: The game can replace the file extension with .mfd to load MIDI songs.
+0006 - fade music out
+	no parameters
+0007 - Timeout (user-interruptable)
+	parameters: one 2-byte word (Little Endian): number of frames to wait
+0008 - print text, then delay for up to 90 frames (user-interruptable)
+	parameters: Shift-JIS encoded text, ends with a two(!) 00 bytes

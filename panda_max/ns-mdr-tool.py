@@ -22,47 +22,16 @@ Text format used by this tool:
   - Strings can use Python-style escaping using the backslash.
 """
 
-"""
-Night Slave MDR format
-----------------------
-This is a series of commands that follow this pattern:
-
-- 2 bytes - command ID (2-byte Little Endian)
-- ? bytes - data
-
-Commands:
-
-0000 - end of file (?)
-        no parameters
-0001 - load graphics file
-        parameters: file name (e.g. C01.vdf), ends with a single 00 byte
-0002 - graphics effect
-        parameters: one 2-byte word (Little Endian): effect ID (valid: 01h..10h)
-0003 - print text
-        parameters: Shift-JIS encoded text, ends with a two(!) 00 bytes
-0004 - wait for user keypress
-        no parameters
-0005 - load music file
-        parameters: file name (e.g. nss01.uso), ends with a single 00 byte
-        Note: The game can replace the file extension with .mfd to load MIDI songs.
-0006 - fade music out
-        no parameters
-0007 - Timeout (user-interruptable)
-        parameters: one 2-byte word (Little Endian): number of frames to wait
-0008 - print text, then delay for up to 90 frames (user-interruptable)
-        parameters: Shift-JIS encoded text, ends with a two(!) 00 bytes
-"""
-
 CMD_MODES = {
     0x00: 0,    # end of file (no parameters)
-    0x01: -1,   # ASCII file name (load graphics VDF)
+    0x01: -1,   # load graphics (.VDF ASCII file name)
     0x02: 2,    # graphics effect (2 bytes of parameters)
-    0x03: -2,   # Shift-JIS text
-    0x04: 0,    # ?? (no parameters)
-    0x05: -1,   # ASCII file name (load music USO)
-    0x06: 0,    # ?? (no parameters)
-    0x07: 2,    # ?? (2 bytes of parameters)
-    0x08: -2,   # Shift-JIS text
+    0x03: -2,   # print + wait for input (Shift-JIS text)
+    0x04: 0,    # wait for input (no parameters)
+    0x05: -1,   # load music (.USO ASCII file name)
+    0x06: 0,    # fade music out
+    0x07: 2,    # timeout (2 bytes of parameters)
+    0x08: -2,   # print + delay (Shift-JIS text)
 }
 
 ESCAPE_TBL = {  # special characters to be escaped

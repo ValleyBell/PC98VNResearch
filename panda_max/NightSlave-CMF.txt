@@ -1,0 +1,176 @@
+Night Slave CMF format
+----------------------
+CMF files consist of two different script formats.
+
+There is a "main script" that handles loading graphics and the level layout. It also calls MDR cutscenes.
+That one can be found under `CmfMainLoopA` in the disassembly.
+
+But there is also a "level script" that is responsible for all sorts of in-level events. (disassembly: `CmfMainLoopB`)
+
+
+Both script formats consist of a series of commands that follow this pattern:
+
+- 2 bytes - command ID (2-byte Little Endian)
+- ? bytes - data
+
+However they use different commands.
+
+Commands - main script
+--------
+00 - end level (also unloads the CMF file)
+	no parameters
+01 - set map position
+	2 bytes - X position
+	2 bytes - Y position
+02 - move map position
+	2 bytes - X increment
+	2 bytes - Y increment
+03 - loop
+	2 bytes - counter (initial value)
+	2 bytes - counter (reset value)
+	2 bytes - jump destination offset
+	When reaching the command, the counter is decremented. If it reaches 0, the counter is rese and the jump is taken.
+04 - ??
+	?? parameters
+05 - ??
+	no parameters
+06 - same as 04
+	?? parameters
+07 - load sprite graphics file
+	? bytes - null-terminated file name (.HDF file)
+	2 bytes - ID of the graphics slot where the HDF is loaded
+08 - unload sprite graphic
+	2 bytes - ID of the graphics slot to be unloaded
+09 - load sprite
+	2 bytes - ID of the graphics slot
+	2 bytes - sprite priority? [only the low byte is used]
+	2 bytes - X position
+	2 bytes - Y position
+	2 bytes - ?? [only the low byte is used]
+0A - show text (see level script command 3A)
+	2 bytes - file offset of the text string
+0B - ??
+	2 bytes - ??
+0C - load enemy
+	2 bytes - X position
+	2 bytes - Y position
+	2 bytes - enemy type?
+0D - load cutscene
+	? bytes - null-terminated file name (.MDR file)
+0E - show cockpit
+	no parameters
+0F - "setup action" (initialize level?)
+	no parameters
+10 - unload all sprite graphics
+	no parameters
+11 - load graphics file
+	? bytes - null-terminated file name (.SDF file)
+12 - load graphics file
+	? bytes - null-terminated file name (.RDF file)
+13 - load graphics file
+	? bytes - null-terminated file name (.TDF file)
+14 - load/play music
+	? bytes - null-terminated file name (.USO file)
+15 - ??
+	no parameters
+16 - set map position (same as 01)
+	2 bytes - X position
+	2 bytes - Y position
+17 - ??
+	2 bytes - ??
+18 - ??
+	2 bytes - ??
+19 - ??
+	2 bytes - ??
+	2 bytes - ??
+1A - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+1B - fade to palette to black
+	2 bytes - offset into VDF palette buffer
+1C - call level script
+	2 bytes - file offset of the level script data
+1D - load palette
+	2 bytes - offset into VDF palette buffer
+1E - ??
+	2 bytes - ??
+1F - ??
+	2 bytes - ??
+	2 bytes - ??
+20 - call executable
+	2 bytes - null-terminated file name (.EXE file)
+21 - show Mission End screen
+	2 bytes - ?? (can be 0..3)
+22 - ??
+	no parameters
+23 - ??
+	2 bytes - ??
+24 - set shield state?
+	2 bytes - state value (can be 0..2)
+25 - ??
+	2 bytes - ??
+
+
+Commands - level script
+--------
+valid commands are 00h..7Eh
+
+03 - jump
+	2 bytes - file offset to continue execution at
+05 - wait
+	2 bytes - number of frames that the script execution is delayed before executing the next command
+08 - set "sprite frames" array
+	2 bytes - file offset of the data
+	Sprite data is a list of 2-byte image IDs that reference frames of the respective HDF file.
+	The game will show each image for 1 frame.
+	Special values:
+		0FFFFh - loop to beginning
+		0FFFEh - stay at last image
+		values 8000h..0FFFDh behave the same as 0FFFEh.
+10 - move map position
+	2 bytes - X increment
+	2 bytes - Y increment
+11 - set object sprite position
+	2 bytes - X position
+	2 bytes - Y position
+14 - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+1E - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - number of frames that the script execution is delayed before executing the next command
+22 - ??
+	2 bytes - number of frames that the script execution is delayed before executing the next command
+26 - ??
+	2 bytes - number of frames that the script execution is delayed before executing the next command
+2B - set sprite for this object
+	2 bytes - sprite graphics slot ID
+2C - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - ??
+34 - ??
+	2 bytes - ??
+3A - show text
+	2 bytes - number of frames that the script execution is delayed before executing the next command
+	? bytes - null-terminated Shift-JIS text (Note: needs 2x 00h as terminator)
+43 - random conditional jump
+	2 bytes - jump probability
+	2 bytes - number of frames that the script execution is delayed before executing the next command
+	It calculates a random number between 0 to 100. The jump is taken when (random number < jump probability).
+47 - move object sprite position
+	2 bytes - X increment
+	2 bytes - Y increment
+4F - show text, halt the game while the text is shown
+	2 bytes - ignored
+	? bytes - null-terminated Shift-JIS text (Note: needs 2x 00h as terminator)
+5B - load/play music
+	? bytes - null-terminated file name (.USO file)
