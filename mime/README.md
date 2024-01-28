@@ -5,6 +5,7 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 ## Folder contents
 
 - `MIME.EXE` disassembly: [ASM file](MIME.asm) / [IDB database](MIME.idb) / [decompressed executable](MIME.EXE)
+- `MIME_OP.EXE` disassembly: [ASM file](MIME_OP.asm) / [IDB database](MIME_OP.idb)
 - a [patch to support ASCII text](MIME-ASC.asm) in `MIME.EXE` almost everywhere
   - The game comes with very limited ASCII support for drawing certain texts like "HP" and "MP" using special script commands.  
     This patch adds ASCII support to almost all functions that originally supported only 2-byte Shift-JIS codes.
