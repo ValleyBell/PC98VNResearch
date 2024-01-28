@@ -155,20 +155,20 @@ class JISConverter:
 	# encode Python str into Shift JIS (bytes)
 	# returns either a "bytes" object OR a tuple of (position of unconvertable input character, converted data)
 	def sjis_encode_str(self, data: str) -> typing.Union[bytes, tuple]:
-		result = b""
+		result = bytearray()
 		idx = 0
 		while idx < len(data):
 			cdata = self.sjis_encode_chr(data[idx:])
 			if cdata is None:
-				return (idx, result)
+				return (idx, bytes(result))
 			if cdata[0] < 0x80:
-				result += bytes([cdata[0]])
+				result.append(cdata[0])
 			else:
 				sjis1 = (cdata[0] >> 8) & 0xFF
 				sjis2 = (cdata[0] >> 0) & 0xFF
-				result += bytes([sjis1, sjis2])
+				result.extend([sjis1, sjis2])
 			idx += cdata[1]
-		return result
+		return bytes(result)
 
 if __name__ == "__main__":
 	sys.stdout.reconfigure(encoding='utf-8')

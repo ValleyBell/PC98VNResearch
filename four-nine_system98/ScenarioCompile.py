@@ -233,8 +233,9 @@ TOKEN_ALPHABET = [chr(x) for x in \
 KEYWORDS = {
 	"INCLUDE",	# include other ASM file
 	"DESC",	# module description: UTF-8 string to be encoded as Shift-JIS
-	"DB",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
+	"DB",	# data: bytes or ASCII strings
 	"DW",	# data: words
+	"DS",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
 	"DSJ",	# data: JIS code words, to be encoded as Shift-JIS
 }
 for cdata in SCENE_CMD_LIST.values():
@@ -453,6 +454,15 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 	
 	return (cmd_list, label_list)
 
+def ascii_encode_str(data: str) -> typing.Union[bytes, tuple]:
+	result = bytearray()
+	for (idx, c) in enumerate(data):
+		c = ord(c)
+		if c >= 0x80:
+			return (idx, bytes(result))
+		result.append(c)
+	return bytes(result)
+
 def generate_binary(cmd_list, label_list) -> bytes:
 	KEYWORD2CMD = {}
 	for (key, item) in SCENE_CMD_LIST.items():
@@ -482,7 +492,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 				elif pitem.type == TKTP_STR:
 					value = necjis.sjis_encode_str(pitem.data)
 					if type(value) is not bytes:
-						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
 						return None
 					mod_desc += value
 				else:
@@ -500,9 +510,29 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
 				elif pitem.type == TKTP_STR:
+					value = ascii_encode_str(pitem.data)
+					if type(value) is not bytes:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Only printable ASCII characters are allowed!")
+						return None
+					data += value
+				else:
+					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
+					return None
+		elif citem.cmdName == "DS":
+			for pitem in citem.params:
+				if pitem.type == TKTP_INT:
+					try:
+						if pitem.data < 0:
+							data += struct.pack("<b", pitem.data)
+						else:
+							data += struct.pack("<B", pitem.data)
+					except:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
+						return None
+				elif pitem.type == TKTP_STR:
 					value = necjis.sjis_encode_str(pitem.data)
 					if type(value) is not bytes:
-						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Unable to convert string to Shift-JIS!")
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
 						return None
 					data += value
 				else:

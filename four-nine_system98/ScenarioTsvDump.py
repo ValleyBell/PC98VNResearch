@@ -58,8 +58,9 @@ TOKEN_ALPHABET = [chr(x) for x in \
 KEYWORDS = {
 	"INCLUDE",	# include other ASM file
 	"DESC",	# module description: UTF-8 string to be encoded as Shift-JIS
-	"DB",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
+	"DB",	# data: bytes or ASCII strings
 	"DW",	# data: words
+	"DS",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
 	"DSJ",	# data: JIS code words, to be encoded as Shift-JIS
 }
 
@@ -356,7 +357,7 @@ def generate_message_table(cmd_list, label_list) -> list:
 			lbl_key = cmd_lbl_list[cid]
 		
 		cmdName = citem.cmdName.upper()
-		if cmdName == "DB":
+		if cmdName == "DS":
 			has_byte = 0
 			has_null = 0
 			has_str = 0
@@ -444,7 +445,7 @@ def generate_message_table(cmd_list, label_list) -> list:
 			cmdName = citem.cmdName.upper()
 			do_flush = False
 			had_end = False
-			if cmdName == "DB":
+			if cmdName == "DS":
 				last_chr = None
 				meta_ctrl_code = False
 				for pitem in citem.params:

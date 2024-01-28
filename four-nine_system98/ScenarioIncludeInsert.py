@@ -54,11 +54,12 @@ TOKEN_ALPHABET = [chr(x) for x in \
 KEYWORDS = {
 	"INCLUDE",	# include other ASM file (currently just ignored)
 	"DESC",	# module description: UTF-8 string to be encoded as Shift-JIS
-	"DB",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
+	"DB",	# data: bytes or ASCII strings
 	"DW",	# data: words
+	"DS",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
 	"DSJ",	# data: JIS code words, to be encoded as Shift-JIS
 }
-DATA_KEYWORDS = ["DB", "DW", "DSJ"]
+DATA_KEYWORDS = ["DB", "DW", "DS", "DSJ"]
 
 config = {}
 

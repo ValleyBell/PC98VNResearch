@@ -639,7 +639,10 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			if strsize > 0:
 				endpos = curpos + strsize
 			str_arr = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
-			cmd_list += get_sjis_str_items(str_arr, curpos)
+			if dtype == SCPT_STR:
+				cmd_list += get_sjis_str_items(str_arr, curpos)
+			else:
+				cmd_list += [(curpos, -11, str_arr)]
 		elif cmd_mode == -21:
 			# menu selection (2-byte words, 5 per entry, terminated with single value 0)
 			dend = curpos
@@ -707,7 +710,7 @@ def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
 	sjis_1st = None
 	chrpos = 0
 	for (pos, c) in enumerate(str_data):
-		new_type = -11
+		new_type = -12
 		if sjis_1st is None:
 			if c >= 0x80:
 				sjis_1st = c
@@ -722,7 +725,7 @@ def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
 				# use special "DSJ" instruction for JIS codes we can not convert
 				new_type = -25
 				new_data = [jis]
-			if new_type == -11:
+			if new_type == -12:
 				new_data = bytes([sjis_1st, c])
 			sjis_1st = None
 			# do NOT set chrpos
@@ -740,7 +743,40 @@ def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
 		result += [(token_pos, last_type, token_data)]
 	return result
 
-def str2asm(str_data: bytes) -> typing.List[str]:
+def str2asm_ascii(str_data: bytes) -> typing.List[str]:
+	# convert binary array to ASM string
+	# This outputs a list of "tokens", consisting of either
+	#   - a quoted string or
+	#   - a raw number (for unprintable/unconvertable character sequences)
+	# This does NOT do Shift-JIS conversion.
+	res_items = []
+	mode = 0
+	for c in str_data:
+		if c >= 0x20 and c <= 0x7E:
+			new_mode = 1
+			c = chr(c)
+			if c in ['"', "'", '\\']:	# escape some special characters
+				c_add = '\\' + c
+			else:
+				c_add = c
+		else:
+			new_mode = 0
+			c_add = f"0x{c:02X}" if c >= 10 else f"{c}"
+		if new_mode == 0 and mode == 0:
+			res_items.append(c_add)
+		elif new_mode == 0 and mode == 1:
+			res_items[-1] += '"'
+			res_items.append(c_add)
+		elif new_mode == 1 and mode == 0:
+			res_items.append('"' + c_add)
+		elif new_mode == 1 and mode == 1:
+			res_items[-1] += c_add
+		mode = new_mode
+	if mode == 1:
+		res_items[-1] += '"'
+	return res_items
+
+def str2asm_sjis(str_data: bytes) -> typing.List[str]:
 	# convert binary array to ASM string
 	# This outputs a list of "tokens", consisting of either
 	#   - a quoted string or
@@ -777,7 +813,7 @@ def str2asm(str_data: bytes) -> typing.List[str]:
 		if type(c) is str:
 			new_mode = 1
 			if c in ['"', "'", '\\']:	# escape some special characters
-				c = '\\' + c_add
+				c_add = '\\' + c
 			else:
 				c_add = c
 		else:
@@ -885,7 +921,7 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					lbl_flags = label_list[cmd_pos][1]
 				if cmd_id == -9:
 					cmd_name = "DESC"	# module description
-					data_strs = str2asm(params)
+					data_strs = str2asm_sjis(params)
 					group_list = gen_string_groups(data_strs)	# intelligent line splitting
 				elif cmd_id == -3:
 					cmd_name = "DW"
@@ -914,9 +950,13 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 				elif cmd_id == -2:
 					cmd_name = "DW"	# Data: word (hex)
 					data_strs = [f"0x{val:04X}" for val in params]
+				elif cmd_id == -12:
+					cmd_name = "DS"	# Data: Shift-JIS string
+					data_strs = str2asm_sjis(params)
+					group_list = gen_string_groups(data_strs)	# intelligent line splitting
 				elif cmd_id == -11:
-					cmd_name = "DB"	# Data: string
-					data_strs = str2asm(params)
+					cmd_name = "DB"	# Data: ASCII string
+					data_strs = str2asm_ascii(params)
 					group_list = gen_string_groups(data_strs)	# intelligent line splitting
 				elif cmd_id == -10:
 					cmd_name = "DB"	# Data: byte (decimal)
