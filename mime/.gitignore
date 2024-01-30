@@ -1,3 +1,4 @@
-*.LST
-Mime (Special Version).hdi
+*.lst
+*.hdi
+*.hdm
 NDC.EXE

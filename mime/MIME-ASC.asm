@@ -59,8 +59,10 @@ scr_fin_2b EQU 72C9h
 	incbin "MIME.EXE", $, 047Ah-($-$$)
 	dw	RelocDummy, 000h	; originally: scr5D_PrintSJIS: call PrintSeg:ShiftJIS2JIS
 	dw	RelocDummy, 000h	; originally: scr5D_PrintSJIS: call PrintSeg:PrintFontChar
+	incbin "MIME.EXE", $, 0486h-($-$$)
 	dw	RelocDummy, 000h	; originally: scr5E_PrintVarStr: call PrintSeg:ShiftJIS2JIS
 	dw	RelocDummy, 000h	; originally: scr5E_PrintVarStr: call PrintSeg:PrintFontChar
+
 	incbin "MIME.EXE", $, 04E2h-($-$$)
 
 
@@ -222,40 +224,41 @@ txtCancel:
 
 	incbin "MIME.EXE", $, 7ADFh - ($-$$-SEG_BASE_OFS)
 	push	cx		; save CX, as it is used for counting the menu entries
+	push	bx		; save BX, which gets textDrawPtr
+	push	di		; save DI - should be unused, but let's be safe
+	mov	di, 41C4h
 PrintMenuEntry:
 	mov	ax, [si]
 	cmp	ax, 5C5Ch
 	jz	short pme_ret
+	
+	mov	bx, [es:di]	; save original textDrawPtr value
 	call	PrintChar	; draw unselected text (white)
 	add	si, cx
 	add	dl, cl		; add character width to "menu width counter"
 	
-	; These 3 lines round es:41C4h (textDrawPtr) up to multiples of 2 bytes.
-	; This fixes the colour highlighting.
-	; TBH, I don't really understand *why* you have to do that.
-	; I should probably study the PC-98 graphics system a bit more.
-	sub	cx, byte 2
-	sub	word [es:41C4h], cx
-	
-	add	word [es:41C4h], byte 26h
-	push	word [es:41C6h]
-	push	word [es:41C8h]
+	add	bx, byte 28h	; move pointer into "selected text" area
+	mov	[es:di], bx	; restore textDrawPtr from BX, so that we advance the text draw pointer only once below
+	push	word [es:di+2]
+	push	word [es:di+4]
 	push	word [cs:020Bh+12h]
-	pop	word [es:41C6h]
+	pop	word [es:di+2]
 	push	word [cs:020Bh+14h]
-	pop	word [es:41C8h]
+	pop	word [es:di+4]
 	push	ax
 reloc_pme:
-	call	PrintSeg:PrintFontChar	; draw selected text
+	call	PrintSeg:PrintFontChar	; draw selected text (also advances textDrawPtr)
 	add	sp, byte 2
-	pop	word [es:41C8h]
-	pop	word [es:41C6h]
-	sub	word [es:41C4h], byte 28h
+	pop	word [es:di+4]
+	pop	word [es:di+2]
+	sub	word [es:di], byte 28h
 	jmp	short PrintMenuEntry
 
-	times 7B3Ch-4-($-$$-SEG_BASE_OFS) db 90h
+	times 7B3Ch-6-($-$$-SEG_BASE_OFS) db 90h
 pme_ret:
 	add	si, byte 2	; skip 5C5C
+	pop	di
+	pop	bx
 	pop	cx
 	; We must be at 7B3Ch here.
 
@@ -287,6 +290,7 @@ pme_ret:
 
 	incbin "MIME.EXE", $, 8C07h - ($-$$-SEG_BASE_OFS)
 ; patching scr5E_PrintVarStr
+	; NOTE: used during fight (highlighted text)
 	call	PrintStr_DI
 	jmp	scr_fin_2b
 	times 8C31h-($-$$-SEG_BASE_OFS) db 90h
