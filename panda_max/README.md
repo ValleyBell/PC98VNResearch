@@ -21,6 +21,7 @@ I did a fair amount of research on it in order to help BabaJeanmel with a proper
 - a [patch to support ASCII text](NSG_ASCII-patch.asm) for `NSG.EXE`
   - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
   - A prepatched version is included as [NSG\_ASC.EXE](NSG_ASC.EXE).
+- `ENDING.EXE` disassembly: [ASM file](NS_ENDING.asm) / [IDB database](NS_ENDING.idb)
 
 ## Notes
 
