@@ -330,7 +330,7 @@ loc_1C951:				; CODE XREF: mdrTextPrint_H2+6j
 		cmp	byte [di], 0Dh
 		jnz	short mtph2_normal_chr
 		; force new line
-		mov	byte [cs:mdrTxtDrawPos], 2+68
+		mov	byte [cs:mdrTxtDrawPos], 2+68-1	; +2 = border, -1 = break *after* the newline
 mtph2_normal_chr:
 		
 		mov	cx, 32		; text box X start
