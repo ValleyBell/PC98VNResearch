@@ -17,6 +17,7 @@ PrintFontChar EQU 06D8h
 
 ScriptMainLoop EQU 70C0h
 scr_fin_2b EQU 72C9h
+WaitFrames EQU 8E59h
 
 
 ; include EXE header
@@ -25,7 +26,11 @@ scr_fin_2b EQU 72C9h
 ; === relocation table patches ===
 ; include relocation table and patch a few of the EXE relocation entries
 
-	incbin "MIME.EXE", $, 1CAh-($-$$)
+	incbin "MIME.EXE", $, 016Eh-($-$$)
+	dw	RelocDummy, 000h	; originally: scr00_PrintTalk: call PrintSeg:ShiftJIS2JIS
+	dw	RelocDummy, 000h	; originally: scr00_PrintTalk: call PrintSeg:PrintFontChar
+
+	incbin "MIME.EXE", $, 01CAh-($-$$)
 	; patch Print_NoData calls
 	dw	reloc_01+3, 4C7h
 	dw	reloc_02+3, 4C7h
@@ -34,17 +39,17 @@ scr_fin_2b EQU 72C9h
 	dw	RelocDummy, 000h
 %endrep
 	; patch PrintSaveGameName calls
-	incbin "MIME.EXE", $, 22Ah-($-$$)
+	incbin "MIME.EXE", $, 022Ah-($-$$)
 %rep (2AEh-($-$$))/4
 	dw	RelocDummy, 000h
 %endrep
 	; patch Print_Cancel calls
-	incbin "MIME.EXE", $, 2AEh-($-$$)
+	incbin "MIME.EXE", $, 02AEh-($-$$)
 %rep (2FEh-($-$$))/4
 	dw	RelocDummy, 000h
 %endrep
 	; patch ShowMenuTexts calls
-	incbin "MIME.EXE", $, 2FEh-($-$$)
+	incbin "MIME.EXE", $, 02FEh-($-$$)
 	dw	RelocDummy, 000h
 	dw	RelocDummy, 000h
 	dw	reloc_pme+3, 4C7h
@@ -71,6 +76,87 @@ scr_fin_2b EQU 72C9h
 	incbin "MIME.EXE", $, 6E02h - ($-$$-SEG_BASE_OFS)
 saveNamePattern:
 	db	"**/** **:**  Lv**", 0, 0, 0	; shorten "Level" text to just "Lv " (save 3 characters)
+
+; --- patch scenario script commands, part 1 ---
+	incbin "MIME.EXE", $, 70DFh - ($-$$-SEG_BASE_OFS)
+	mov	bh, 32		; patch from 16 full-width to 32 half-width characters per line
+	incbin "MIME.EXE", $, 70E8h - ($-$$-SEG_BASE_OFS)
+; patching scr00_PrintTalk
+loc_1BD58:
+	mov	[es:41C4h], di
+	or	dl, dl
+	jz	short loc_1BD64
+	add	di, byte 2
+loc_1BD64:
+	xor	bl, bl
+
+loc_1BD66:
+	test	word [cs:016Eh], 1
+	jz	short loc_1BD88
+	
+	push	di
+	mov	di, 020Bh	; 020Bh = ScriptMemory
+	add	di, [cs:0170h]
+	mov	ax, [cs:di]
+	pop	di
+	or	ax, ax		; bytes 00 00 -> return to "original" string
+	jz	short loc_1BD88
+	
+	push	ax
+	call	scr00_print_chr
+	add	[cs:0170h], cx
+	jmp	short scr00_chr_check
+
+loc_1BD88:
+	mov	ax, [si]
+	cmp	ax, 5C5Ch	; '\\'
+	jz	short scr00_ret
+	cmp	ax, 2323h	; '##'
+	jz	short scr00_print_name
+	
+	push	ax
+	call	scr00_print_chr
+	add	si, cx
+scr00_chr_check:
+	add	bl, cl
+	
+	pop	cx
+	cmp	bl, bh
+	jae	short loc_1BDD5
+	cmp	cx, 7A81h	; Shift-JIS closing bracket
+	jnz	short loc_1BD66
+	
+	mov	dl, 1		; enforce line break
+	jmp	short loc_1BDDD
+loc_1BDD5:
+	or	dl, dl
+	jz	short loc_1BDDD
+	sub	bh, 2
+	xor	dl, dl
+loc_1BDDD:
+	add	di, 5F0h
+	jmp	loc_1BD58
+
+scr00_print_name:
+	add	si, byte 2
+	or	word [cs:016Eh], byte 1
+	mov	word [cs:0170h], 0
+	jmp	short loc_1BD66
+
+scr00_ret:
+	add	si, byte 2
+	jmp	ScriptMainLoop
+
+scr00_print_chr:
+	push	word [cs:020Bh+0Ch]
+	call	WaitFrames
+	add	sp, byte 2
+	jmp	PrintChar
+
+	times 7174h-($-$$-SEG_BASE_OFS) db 90h
+
+; TODO: patch scr02 (and figure out what it does)
+
 
 ; --- patch save game code ---
 	incbin "MIME.EXE", $, 7567h - ($-$$-SEG_BASE_OFS)
@@ -266,10 +352,7 @@ pme_ret:
 	shl	dx, 3		; patch from <<4 (*16) to <<3 (*8)
 
 
-; --- patch scenario script commands ---
-; TODO: patch scr00 (and figure out what it does)
-; TODO: patch scr02 (and figure out what it does)
-
+; --- patch scenario script commands, part 2 ---
 	incbin "MIME.EXE", $, 825Ah - ($-$$-SEG_BASE_OFS)
 ; patching scr30_PrintSJIS
 	call	PrintStr_SI
