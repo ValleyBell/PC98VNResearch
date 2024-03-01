@@ -54,212 +54,22 @@ def get_cjk_string_width(text: str) -> int:
 def tsv2textitems(tsv_data: list) -> list:
 	textitem_list = []
 	
-	# collect "text groups" and fuse consecutive lines with the same "label"
-	last_label = None
-	tlid_start = None
-	tlid_end = None
-	tstr = None
 	for (lid, cols) in enumerate(tsv_data):
 		if type(cols) is str:
 			continue
 		#print(cols)
 		(filename, lineref, lblname, mode, tbox, text) = cols
-		mode = cols[3]
-		text = cols[5]
-		if last_label != lblname:
-			if tstr is not None:
-				textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
-			last_label = lblname
-			tlid_start = lid
-			tstr = ""
-		tstr += text
-		tlid_end = lid
-		if tstr.endswith('\\'):
-			tstr += '\n'
-		else:
-			textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
-			tstr = None
-			last_label = None
-	if tstr is not None:
-		textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
+		textitem_list += [{"line_id": lid, "mode": mode, "text": text}]
 	
 	return textitem_list
-
-def get_last_tbox_size(tsv_data: list, line: int) -> str:
-	while line >= 0:
-		if "x" in tsv_data[line][4]:
-			return tsv_data[line][4]
-		line -= 1
-	return "999x999"
-
-def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, lines, text_size):
-	global config
-	
-	(tb_width, tb_height) = tb_size_int
-	if config.textsize_check == 1:
-		(xpos, ypos) = text_size
-		if xpos <= tb_width and ypos <= tb_height:
-			return
-		print(f"TSV line {1+txitm['line_st']}: New text ({xpos}x{ypos}) " \
-				f"exceeds text box! (text box: {tb_size_str})")
-	elif config.textsize_check == 2:
-		if len(lines) == line_count:
-			return
-		print(f"TSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) " \
-				f"when original one had {line_count}! (text box: {tb_size_str})")
-	else:
-		return
-	
-	# show line data
-	old_txt = []
-	for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-		if type(tsv_data[tsv_lid]) is str:
-			continue	# ignore comment lines
-		old_txt.append(tsv_data[tsv_lid][5])
-	print("\told: " + str(old_txt))
-	print("\tnew: " + str(lines))
-	return
 
 def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 	# reinsert text items into the TSV column list again
 	tsv_new = tsv_data.copy()
 	for txitm in textitem_list:
-		# count effective text lines
-		line_count = 0
-		for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-			if type(tsv_new[tsv_lid]) is str:
-				continue	# don't count comment lines
-			line_count += 1
-		
-		tbox_size = get_last_tbox_size(tsv_data, txitm["line_st"])
-		(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
-		#tb_width += 2	# somehow my calculations were off by 1
-		
-		can_add_linebreaks = False
-		if txitm["mode"] == "txt":
-			if tb_height > 1:
-				can_add_linebreaks = True	# line breaks may be added to longer text paragraphs
-		if config.keep_lines:
-			can_add_linebreaks = False	# The option enforces to keep the original line breaks.
-		
-		# split text data into multiple lines for the TSV
-		text = txitm["text"]
-		pos = 0
-		xpos = 0
-		max_xpos = xpos
-		tbox_ybase = 0
-		lines = [""]
-		# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
-		last_word_lpos = pos	# character position (in *line*) of the beginning of the last "word"
-		last_word_xpos = xpos	# text X position of the beginning of the last "word"
-		while pos < len(text):
-			chrlen = 1
-			chrwidth = 0
-			no_linebreak_now = False
-			if (text[pos] == '\\') and (pos + 1 < len(text)):
-				ctrl_chr = text[pos + 1]
-				chrlen += 1
-				if ctrl_chr == 'x':
-					ccode = int(text[pos+chrlen : pos+chrlen+2], 0x10)
-					chrwidth = get_cjk_char_width(chr(ccode))
-					chrlen += 2
-				elif ctrl_chr == 'j':
-					chrwidth = 2	# assume full-width emoji / custom PC-98 font character
-					chrlen += 4
-				elif ctrl_chr == 'u':
-					ccode = int(text[pos+chrlen : pos+chrlen+4], 0x10)
-					chrwidth = get_cjk_char_width(chr(ccode))
-					chrlen += 4
-				elif ctrl_chr == 'U':
-					ccode = int(text[pos+chrlen : pos+chrlen+8], 0x10)
-					chrwidth = get_cjk_char_width(chr(ccode))
-					chrlen += 8
-				elif ctrl_chr == 'r':	# reset X position
-					xpos = 0
-				elif ctrl_chr == '\n':	# new TSV line
-					lines[-1] += "\\"
-					lines.append("")	# start new line
-					pos += chrlen
-					continue
-				elif ctrl_chr == 'c':	# set colour
-					xpos -= 1	# This and the following byte don't affect the cursor.
-					# I can't modify chrlen here, because the following byte is a separate "token" of variable length.
-				elif ctrl_chr == 'w':	# wait + clear textbox
-					lines[-1] += text[pos : pos+chrlen]
-					pos += chrlen
-					do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
-					
-					# reset all coordinate data
-					tbox_ybase = len(lines)
-					xpos = 0
-					max_xpos = xpos
-					last_word_lpos = pos
-					last_word_xpos = xpos
-					continue
-			elif ord(text[pos]) >= 0x20:
-				chrwidth = get_cjk_char_width(text[pos])
-				if text[pos].isspace():
-					no_linebreak_now = True	# prevent line breaks before spaces
-					last_word_lpos = len(lines[-1]) + chrlen
-					last_word_xpos = xpos + chrwidth
-			if can_add_linebreaks and (xpos + chrwidth > tb_width) and not no_linebreak_now:
-				# add line breaks only in "txt" mode
-				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace() or \
-					(last_word_xpos < tb_width*0.7):
-					# (a) there were no spaces OR
-					# (b) the only spaces were indentation OR
-					# (c) the last word is very long (more than 30% of the line)
-					# -> just break in the middle of the word
-					#print(f"Line break after: {str(lines)}")
-					lines[-1] += "\\r\\"
-					lines.append("")	# start new line
-					xpos = 0
-				else:
-					# insert a line break at the beginning of the last word (and strip spaces)
-					#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - last_word_xpos}")
-					#print(f"Line-Beginning: Word Pos {last_word_lpos}, Word XPos {last_word_xpos}, \"{lines[-1][:last_word_lpos]}\"")
-					rem_line = lines[-1][last_word_lpos:]
-					lines[-1] = lines[-1][:last_word_lpos] + "\\r\\"
-					lines.append(rem_line)
-					xpos -= last_word_xpos
-				last_word_lpos = 0
-				last_word_xpos = 0
-			
-			lines[-1] += text[pos : pos+chrlen]
-			if not text[pos : pos+chrlen].isspace():
-				max_xpos = max([xpos, max_xpos])
-			xpos += chrwidth
-			pos += chrlen
-		do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
-		
-		# make sure that we can replace the lines exactly
-		while len(lines) < line_count:
-			lines[-1] += "\\"
-			lines.append("")
-		while len(lines) > line_count:
-			if lines[-2].endswith("\\"):
-				lines[-2] = lines[-2][:-1]	# remove trailing backslash
-			lines[-2] += lines[-1]
-			lines.pop(-1)
-		
-		# now insert the lines into the TSV
-		line_count = txitm["line_end"] + 1 - txitm["line_st"]
-		txt_lid = 0
-		for tsv_lid in range(txitm["line_st"], txitm["line_end"] + 1):
-			if type(tsv_new[tsv_lid]) is str:
-				continue	# ignore comment lines
-			tsv_new[tsv_lid][5] = lines[txt_lid]
-			txt_lid += 1
+		tsv_lid = txitm["line_id"]
+		tsv_new[tsv_lid][5] = txitm["text"]
 	return tsv_new
-
-# Fusioning rules:
-#	general:
-#		- replace \X codes with {n} (for later resolving)
-#	mode "txt":
-#		- for "\r" followed by a space, keep both
-#		- just strip \r and fuse lines without spaces
-#		- after "terminator", do 2x \n
-#	mode "sel": replace \r at the end with normal newline
 
 def process_data(tsv_data: list) -> list:
 	global config
@@ -269,62 +79,31 @@ def process_data(tsv_data: list) -> list:
 			for cols in tsv_data:
 				f.write(str(cols).rstrip() + "\n")
 	
-	# At first, collect "text groups" and fuse consecutive lines.
+	# At first, turn TSV into a simpler list. (strip comments and unneccessary columns)
 	textitem_list = tsv2textitems(tsv_data)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "01_textitems_org.log", "wt") as f:
 			for txitm in textitem_list:
 				f.write(str(txitm) + "\n")
 	
-	if not config.keep_lines:
-		# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
-		SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼❢。？！〉》」』"
-		for txitm in textitem_list:
-			text = txitm["text"]
-			pos = text.find("\\r")
-			while pos >= 0:
-				next_pos = pos + 2
-				if text[next_pos : next_pos+2] == '\\\n':
-					next_pos += 2	# skip line end marker
-				#print(f"Next: {text[next_pos : next_pos+2]}")
-				if pos == 0:
-					pass	# keep when the string starts with it
-				elif (len(text) <= next_pos) or text[next_pos].isspace():
-					pass	# keep when being followed by a space
-				elif (pos > 1) and (text[pos - 1] in SENTENCE_END_CHRS):
-					pass	# keep when the last character is a "sentence/paragraph end" character
-				elif txitm["mode"] == "txt":
-					# fuse lines
-					text = text[:pos] + text[next_pos:]
-					pos -= 1
-				elif txitm["mode"] == "sel":
-					pass	# keep
-				pos = text.find("\\r", pos+1)
-			txitm["text"] = text
-		if DEBUG_OUTPUT_PATH:
-			with open(DEBUG_OUTPUT_PATH + "02_textitems_clean.log", "wt") as f:
-				for txitm in textitem_list:
-					f.write(str(txitm) + "\n")
-	
 	# Extract "unique" lines and set references in the original list.
 	trans_data = []
 	unique_texts = []
 	for (tid, txitm) in enumerate(textitem_list):
-		for tline in txitm["text"].split('\n'):
-			trdat = text2transdata(tline)
-			# Store text strings in a separate "unique texts" table.
-			# This allows us to remove duplicate instances of text lines.
-			try:
-				if len(trdat["data"]) == 0:
-					ut_idx = -1	# special value for empty strings
-				else:
-					ut_idx = unique_texts.index(trdat["data"])
-			except ValueError:
-				ut_idx = len(unique_texts)
-				unique_texts.append(trdat["data"])
-			trdat.pop("data")
-			trdat["tidx"] = ut_idx	# and save only a text reference
-			trans_data.append({"text_item": tid, **trdat})
+		trdat = text2transdata(txitm["text"])
+		# Store text strings in a separate "unique texts" table.
+		# This allows us to remove duplicate instances of text lines.
+		try:
+			if len(trdat["data"]) == 0:
+				ut_idx = -1	# special value for empty strings
+			else:
+				ut_idx = unique_texts.index(trdat["data"])
+		except ValueError:
+			ut_idx = len(unique_texts)
+			unique_texts.append(trdat["data"])
+		trdat.pop("data")
+		trdat["tidx"] = ut_idx	# save only a text reference ID
+		trans_data.append({"text_item": tid, **trdat})
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "03_translate_texts.log", "wt") as f:
 			for trdat in trans_data:
@@ -346,6 +125,7 @@ def process_data(tsv_data: list) -> list:
 	for trdat in trans_data:
 		txitm = textitem_newlist[trdat["text_item"]]
 		text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
+		# for "selection" type, optionally apply Title Case
 		if not config.raw and txitm["mode"] == "sel":
 			text = text.title()
 		txitm["text"].append(transdata2txt({**trdat, "data": text}))
@@ -357,7 +137,6 @@ def process_data(tsv_data: list) -> list:
 				f.write(str(txitm) + "\n")
 	
 	# Finally, reconstruct the TSV file.
-	# This includes inserting line breaks again.
 	tsv_newdata = textitems2tsv(textitem_newlist, tsv_data)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "07_tsvdata.log", "wt") as f:
@@ -601,8 +380,6 @@ def main(argv):
 	print("TSV Translator")
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-r", "--raw", action="store_true", help="no remapping of Japanese quotation marks")
-	aparse.add_argument("-l", "--keep-lines", action="store_true", help="do NOT remove + reinsert line breaks")
-	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default], 2 = check against previous text", default=1)
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	

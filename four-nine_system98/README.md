@@ -20,6 +20,7 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - [scenario text dumping tool](ScenarioTsvDump.py) - takes multiple decompiled scenarios (`ASM` file), extracts all text and dumps it into a tab-separated (TSV) text table file  
   The output is sorted by the order the scenario script references the text strings. (This seems to represent in-game order more accurately then the order of the strings, especially in the prologue.)
 - [scenario text reinsertion tool](ScenarioTsvReinsert.py) - takes a TSV text table file and reinserts the text into existing ASM files
+- [text table line break tool](tsvLineBreak.py) - takes a TSV text table file and removes or reinserts line breaks for running text according to text box info
 - [text table translation tool](tsvTranslate.py) - takes a TSV text table file and translates all text using Google Translate
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
