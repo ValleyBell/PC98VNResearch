@@ -15,7 +15,14 @@ Commands
 --------
 00 - exit to DOS, return code 0
 	no parameters
-01 - undefined
+01 - [v1.00] text box related
+	2 bytes - text box ID (00h..0Fh)
+	2 bytes - ??
+	2 bytes - ??
+	2 bytes - [HB-pad] ??
+	2 bytes - file offset of image file name to load
+	-> 0Ah bytes total
+01 - [v3.10] undefined
 02 - load image
 	2 bytes - destination column (X/8)
 	2 bytes - destination row (Y)
@@ -167,8 +174,12 @@ Commands
 	2 bytes - source register ID
 	2 bytes - register ID with X position
 	2 bytes - register ID with Y position
-2B - undefined
-2C - undefined
+2B - [v1.00] save full register buffer to file (2048 bytes)
+	2 bytes - file offset of file name
+2B - [v3.10] undefined
+2C - [v1.00] load register buffer from file (2048 bytes)
+	2 bytes - file offset of file name
+2C - [v3.10] undefined
 2D - clear registers
 	2 bytes - register ID 1
 	2 bytes - register ID 2
@@ -274,12 +285,19 @@ Commands
 43 - ?? (screen resolution related?)
 	2 bytes - register ID <- word_1D202
 	2 bytes - register ID <- word_1D204
-44 - undefined
-45 - undefined
-46 - undefined
-47 - undefined
-48 - undefined
-49 - undefined
+44 - [v1.00] dummy (does nothing)
+44 - [v3.10] undefined
+45 - [v1.00] some GFX effect
+	2 bytes - ??
+45 - [v3.10] undefined
+46 - [v1.00] same as command 56
+46 - [v3.10] undefined
+47 - [v1.00] same as command 56
+47 - [v3.10] undefined
+48 - [v1.00] same as command 56
+48 - [v3.10] undefined
+49 - [v1.00] same as command 56
+49 - [v3.10] undefined
 4A - save register buffer to file
 	2 bytes - [HB-pad] buffer (00 = buffer 1, 1000 bytes, 01..FF = buffer 2, 1048 bytes)
 	2 bytes - file offset of file name
@@ -422,9 +440,22 @@ Commands
 	2 bytes - destination register ID
 	2 bytes - source string ID
 	Puts the length of the source string (without terminator character) into the destination register.
-6F - undefined
-70 - undefined
-71 - undefined
+6F - [v1.00] convert long to 2 short registers
+	2 bytes - destination register ID [short]
+	2 bytes - source register ID [long]
+	Reads src, then puts the high word into src+0 and the low word into src+1. (effectively swapping the words)
+6F - [v3.10] undefined
+70 - [v1.00] read 2 short registers and save into 1 long-word register
+	2 bytes - destination register ID [long]
+	2 bytes - source register ID [short]
+	Reads src+0 and src+1 and writes it into dst with src+0 = high word, src+1 = low word.
+70 - [v3.10] undefined
+71 - [v1.00] compare two long registers
+	2 bytes - register ID of reg1 [long]
+	2 bytes - register ID of reg2 [long]
+	Same as command 0C, except that two long registers are compared with their full 4-byte longwords.
+	Additionally, the result is saved in register 0. (unlike command 0C)
+71 - [v3.10] undefined
 72 - set script loop counter
 	2 bytes - value for script loop counter
 73 - get script loop counter
@@ -480,8 +511,10 @@ Commands
 	no parameters
 86 - ??
 	2 bytes - file offset of ?? data
+	The data is 30h items * 12h bytes/item = 360h bytes long. All data values are 2-byte words.
+	The 12h data per items equals the same as the parameters to command 87 after the index.
 87 - ??
-	2 bytes - ??
+	2 bytes - ?? (some index)
 	2 bytes - [HB-pad] ??
 	2 bytes - ?? (some X position)
 	2 bytes - ?? (some Y position)
@@ -496,23 +529,24 @@ Commands
 	2 bytes - [HB-pad] GCD plane ID (0..3)
 	2 bytes - ?? (some X position)
 	2 bytes - ?? (some Y position)
-89 - ?? (GFX related)
+89 - [v1.10+] ?? (GFX related)
 	2 bytes - file offset of ?? data
-8A - ?? (GFX related)
+	The data is 30h items * 06h bytes/item = 120h bytes long. All data values are 2-byte words.
+8A - [v1.10+] ?? (GFX related)
 	2 bytes - register ID
 	2 bytes - register ID
 	2 bytes - register ID
 	2 bytes - register ID
-8B - ?? (GFX related)
+8B - [v1.10+] ?? (GFX related)
 	2 bytes - register ID (contains GDC plane ID)
 	2 bytes - ?? (some X position)
 	2 bytes - ?? (some Y position)
 	Note: Same as 88, except that parameters are read from registers.
-8C - ?? (GFX related)
+8C - [v1.10+] ?? (GFX related)
 	no parameters
-8D - ?? (GFX related)
+8D - [v3.10] ?? (GFX related)
 	no parameters
-8E - ?? (GFX related)
+8E - [v3.10] ?? (GFX related)
 	no parameters
 
 "Undefined" commands will print the message "Executed undefined system reserved instruction" and then exit to DOS with return code 1.
@@ -527,7 +561,7 @@ File names
 Text box strings
 ----------------
 - Strings use Shift-JIS encoding. They may include non-standard NEC-specific JIS characters, as well as custom ones from GAO4.FNT.
-- Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
+- [v3.10] Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
 - Special characters:
   - 00h - end string
   - 01h - wait for key press (shows idle animation), then clear text box
@@ -535,17 +569,24 @@ Text box strings
   - 03h cc - set text colour to cc
   - 04h ii - print register string ii (00/01 = character names)
   - 05h aa bb - print integer register bbaa (printed as decimal numbers, full-width Shift-JIS 854F..8558)
-  - 06h xx - ?? (xx can be 00..3F)
-  - 07h - some GFX effect
-  - 08h xx - ?? (sets byte_1E5C6)
+  - 06h - [v1.00] ignored
+  - 06h pp - [v3.10] portrait related (pp can be 00..3F)
+  - 07h - [v1.00] ignored
+  - 07h - [v3.10] some GFX effect
+  - 08h - [v1.00] ignored
+  - 08h xx - [v3.10] ?? (sets byte_1E5C6)
   - 09h - tab (print 8 spaces)
-  - 0Ah - no effect
-  - 0Bh - ?? (xx can be 00..3F)
-  - 0Ch - ?? (xx can be 00..3F)
+  - 0Ah - [v1.00] scroll text by 1 line
+  - 0Ah - [v3.10] no effect
+  - 0Bh pp - show portrait (pp can be 00..3F)
+  - 0Ch - [v1.00] ignored
+  - 0Ch pp - [v3.10] portrait related (pp can be 00..3F)
   - 0Dh - next line
-  - 0Eh xx - no effect (parameter is ignored)
-  - 0Fh cc - special code
-  - 0Fh 00h xx - sets some flag (value can be 00 or 01)
+  - 0Eh - [v1.00] ignored
+  - 0Eh xx - [v3.10] no effect (parameter is ignored)
+  - 0Fh - [v1.00] ignored
+  - 0Fh cc - [v3.10] special code
+  - 0Fh 00h xx - [v3.10] sets some flag (value can be 00 or 01)
 
 Menu Data
 ---------

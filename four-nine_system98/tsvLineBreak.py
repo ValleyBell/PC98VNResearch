@@ -179,7 +179,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				elif ctrl_chr == 'c':	# set colour
 					xpos -= 1	# This and the following byte don't affect the cursor.
 					# I can't modify chrlen here, because the following byte is a separate "token" of variable length.
-				elif ctrl_chr == 'w':	# wait + clear textbox
+				elif ctrl_chr == 'e':	# paragraph end (wait + clear textbox)
 					lines[-1] += text[pos : pos+chrlen]
 					pos += chrlen
 					if not keep_lines:

@@ -1,3 +1,6 @@
+; Input	MD5   :	1ADEE4E65FD6B6C04EE1F6177F74C985
+; Input	CRC32 :	F0A5F7CE
+
 ; File Name   :	R:\CANAAN\SYS98.EXE
 ; Format      :	MS-DOS executable (EXE)
 ; Base Address:	1000h Range: 10000h-27650h Loaded length: 16385h
@@ -2618,7 +2621,7 @@ sub_10F92	proc near		; CODE XREF: GetChrData+23p
 		push	es
 		mov	ax, seg	dseg
 		mov	ds, ax
-		mov	dl, byte_18E1A
+		mov	dl, print_color
 		mov	ax, es
 		mov	ds, ax
 		mov	si, di
@@ -2880,15 +2883,15 @@ sub_110BC	endp
 		align 2
 scriptFuncList	dw offset sExitDOS	; 0 ; DATA XREF: sub_110BC+35o
 		dw offset sUndefined	; 1
-		dw offset loc_13F38	; 2
-		dw offset loc_13E66	; 3
-		dw offset loc_13ED2	; 4
-		dw offset loc_13EF0	; 5
-		dw offset sApplyPalette	; 6
+		dw offset sLoadImage	; 2
+		dw offset sOpenTextBox	; 3
+		dw offset sCloseTextBox	; 4
+		dw offset sClearTextBox	; 5
+		dw offset sPalApply	; 6
 		dw offset sPalFadeBW1	; 7
 		dw offset sPalFadeBW2	; 8
 		dw offset sPalMaskToggle; 9
-		dw offset sJumpAbs	; 0Ah
+		dw offset sJump		; 0Ah
 		dw offset sCompareVars	; 0Bh
 		dw offset sCompareValVal; 0Ch
 		dw offset sCondJmp_EQ	; 0Dh
@@ -2899,20 +2902,20 @@ scriptFuncList	dw offset sExitDOS	; 0 ; DATA XREF: sub_110BC+35o
 		dw offset sCondJmp_NE	; 12h
 		dw offset sTblJump	; 13h
 		dw offset sSetPalColour	; 14h
-		dw offset loc_145B3	; 15h
-		dw offset loc_1458E	; 16h
+		dw offset sShowText_TBox; 15h
+		dw offset sShowText_XY	; 16h
 		dw offset sUndefined	; 17h
 		dw offset sLoadVar_Val	; 18h
 		dw offset sLoadVar_Var	; 19h
-		dw offset sBGM_Play	; 1Ah
-		dw offset sBGM_FadeOut	; 1Bh
-		dw offset sBGM_Stop	; 1Ch
+		dw offset sBGMPlay	; 1Ah
+		dw offset sBGMFadeOut	; 1Bh
+		dw offset sBGMStop	; 1Ch
 		dw offset sGetMusMode	; 1Dh
-		dw offset loc_14612	; 1Eh
+		dw offset sWaitKey	; 1Eh
 		dw offset sLoadScene	; 1Fh
 		dw offset sFillGVRAM	; 20h
 		dw offset sDelay	; 21h
-		dw offset loc_1382F	; 22h
+		dw offset sSetChrDelay	; 22h
 		dw offset sUndefined	; 23h
 		dw offset sAddVar_Val	; 24h
 		dw offset sSubVar_Val	; 25h
@@ -2928,7 +2931,7 @@ scriptFuncList	dw offset sExitDOS	; 0 ; DATA XREF: sub_110BC+35o
 		dw offset loc_13FA4	; 2Fh
 		dw offset sUndefined	; 30h
 		dw offset sUndefined	; 31h
-		dw offset loc_145D8	; 32h
+		dw offset sPrintVar_TBox; 32h
 		dw offset sWritePortA4	; 33h
 		dw offset sReadPortA4	; 34h
 		dw offset sTextFill	; 35h
@@ -2942,7 +2945,7 @@ scriptFuncList	dw offset sExitDOS	; 0 ; DATA XREF: sub_110BC+35o
 		dw offset sMulVar_Var	; 3Dh
 		dw offset sDivVar_Var	; 3Eh
 		dw offset loc_14761	; 3Fh
-		dw offset loc_1462E	; 40h
+		dw offset sDoMenuSel	; 40h
 		dw offset loc_14674	; 41h
 		dw offset loc_146B1	; 42h
 		dw offset loc_1473B	; 43h
@@ -2955,19 +2958,19 @@ scriptFuncList	dw offset sExitDOS	; 0 ; DATA XREF: sub_110BC+35o
 		dw offset sSaveVarBuf	; 4Ah
 		dw offset sLoadVarBuf	; 4Bh
 		dw offset loc_1474F	; 4Ch
-		dw offset sBGM_GetMeas	; 4Dh
-		dw offset sSFX_PlaySSG	; 4Eh
-		dw offset sSFX_PlayFM	; 4Fh
-		dw offset sBGM_GetState	; 50h
+		dw offset sBGMGetMeas	; 4Dh
+		dw offset sSFXPlaySSG	; 4Eh
+		dw offset sSFXPlayFM	; 4Fh
+		dw offset sBGMGetState	; 50h
 		dw offset sAndVar_Val	; 51h
 		dw offset sOrVar_Val	; 52h
-		dw offset sStrCat	; 53h
+		dw offset sStrCat_Var	; 53h
 		dw offset sCall		; 54h
 		dw offset sReturn	; 55h
-		dw offset sCompareStrs	; 56h
+		dw offset sStrCompare	; 56h
 		dw offset sStrNCpy	; 57h
 		dw offset sStrChrCat	; 58h
-		dw offset sStr_SetVal	; 59h
+		dw offset sStrCat_Val	; 59h
 		dw offset sStrClear	; 5Ah
 		dw offset sStrCopy	; 5Bh
 		dw offset sUndefined	; 5Ch
@@ -2994,11 +2997,11 @@ scriptFuncList	dw offset sExitDOS	; 0 ; DATA XREF: sub_110BC+35o
 		dw offset sUndefined	; 71h
 		dw offset sLoopInit	; 72h
 		dw offset sLoopGet	; 73h
-		dw offset sLoopJumpVal	; 74h
+		dw offset sLoopCondJump	; 74h
 		dw offset sLoadFontChr	; 75h
-		dw offset loc_14560	; 76h
-		dw offset loc_14565	; 77h
-		dw offset loc_1457B	; 78h
+		dw offset sSetIdleChars	; 76h
+		dw offset sSetIdleDelay	; 77h
+		dw offset sSetIdlePos	; 78h
 		dw offset sScriptSomething; 79h
 		dw offset sLoopSetVar	; 7Ah
 		dw offset sLoopJumpVar	; 7Bh
@@ -3523,7 +3526,7 @@ sub_11503	proc near		; CODE XREF: sub_110BC+24p
 		mov	byte_1D1F4, 0
 		cmp	byte_1D1F5, 41h	; 'A'
 		jz	short loc_1151C
-		mov	bx, word_1D1E5
+		mov	bx, ptrMenuEntry
 		mov	al, byte_1D1F6
 		cbw
 		mov	[bx], ax
@@ -3539,7 +3542,7 @@ loc_1151C:				; CODE XREF: sub_11503+Bj
 		mov	[bx], ax
 
 loc_1152E:				; CODE XREF: sub_11503+17j
-		mov	bx, word_1D1E7
+		mov	bx, ptrUserAction
 		mov	al, byte_1D1F9
 		cbw
 		mov	[bx], ax
@@ -3551,7 +3554,7 @@ loc_1153F:				; CODE XREF: sub_11503+41j
 		mov	al, byte_1D1F9
 		cmp	al, ah
 		jz	short loc_1153F
-		mov	si, word_1D1F1
+		mov	si, scrMenuJumpPtr
 		retn
 sub_11503	endp
 
@@ -3807,7 +3810,7 @@ loc_116DE:				; CODE XREF: seg000:16CFj seg000:16D9j
 
 
 sub_11716	proc near		; CODE XREF: seg000:16DBp
-		les	si, dword_1D1ED
+		les	si, menuDataPtr
 		cld
 
 loc_1171B:				; CODE XREF: sub_11716+13j
@@ -4481,7 +4484,7 @@ WriteIO_A0	endp
 
 
 WaitForVSync	proc near		; CODE XREF: WaitFrames:loc_11AE1p
-					; sub_12648:loc_1265Dp	...
+					; DoPrintChrDelay:loc_1265Dp ...
 		push	ax
 
 loc_11AC8:				; CODE XREF: WaitForVSync+9j
@@ -4530,9 +4533,9 @@ Int0A:					; DATA XREF: SetupInt0A_24+39o
 		mov	al, 20h
 		out	0, al
 		sti
-		cmp	byte_1D1A6, 0
+		cmp	idleAniActive, 0
 		jz	short loc_11B02
-		call	sub_11B12
+		call	DoIdleAnimation
 
 loc_11B02:				; CODE XREF: seg000:1AFDj
 		cmp	byte_1E5C6, 0
@@ -4549,42 +4552,42 @@ loc_11B0C:				; CODE XREF: seg000:1B07j
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_11B12	proc near		; CODE XREF: seg000:1AFFp
+DoIdleAnimation	proc near		; CODE XREF: seg000:1AFFp
 		push	0A000h
 		pop	es
 		assume es:nothing
-		mov	di, word_1D1AE
+		mov	di, idleAniChar
 		xor	bh, bh
-		mov	bl, byte_1D1A7
+		mov	bl, idleAniFrame
 		shl	bx, 2
-		add	bx, offset word_1D1B0
+		add	bx, offset idleAniData
 		mov	ax, [bx]
 		xchg	ah, al
 		sub	al, 20h
 		stosw
 		or	al, 80h
 		stosw
-		dec	word_1D1A8
+		dec	idleAniRemDelay
 		jnz	short locret_11B5B
-		inc	byte_1D1A7
-		and	byte_1D1A7, 7
+		inc	idleAniFrame
+		and	idleAniFrame, 7
 		jnz	short loc_11B45
-		mov	bx, offset word_1D1AC
+		mov	bx, offset idleAniData-4
 
-loc_11B45:				; CODE XREF: sub_11B12+2Ej
+loc_11B45:				; CODE XREF: DoIdleAnimation+2Ej
 		add	bx, 4
 		cmp	word ptr [bx], 0
 		jnz	short loc_11B55
-		mov	byte_1D1A7, 0
-		mov	bx, offset word_1D1B0
+		mov	idleAniFrame, 0
+		mov	bx, offset idleAniData
 
-loc_11B55:				; CODE XREF: sub_11B12+39j
+loc_11B55:				; CODE XREF: DoIdleAnimation+39j
 		mov	ax, [bx+2]
-		mov	word_1D1A8, ax
+		mov	idleAniRemDelay, ax
 
-locret_11B5B:				; CODE XREF: sub_11B12+23j
+locret_11B5B:				; CODE XREF: DoIdleAnimation+23j
 		retn
-sub_11B12	endp
+DoIdleAnimation	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -4713,8 +4716,8 @@ GetStringPtr	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-GetScrBufLine	proc near		; CODE XREF: seg000:loc_13E66p
-					; seg000:loc_13ED2p ...
+GetTextBoxPtr	proc near		; CODE XREF: seg000:sOpenTextBoxp
+					; seg000:sCloseTextBoxp ...
 		push	ax
 		push	cx
 		mov	cl, 18h
@@ -4723,11 +4726,11 @@ GetScrBufLine	proc near		; CODE XREF: seg000:loc_13E66p
 		inc	si
 		mul	cl
 		mov	bx, ax
-		add	bx, offset byte_1CE5A
+		add	bx, offset textBoxMem
 		pop	cx
 		pop	ax
 		retn
-GetScrBufLine	endp
+GetTextBoxPtr	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -6297,26 +6300,26 @@ doTextFill	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-PrintTextSomething proc	near		; CODE XREF: seg000:277Ep seg000:27BBp ...
-		mov	word_1D180, offset loc_125D6
-		cmp	byte_1D17A, 0FFh
-		jnz	short loc_12572
-		mov	word_1D180, offset loc_125BB
+PrintText	proc near		; CODE XREF: seg000:277Ep seg000:27BBp ...
+		mov	PrintChar, offset PrintChar_TBox
+		cmp	textBoxID, 0FFh
+		jnz	short ptx_mainloop
+		mov	PrintChar, offset PrintChar_XY
 
-loc_12572:				; CODE XREF: PrintTextSomething+Bj
-					; PrintTextSomething+22j ...
+ptx_mainloop:				; CODE XREF: PrintText+Bj
+					; PrintText+22j ...
 		cmp	byte ptr es:[si], 0Fh
 		jb	short loc_12583
-		jz	short loc_12593
-		call	word_1D180
-		call	sub_12648
-		jmp	short loc_12572
+		jz	short ptx0F_meta
+		call	PrintChar
+		call	DoPrintChrDelay
+		jmp	short ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12583:				; CODE XREF: PrintTextSomething+17j
-		mov	cx, offset off_1259A
+loc_12583:				; CODE XREF: PrintText+17j
+		mov	cx, offset ptxJumpTbl
 
-loc_12586:				; CODE XREF: PrintTextSomething+38j
+loc_12586:				; CODE XREF: PrintText+38j
 		xor	bh, bh
 		mov	bl, es:[si]
 		inc	si
@@ -6325,55 +6328,55 @@ loc_12586:				; CODE XREF: PrintTextSomething+38j
 		jmp	word ptr cs:[bx]
 ; ---------------------------------------------------------------------------
 
-loc_12593:				; CODE XREF: PrintTextSomething+19j
+ptx0F_meta:				; CODE XREF: PrintText+19j
 		inc	si
-		mov	cx, offset off_125B8
+		mov	cx, offset ptxMetaJumpTbl
 		jmp	short loc_12586
-PrintTextSomething endp
+PrintText	endp
 
 ; ---------------------------------------------------------------------------
 		align 2
-off_1259A	dw offset locret_125BA	; 0 ; DATA XREF: PrintTextSomething:loc_12583o
-		dw offset loc_1266A	; 1
-		dw offset loc_126EB	; 2
-		dw offset loc_1275B	; 3
-		dw offset loc_12765	; 4
-		dw offset loc_12786	; 5
-		dw offset loc_128CA	; 6
-		dw offset loc_12A42	; 7
-		dw offset loc_12A9A	; 8
-		dw offset loc_127C3	; 9
-		dw offset loc_127DD	; 0Ah
-		dw offset loc_127E0	; 0Bh
-		dw offset loc_12821	; 0Ch
-		dw offset loc_12AA4	; 0Dh
-		dw offset loc_12ACA	; 0Eh
-off_125B8	dw offset loc_12ACE	; DATA XREF: PrintTextSomething+35o
+ptxJumpTbl	dw offset locret_125BA	; 0 ; DATA XREF: PrintText:loc_12583o
+		dw offset ptx01_wait_clear; 1
+		dw offset ptx02_wait_cont; 2
+		dw offset ptx03_set_color; 3
+		dw offset ptx04_print_str; 4
+		dw offset ptx05_print_var; 5
+		dw offset ptx06_portrait; 6
+		dw offset ptx07		; 7
+		dw offset ptx08		; 8
+		dw offset ptx09_tab	; 9
+		dw offset ptx0A_dummy	; 0Ah
+		dw offset ptx0B_portrait; 0Bh
+		dw offset ptx0C_portrait; 0Ch
+		dw offset ptx0D_line_break; 0Dh
+		dw offset ptx0E		; 0Eh
+ptxMetaJumpTbl	dw offset ptx0F_00	; DATA XREF: PrintText+35o
 ; ---------------------------------------------------------------------------
 
-locret_125BA:				; DATA XREF: seg000:off_1259Ao
+locret_125BA:				; DATA XREF: seg000:ptxJumpTblo
 		retn
 ; ---------------------------------------------------------------------------
 
-loc_125BB:				; DATA XREF: PrintTextSomething+Do
-		mov	dl, byte_1D178
-		mov	dh, byte_1D179
+PrintChar_XY:				; DATA XREF: PrintText+Do
+		mov	dl, ptxPosX
+		mov	dh, ptxPosY
 		call	GetChrData
-		mov	cl, byte_1D178
-		mov	ch, byte_1D179
-		call	sub_1261F
-		mov	byte_1D178, dl
+		mov	cl, ptxPosX
+		mov	ch, ptxPosY
+		call	DrawChar
+		mov	ptxPosX, dl
 		retn
 ; ---------------------------------------------------------------------------
 
-loc_125D6:				; DATA XREF: PrintTextSomethingo
-		mov	bx, word_1D17E
+PrintChar_TBox:				; DATA XREF: PrintTexto
+		mov	bx, textBoxPtr
 		mov	dl, [bx+0Ch]
 		mov	dh, [bx+0Ah]
 		call	GetChrData
 		mov	cl, [bx+0Ch]
 		mov	ch, [bx+0Ah]
-		call	sub_1261F
+		call	DrawChar
 		mov	[bx+0Ch], dl
 		retn
 
@@ -6414,7 +6417,7 @@ GetChrData	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1261F	proc near		; CODE XREF: seg000:25CEp seg000:25E9p
+DrawChar	proc near		; CODE XREF: seg000:25CEp seg000:25E9p
 		push	dx
 		push	si
 		push	es
@@ -6426,11 +6429,11 @@ sub_1261F	proc near		; CODE XREF: seg000:25CEp seg000:25E9p
 		add	ax, ax
 		add	ax, ax
 		add	ax, dx
-		add	di, ax		; DI = *off_1E612 + ([BX+0Ah] *	300h + [BX+0Ah])
+		add	di, ax		; DI = *off_1E612 + ([BX+0Ah] *	500h + [BX+0Ch])
 		mov	si, offset characterBuffer
 		mov	cx, 10h
 
-loc_1263E:				; CODE XREF: sub_1261F+23j
+loc_1263E:				; CODE XREF: DrawChar+23j
 		movsw
 		add	di, 4Eh
 		loop	loc_1263E
@@ -6438,14 +6441,14 @@ loc_1263E:				; CODE XREF: sub_1261F+23j
 		pop	si
 		pop	dx
 		retn
-sub_1261F	endp
+DrawChar	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_12648	proc near		; CODE XREF: PrintTextSomething+1Fp
-		mov	cx, word_1D17C
+DoPrintChrDelay	proc near		; CODE XREF: PrintText+1Fp
+		mov	cx, printChrDelay
 		jcxz	short locret_12669
 		push	es
 		xor	ax, ax
@@ -6457,32 +6460,32 @@ sub_12648	proc near		; CODE XREF: PrintTextSomething+1Fp
 		shr	al, 2
 		jb	short locret_12669
 
-loc_1265D:				; CODE XREF: sub_12648+1Fj
+loc_1265D:				; CODE XREF: DoPrintChrDelay+1Fj
 		call	WaitForVSync
 		mov	al, byte_1D1F9
 		and	al, 1
 		jnz	short locret_12669
 		loop	loc_1265D
 
-locret_12669:				; CODE XREF: sub_12648+4j
-					; sub_12648+13j ...
+locret_12669:				; CODE XREF: DoPrintChrDelay+4j
+					; DoPrintChrDelay+13j ...
 		retn
-sub_12648	endp
+DoPrintChrDelay	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_1266A:				; DATA XREF: seg000:off_1259Ao
-		call	sub_126F1
-		cmp	byte_1D17A, 0FFh
+ptx01_wait_clear:			; DATA XREF: seg000:ptxJumpTblo
+		call	WaitForUser	; wait for user	to press a key,	then clear the text box
+		cmp	textBoxID, 0FFh
 		jnz	short loc_12677
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
 loc_12677:				; CODE XREF: seg000:2672j
-		mov	bx, word_1D17E
+		mov	bx, textBoxPtr
 		cmp	byte ptr [bx+1], 0
 		jnz	short loc_12684
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
 loc_12684:				; CODE XREF: seg000:267Fj
@@ -6491,19 +6494,19 @@ loc_12684:				; CODE XREF: seg000:267Fj
 		cmp	word ptr [bx+0Eh], 0
 		jnz	short loc_12696
 		call	sub_11CCA
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
 loc_12696:				; CODE XREF: seg000:268Ej
 		cmp	byte ptr [bx], 8
 		jb	short loc_126A1
 		call	sub_11CCA
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
 loc_126A1:				; CODE XREF: seg000:2699j
 		call	sub_11DF4
-		jmp	loc_12572
+		jmp	ptx_mainloop
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -6556,47 +6559,47 @@ sub_126B8	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_126EB:				; DATA XREF: seg000:off_1259Ao
-		call	sub_126F1
-		jmp	loc_12572
+ptx02_wait_cont:			; DATA XREF: seg000:ptxJumpTblo
+		call	WaitForUser
+		jmp	ptx_mainloop
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_126F1	proc near		; CODE XREF: seg000:loc_1266Ap
-					; seg000:loc_126EBp
-		mov	word_1D1AE, 0E50h
-		cmp	byte_1D17A, 0FFh
+WaitForUser	proc near		; CODE XREF: seg000:ptx01_wait_clearp
+					; seg000:ptx02_wait_contp
+		mov	idleAniChar, 0E50h
+		cmp	textBoxID, 0FFh
 		jz	short loc_1272B
-		mov	bx, word_1D17E
+		mov	bx, textBoxPtr
 		mov	ax, [bx+4]
 		add	ax, [bx+8]
 		dec	ax
 		dec	ax
 		add	ax, ax
-		sub	ax, word_1D1AA
+		sub	ax, idleAniPosX
 		mov	dx, [bx+2]
 		add	dx, [bx+6]
 		dec	dx
 		dec	dx
-		sub	dx, word_1D1AC
+		sub	dx, idleAniPosY
 		shl	dx, 4
 		add	ax, dx
 		shl	dx, 2
 		add	ax, dx
 		add	ax, ax
-		mov	word_1D1AE, ax
+		mov	idleAniChar, ax
 
-loc_1272B:				; CODE XREF: sub_126F1+Bj
-		mov	byte_1D1A6, 0FFh
+loc_1272B:				; CODE XREF: WaitForUser+Bj
+		mov	idleAniActive, 0FFh
 
-loc_12730:				; CODE XREF: sub_126F1+44j
+loc_12730:				; CODE XREF: WaitForUser+44j
 		mov	al, byte_1D1F9
 		and	al, 2
 		jz	short loc_12730
-		mov	byte_1D1A6, 0
+		mov	idleAniActive, 0
 
-loc_1273C:				; CODE XREF: sub_126F1+50j
+loc_1273C:				; CODE XREF: WaitForUser+50j
 		mov	al, byte_1D1F9
 		and	al, 2
 		jnz	short loc_1273C
@@ -6605,25 +6608,25 @@ loc_1273C:				; CODE XREF: sub_126F1+50j
 		push	0A000h
 		pop	es
 		assume es:nothing
-		mov	di, word_1D1AE
+		mov	di, idleAniChar
 		mov	word ptr es:[di+2], 0
 		mov	word ptr es:[di], 0
 		pop	es
 		assume es:nothing
 		pop	di
 		retn
-sub_126F1	endp
+WaitForUser	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_1275B:				; DATA XREF: seg000:off_1259Ao
+ptx03_set_color:			; DATA XREF: seg000:ptxJumpTblo
 		mov	al, es:[si]
 		inc	si
-		mov	byte_18E1A, al
-		jmp	loc_12572
+		mov	print_color, al
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12765:				; DATA XREF: seg000:off_1259Ao
+ptx04_print_str:			; DATA XREF: seg000:ptxJumpTblo
 		mov	al, es:[si]
 		inc	si
 		cbw
@@ -6638,14 +6641,14 @@ loc_12765:				; DATA XREF: seg000:off_1259Ao
 		mov	ax, ds
 		mov	es, ax
 		assume es:dseg
-		call	PrintTextSomething
+		call	PrintText
 		pop	es
 		assume es:nothing
 		pop	si
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12786:				; DATA XREF: seg000:off_1259Ao
+ptx05_print_var:			; DATA XREF: seg000:ptxJumpTblo
 		mov	ax, es:[si]
 		inc	si
 		inc	si
@@ -6675,33 +6678,33 @@ loc_127B2:				; CODE XREF: seg000:279Cj
 		mov	ax, ds
 		mov	es, ax
 		assume es:dseg
-		call	PrintTextSomething
+		call	PrintText
 		pop	es
 		assume es:nothing
 		pop	si
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_127C3:				; DATA XREF: seg000:off_1259Ao
-		cmp	byte_1D17A, 0FFh
+ptx09_tab:				; DATA XREF: seg000:ptxJumpTblo
+		cmp	textBoxID, 0FFh
 		jnz	short loc_127D2
-		add	byte_1D178, 8
-		jmp	loc_12572
+		add	ptxPosX, 8
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
 loc_127D2:				; CODE XREF: seg000:27C8j
-		mov	bx, word_1D17E
+		mov	bx, textBoxPtr
 		add	word ptr [bx+0Ch], 8
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_127DD:				; DATA XREF: seg000:off_1259Ao
-		jmp	loc_12572
+ptx0A_dummy:				; DATA XREF: seg000:ptxJumpTblo
+		jmp	ptx_mainloop	; System-98 v1:	scroll text 1 line up
 ; ---------------------------------------------------------------------------
 
-loc_127E0:				; DATA XREF: seg000:off_1259Ao
-		call	sub_1282A
-		mov	al, 0Dh
+ptx0B_portrait:				; DATA XREF: seg000:ptxJumpTblo
+		call	GetPortraitPtr
+		mov	al, 0Dh		; show character portrait
 		out	0A8h, al	; Interrupt Controller #2, 8259A
 		mov	al, [bx+3]
 		mov	ah, al
@@ -6727,19 +6730,19 @@ loc_127E0:				; DATA XREF: seg000:off_1259Ao
 		and	al, 0Fh
 		out	0AEh, al	; Interrupt Controller #2, 8259A
 		call	sub_12840
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12821:				; DATA XREF: seg000:off_1259Ao
-		call	sub_1282A
+ptx0C_portrait:				; DATA XREF: seg000:ptxJumpTblo
+		call	GetPortraitPtr
 		call	sub_12840
-		jmp	loc_12572
+		jmp	ptx_mainloop
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1282A	proc near		; CODE XREF: seg000:loc_127E0p
-					; seg000:loc_12821p ...
+GetPortraitPtr	proc near		; CODE XREF: seg000:ptx0B_portraitp
+					; seg000:ptx0C_portraitp ...
 		mov	al, es:[si]
 		inc	si
 		and	ax, 3Fh
@@ -6750,7 +6753,7 @@ sub_1282A	proc near		; CODE XREF: seg000:loc_127E0p
 		add	bx, ax
 		add	bx, offset byte_1D2A4 ;	BX = byte_1D2A4	+ idx*6
 		retn
-sub_1282A	endp
+GetPortraitPtr	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -6836,8 +6839,8 @@ SomeGDCCopy1	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_128CA:				; DATA XREF: seg000:off_1259Ao
-		call	sub_1282A
+ptx06_portrait:				; DATA XREF: seg000:ptxJumpTblo
+		call	GetPortraitPtr
 		push	si
 		push	es
 		call	sub_128E4
@@ -6848,7 +6851,7 @@ loc_128CA:				; DATA XREF: seg000:off_1259Ao
 		out	0A6h, al	; Interrupt Controller #2, 8259A
 		pop	es
 		pop	si
-		jmp	loc_12572
+		jmp	ptx_mainloop
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -7059,7 +7062,7 @@ SomeGDCCopy4	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_12A42:				; DATA XREF: seg000:off_1259Ao
+ptx07:					; DATA XREF: seg000:ptxJumpTblo
 		push	si
 		push	es
 		mov	si, offset byte_1D3C4
@@ -7079,7 +7082,7 @@ loc_12A42:				; DATA XREF: seg000:off_1259Ao
 		out	0A6h, al	; Interrupt Controller #2, 8259A
 		pop	es
 		pop	si
-		jmp	loc_12572
+		jmp	ptx_mainloop
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -7108,37 +7111,37 @@ SomeGDCCopy5	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_12A9A:				; DATA XREF: seg000:off_1259Ao
+ptx08:					; DATA XREF: seg000:ptxJumpTblo
 		mov	al, es:[si]
 		inc	si
 		mov	byte_1E5C6, al
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12AA4:				; DATA XREF: seg000:off_1259Ao
-		cmp	byte_1D17A, 0FFh
+ptx0D_line_break:			; DATA XREF: seg000:ptxJumpTblo
+		cmp	textBoxID, 0FFh
 		jnz	short loc_12AB7
-		mov	byte_1D178, 0
-		inc	byte_1D179
-		jmp	loc_12572
+		mov	ptxPosX, 0
+		inc	ptxPosY
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
 loc_12AB7:				; CODE XREF: seg000:2AA9j
-		mov	bx, word_1D17E
+		mov	bx, textBoxPtr
 		mov	ax, [bx+4]
 		inc	ax
 		add	ax, ax
 		mov	[bx+0Ch], ax
 		inc	word ptr [bx+0Ah]
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12ACA:				; DATA XREF: seg000:off_1259Ao
+ptx0E:					; DATA XREF: seg000:ptxJumpTblo
 		inc	si
-		jmp	loc_12572
+		jmp	ptx_mainloop
 ; ---------------------------------------------------------------------------
 
-loc_12ACE:				; DATA XREF: seg000:off_125B8o
+ptx0F_00:				; DATA XREF: seg000:ptxMetaJumpTblo
 		mov	al, es:[si]
 		inc	si
 		and	al, 1
@@ -7149,7 +7152,7 @@ loc_12ACE:				; DATA XREF: seg000:off_125B8o
 		add	ax, cx
 		add	ax, offset byte_1B22E
 		mov	off_1B22C, ax
-		jmp	loc_12572
+		jmp	ptx_mainloop
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -9209,7 +9212,7 @@ sLoopGet:				; DATA XREF: seg000:scriptFuncListo
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sLoopJumpVal:				; DATA XREF: seg000:scriptFuncListo
+sLoopCondJump:				; DATA XREF: seg000:scriptFuncListo
 		mov	ax, es:[si]
 		cmp	ax, scrLoopCounter
 		jnb	short loc_1380C
@@ -9238,9 +9241,9 @@ loc_13825:				; CODE XREF: seg000:381Ej
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_1382F:				; DATA XREF: seg000:scriptFuncListo
+sSetChrDelay:				; DATA XREF: seg000:scriptFuncListo
 		call	GetVariable
-		mov	word_1D17C, ax
+		mov	printChrDelay, ax
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
@@ -9879,7 +9882,7 @@ loc_13CD8:				; CODE XREF: seg000:loc_13CD2j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sJumpAbs:				; DATA XREF: seg000:scriptFuncListo
+sJump:					; DATA XREF: seg000:scriptFuncListo
 		mov	si, es:[si]
 		add	si, word ptr SceneData
 		jmp	ScriptMainLop
@@ -10117,8 +10120,8 @@ SomeGDCCopy6	endp
 
 ; ---------------------------------------------------------------------------
 
-loc_13E66:				; DATA XREF: seg000:scriptFuncListo
-		call	GetScrBufLine
+sOpenTextBox:				; DATA XREF: seg000:scriptFuncListo
+		call	GetTextBoxPtr
 		cmp	byte ptr [bx+1], 0
 		jnz	short loc_13ECC
 		push	es
@@ -10168,8 +10171,8 @@ loc_13ECC:				; CODE XREF: seg000:3E6Dj seg000:3EBAj ...
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_13ED2:				; DATA XREF: seg000:scriptFuncListo
-		call	GetScrBufLine
+sCloseTextBox:				; DATA XREF: seg000:scriptFuncListo
+		call	GetTextBoxPtr
 		cmp	byte ptr [bx+1], 0
 		jnz	short loc_13EDE
 		jmp	ScriptMainLop
@@ -10186,8 +10189,8 @@ loc_13EE6:				; CODE XREF: seg000:3EE1j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_13EF0:				; DATA XREF: seg000:scriptFuncListo
-		call	GetScrBufLine
+sClearTextBox:				; DATA XREF: seg000:scriptFuncListo
+		call	GetTextBoxPtr
 		cmp	byte ptr [bx+1], 0
 		jnz	short loc_13EFC
 		jmp	ScriptMainLop
@@ -10230,7 +10233,7 @@ sReadPortA4:				; DATA XREF: seg000:scriptFuncListo
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_13F38:				; DATA XREF: seg000:scriptFuncListo
+sLoadImage:				; DATA XREF: seg000:scriptFuncListo
 		mov	ax, es:[si]
 		mov	word_1D0F8, ax
 		mov	word_1D10A, ax
@@ -10731,7 +10734,7 @@ sSetPalColour:				; DATA XREF: seg000:scriptFuncListo
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sApplyPalette:				; DATA XREF: seg000:scriptFuncListo
+sPalApply:				; DATA XREF: seg000:scriptFuncListo
 		push	si
 		push	es
 		mov	si, offset PalCurrent
@@ -11091,13 +11094,13 @@ loc_1453E:				; CODE XREF: seg000:4552j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_14560:				; DATA XREF: seg000:scriptFuncListo
-		mov	di, offset word_1D1B0
+sSetIdleChars:				; DATA XREF: seg000:scriptFuncListo
+		mov	di, offset idleAniData
 		jmp	short loc_14568
 ; ---------------------------------------------------------------------------
 
-loc_14565:				; DATA XREF: seg000:scriptFuncListo
-		mov	di, (offset word_1D1B0+2)
+sSetIdleDelay:				; DATA XREF: seg000:scriptFuncListo
+		mov	di, (offset idleAniData+2)
 
 loc_14568:				; CODE XREF: seg000:4563j
 		push	ds
@@ -11118,57 +11121,57 @@ loc_1456F:				; CODE XREF: seg000:4572j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_1457B:				; DATA XREF: seg000:scriptFuncListo
+sSetIdlePos:				; DATA XREF: seg000:scriptFuncListo
 		mov	ax, es:[si]
-		mov	word_1D1AA, ax
+		mov	idleAniPosX, ax
 		mov	ax, es:[si+2]
-		mov	word_1D1AC, ax
+		mov	idleAniPosY, ax
 		add	si, 4
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_1458E:				; DATA XREF: seg000:scriptFuncListo
-		mov	byte_1D17A, 0FFh
+sShowText_XY:				; DATA XREF: seg000:scriptFuncListo
+		mov	textBoxID, 0FFh
 		mov	al, es:[si]
-		mov	byte_1D178, al
+		mov	ptxPosX, al
 		mov	al, es:[si+2]
-		mov	byte_1D179, al
+		mov	ptxPosY, al
 		push	si
 		mov	si, es:[si+4]
 		add	si, word ptr SceneData
-		call	PrintTextSomething
+		call	PrintText
 		pop	si
 		add	si, 6
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_145B3:				; DATA XREF: seg000:scriptFuncListo
+sShowText_TBox:				; DATA XREF: seg000:scriptFuncListo
 		mov	al, es:[si]
 		and	al, 0Fh
-		mov	byte_1D17A, al
+		mov	textBoxID, al
 		mov	cl, 18h
 		mul	cl
-		add	ax, offset byte_1CE5A
-		mov	word_1D17E, ax
+		add	ax, offset textBoxMem
+		mov	textBoxPtr, ax
 		push	si
 		mov	si, es:[si+2]
 		add	si, word ptr SceneData
-		call	PrintTextSomething
+		call	PrintText
 		pop	si
 		add	si, 4
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_145D8:				; DATA XREF: seg000:scriptFuncListo
+sPrintVar_TBox:				; DATA XREF: seg000:scriptFuncListo
 		mov	al, es:[si]
 		inc	si
 		inc	si
 		and	al, 0Fh
-		mov	byte_1D17A, al
+		mov	textBoxID, al
 		mov	cl, 18h
 		mul	cl
-		add	ax, offset byte_1CE5A
-		mov	word_1D17E, ax
+		add	ax, offset textBoxMem
+		mov	textBoxPtr, ax
 		cmp	word ptr es:[si], 400h
 		jnb	short loc_145FB
 		call	GetVariable
@@ -11187,18 +11190,18 @@ loc_14601:				; CODE XREF: seg000:45F9j
 		mov	es, ax
 		assume es:dseg
 		mov	si, offset i2sTextBuf
-		call	PrintTextSomething
+		call	PrintText
 		pop	es
 		assume es:nothing
 		pop	si
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_14612:				; CODE XREF: seg000:4617j
+sWaitKey:				; CODE XREF: seg000:4617j
 					; DATA XREF: seg000:scriptFuncListo
 		mov	al, byte_1D1F9
 		or	al, al
-		jz	short loc_14612
+		jz	short sWaitKey
 		mov	ah, al
 
 loc_1461B:				; CODE XREF: seg000:4622j
@@ -11212,18 +11215,18 @@ loc_1461B:				; CODE XREF: seg000:4622j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-loc_1462E:				; DATA XREF: seg000:scriptFuncListo
+sDoMenuSel:				; DATA XREF: seg000:scriptFuncListo
 		call	GetVarPtr
-		mov	word_1D1E5, bx
+		mov	ptrMenuEntry, bx
 		call	GetVarPtr
-		mov	word_1D1E7, bx
+		mov	ptrUserAction, bx
 		mov	ax, es:[si]
 		add	ax, word ptr SceneData
-		mov	word ptr dword_1D1ED, ax
-		mov	word ptr dword_1D1ED+2,	es
+		mov	word ptr menuDataPtr, ax
+		mov	word ptr menuDataPtr+2,	es
 		mov	ax, es:[si+2]
 		add	ax, word ptr SceneData
-		mov	word_1D1F1, ax
+		mov	scrMenuJumpPtr,	ax
 		add	si, 4
 		mov	byte_1D1F6, 0
 		mov	byte_1D1F7, 0FFh
@@ -11239,10 +11242,10 @@ loc_14674:				; DATA XREF: seg000:scriptFuncListo
 		call	GetVarPtr
 		mov	word_1D1EB, bx
 		call	GetVarPtr
-		mov	word_1D1E7, bx
+		mov	ptrUserAction, bx
 		mov	ax, es:[si]
 		add	ax, word ptr SceneData
-		mov	word_1D1F1, ax
+		mov	scrMenuJumpPtr,	ax
 		inc	si
 		inc	si
 		mov	byte_1D1F6, 0
@@ -11386,7 +11389,7 @@ CallMMD:				; DATA XREF: SetupInt0A_24+22o
 		retn
 ; ---------------------------------------------------------------------------
 
-sBGM_Play:				; DATA XREF: seg000:scriptFuncListo
+sBGMPlay:				; DATA XREF: seg000:scriptFuncListo
 		mov	bx, es:[si]
 		inc	si
 		inc	si
@@ -11422,7 +11425,7 @@ loc_147B4:				; CODE XREF: seg000:47AFj
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sBGM_FadeOut:				; DATA XREF: seg000:scriptFuncListo
+sBGMFadeOut:				; DATA XREF: seg000:scriptFuncListo
 		cmp	MusicMode, 0
 		jnz	short loc_147C7
 		jmp	ScriptMainLop
@@ -11434,7 +11437,7 @@ loc_147C7:				; CODE XREF: seg000:47C2j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sBGM_Stop:				; DATA XREF: seg000:scriptFuncListo
+sBGMStop:				; DATA XREF: seg000:scriptFuncListo
 		cmp	MusicMode, 0
 		jnz	short loc_147DB
 		jmp	ScriptMainLop
@@ -11454,7 +11457,7 @@ sGetMusMode:				; DATA XREF: seg000:scriptFuncListo
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sBGM_GetMeas:				; DATA XREF: seg000:scriptFuncListo
+sBGMGetMeas:				; DATA XREF: seg000:scriptFuncListo
 		call	GetVarPtr
 		cmp	MusicMode, 0
 		jnz	short loc_147FD
@@ -11469,7 +11472,7 @@ loc_147FD:				; CODE XREF: seg000:47F8j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sBGM_GetState:				; DATA XREF: seg000:scriptFuncListo
+sBGMGetState:				; DATA XREF: seg000:scriptFuncListo
 		call	GetVarPtr
 		cmp	MusicMode, 0
 		jnz	short loc_14816
@@ -11483,7 +11486,7 @@ loc_14816:				; CODE XREF: seg000:4811j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sSFX_PlaySSG:				; DATA XREF: seg000:scriptFuncListo
+sSFXPlaySSG:				; DATA XREF: seg000:scriptFuncListo
 		mov	al, es:[si]
 		inc	si
 		inc	si
@@ -11498,7 +11501,7 @@ loc_14830:				; CODE XREF: seg000:482Bj
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sSFX_PlayFM:				; DATA XREF: seg000:scriptFuncListo
+sSFXPlayFM:				; DATA XREF: seg000:scriptFuncListo
 		mov	al, es:[si]
 		inc	si
 		inc	si
@@ -11513,7 +11516,7 @@ loc_14846:				; CODE XREF: seg000:4841j
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sCompareStrs:				; DATA XREF: seg000:scriptFuncListo
+sStrCompare:				; DATA XREF: seg000:scriptFuncListo
 		call	GetStringPtr
 		mov	di, bx
 		call	GetStringPtr
@@ -11555,7 +11558,7 @@ sStrNCpy:				; DATA XREF: seg000:scriptFuncListo
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sStrCat:				; DATA XREF: seg000:scriptFuncListo
+sStrCat_Var:				; DATA XREF: seg000:scriptFuncListo
 		call	GetStringPtr
 		call	StrLen
 		add	bx, ax
@@ -11580,7 +11583,7 @@ sStrChrCat:				; DATA XREF: seg000:scriptFuncListo
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
 
-sStr_SetVal:				; DATA XREF: seg000:scriptFuncListo
+sStrCat_Val:				; DATA XREF: seg000:scriptFuncListo
 		call	GetStringPtr
 		call	StrLen
 		add	bx, ax
@@ -14586,7 +14589,7 @@ word_18E08	dw 0			; DATA XREF: sub_10C1A+18r
 word_18E0A	dw 0			; DATA XREF: sub_10C1A+1Br
 					; sub_10C45+14r
 byte_18E0C	db 0Eh dup(0)		; DATA XREF: CopyFilename+Co
-byte_18E1A	db 0Fh			; DATA XREF: sub_10F92+Dr seg000:275Fw
+print_color	db 0Fh			; DATA XREF: sub_10F92+Dr seg000:275Fw
 		align 2
 		dw offset byte_18E2C
 		dw offset byte_192AC
@@ -14665,8 +14668,8 @@ ScrVariablesL	dd 0Ah dup(0)		; DATA XREF: GetLVarPtr+Do
 word_1CE56	dw 0			; DATA XREF: sub_112B2+60w
 					; sub_11D5E+4r	...
 word_1CE58	dw 0			; DATA XREF: sub_112B2+5Dw sub_11D5Er	...
-byte_1CE5A	db 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0
-					; DATA XREF: GetScrBufLine+Do
+textBoxMem	db 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0
+					; DATA XREF: GetTextBoxPtr+Do
 					; seg000:45BFo	...
 		db 1, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0
 		db 2, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0
@@ -14751,33 +14754,33 @@ seg_1D174	dw 0			; DATA XREF: LoadPIImage2+6w
 					; LoadPIImage2:loc_12BF5r
 word_1D176	dw 0			; DATA XREF: LoadPIImage2+1w
 					; ReadFullFile2+22r ...
-byte_1D178	db 0			; DATA XREF: seg000:loc_125BBr
+ptxPosX		db 0			; DATA XREF: seg000:PrintChar_XYr
 					; seg000:25C6r	...
-byte_1D179	db 0			; DATA XREF: seg000:25BFr seg000:25CAr ...
-byte_1D17A	db 0			; DATA XREF: PrintTextSomething+6r
-					; seg000:266Dr	...
+ptxPosY		db 0			; DATA XREF: seg000:25BFr seg000:25CAr ...
+textBoxID	db 0			; DATA XREF: PrintText+6r seg000:266Dr ...
 		align 2
-word_1D17C	dw 0			; DATA XREF: sub_12648r seg000:3832w
-word_1D17E	dw 0			; DATA XREF: seg000:loc_125D6r
+printChrDelay	dw 0			; DATA XREF: DoPrintChrDelayr
+					; seg000:3832w
+textBoxPtr	dw 0			; DATA XREF: seg000:PrintChar_TBoxr
 					; seg000:loc_12677r ...
-word_1D180	dw 0			; DATA XREF: PrintTextSomethingw
-					; PrintTextSomething+Dw ...
+PrintChar	dw 0			; DATA XREF: PrintTextw PrintText+Dw ...
 chrBufPtr	dd characterBuffer	; DATA XREF: GetChrData+4r
-characterBuffer	db 20h dup(0)		; DATA XREF: sub_1261F+19o
+characterBuffer	db 20h dup(0)		; DATA XREF: DrawChar+19o
 					; dseg:chrBufPtro
-byte_1D1A6	db 0			; DATA XREF: seg000:1AF8r
-					; sub_126F1:loc_1272Bw	...
-byte_1D1A7	db 0			; DATA XREF: sub_11B12+Ar
-					; sub_11B12+25w ...
-word_1D1A8	dw 4			; DATA XREF: sub_11B12+1Fw
-					; sub_11B12+46w
-word_1D1AA	dw 0			; DATA XREF: sub_126F1+1Br
+idleAniActive	db 0			; DATA XREF: seg000:1AF8r
+					; WaitForUser:loc_1272Bw ...
+idleAniFrame	db 0			; DATA XREF: DoIdleAnimation+Ar
+					; DoIdleAnimation+25w ...
+idleAniRemDelay	dw 4			; DATA XREF: DoIdleAnimation+1Fw
+					; DoIdleAnimation+46w
+idleAniPosX	dw 0			; DATA XREF: WaitForUser+1Br
 					; seg000:457Ew
-word_1D1AC	dw 0			; DATA XREF: sub_11B12+30o
-					; sub_126F1+27r ...
-word_1D1AE	dw 0			; DATA XREF: sub_11B12+4r sub_126F1w ...
-word_1D1B0	dw 7721h, 4		; DATA XREF: sub_11B12+11o
-					; sub_11B12+40o ...
+idleAniPosY	dw 0			; DATA XREF: WaitForUser+27r
+					; seg000:4585w
+idleAniChar	dw 0			; DATA XREF: DoIdleAnimation+4r
+					; WaitForUserw	...
+idleAniData	dw 7721h, 4		; DATA XREF: DoIdleAnimation+11o
+					; DoIdleAnimation+30t ...
 		dw 7722h, 4
 		dw 7723h, 4
 		dw 7724h, 4
@@ -14785,8 +14788,7 @@ word_1D1B0	dw 7721h, 4		; DATA XREF: sub_11B12+11o
 		dw 7726h, 4
 		dw 7727h, 4
 		dw 7728h, 4
-		db    0
-		db    0
+		dw 0
 CallMusicDriver	dw 0			; DATA XREF: SetupInt0A_24:loc_113C6w
 					; seg000:478Dr	...
 MusicMode	db 0			; DATA XREF: SetupInt0A_24+18w
@@ -14802,15 +14804,15 @@ OldIntVec0A	dd 0			; DATA XREF: SetupInt0A_24+2Ew
 scrLoopCounter	dw 0			; DATA XREF: seg000:1AEFw seg000:37DEw ...
 OldIntVec15	dd 0			; DATA XREF: RestoreInts+2Br
 					; SetupInt15+6w ...
-word_1D1E5	dw 0			; DATA XREF: sub_11503+Dr seg000:4631w
-word_1D1E7	dw 0			; DATA XREF: sub_11503:loc_1152Er
+ptrMenuEntry	dw 0			; DATA XREF: sub_11503+Dr seg000:4631w
+ptrUserAction	dw 0			; DATA XREF: sub_11503:loc_1152Er
 					; seg000:4638w	...
 word_1D1E9	dw 0			; DATA XREF: sub_11503:loc_1151Cr
 					; seg000:4677w
 word_1D1EB	dw 0			; DATA XREF: sub_11503+22r
 					; seg000:467Ew
-dword_1D1ED	dd 0			; DATA XREF: sub_11716r seg000:4643w ...
-word_1D1F1	dw 0			; DATA XREF: sub_11503+43r
+menuDataPtr	dd 0			; DATA XREF: sub_11716r seg000:4643w ...
+scrMenuJumpPtr	dw 0			; DATA XREF: sub_11503+43r
 					; seg000:4652w	...
 byte_1D1F3	db 0			; DATA XREF: sub_110BC:ScriptMainLopr
 					; sub_11503+35w ...
@@ -14864,7 +14866,7 @@ word_1D29E	dw 0			; DATA XREF: seg000:4B3Bw seg000:4B53w ...
 word_1D2A0	dw 0			; DATA XREF: seg000:4B41w seg000:4B5Cw ...
 word_1D2A2	dw 500Eh		; DATA XREF: SomeGDCCopy1+2Cr
 					; SomeGDCCopy3+1r ...
-byte_1D2A4	db 120h	dup(0)		; DATA XREF: sub_1282A+11o
+byte_1D2A4	db 120h	dup(0)		; DATA XREF: GetPortraitPtr+11o
 					; seg000:51FAo	...
 byte_1D3C4	db 1200h dup(0)		; DATA XREF: seg000:2A44o seg000:5375o
 SomeGDCPlane	db 0			; DATA XREF: SomeGDCCopy1+35r
@@ -14882,7 +14884,7 @@ aInsertDiskX	db 1Bh,'*',1Bh,'=+.ドライブ２にＡディスクをセットしてクリックして下
 		db    0
 textFillMode	dw 0			; DATA XREF: doTextFill+1Fr
 					; seg000:4493w	...
-off_1E612	dd byte_1E61E		; DATA XREF: sub_1261F+3r sub_126B8+1r
+off_1E612	dd byte_1E61E		; DATA XREF: DrawChar+3r sub_126B8+1r
 off_1E616	dd byte_15AF0		; DATA XREF: sub_117B8+Cr sub_117F8+Cr
 word_1E61A	dw 0			; DATA XREF: sub_117B8+4w sub_117F8+8r
 word_1E61C	dw 0			; DATA XREF: sub_117B8+8w sub_117F8+4r

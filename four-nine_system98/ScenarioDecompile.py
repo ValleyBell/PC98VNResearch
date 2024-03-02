@@ -27,6 +27,8 @@ SCPT_FNAME = 0x13	# file path pointer
 SCPT_JUMP = 0x14	# jump destination pointer
 SCPT_TXTSEL = 0x15	# text/menu selection list
 SCPT_FONTDAT = 0x16	# font data
+SCPT_86DAT = 0x17	# data for command 86
+SCPT_89DAT = 0x18	# data for command 89
 
 SCPT_REG_INT = 0x80	# register: integer
 SCPT_REG_LNG = 0x81	# register: long
@@ -108,7 +110,7 @@ SCENE_CMD_LIST = {
 	0x42: ("CMD42"  , [SCPT_BYTE]),
 	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
 	0x44: (None     , []),
-	0x45: (None     , []),
+	0x45: ("CMD45"  , [SCPT_INT]),
 	0x46: (None     , []),
 	0x47: (None     , []),
 	0x48: (None     , []),
@@ -173,10 +175,10 @@ SCENE_CMD_LIST = {
 	0x83: ("GFX83"  , [SCPT_REG_INT]),
 	0x84: ("GFX84"  , []),
 	0x85: ("GFX85"  , []),
-	0x86: ("GFX86"  , [SCPT_DATA1]),
+	0x86: ("GFX86"  , [SCPT_86DAT]),
 	0x87: ("GFX87"  , [SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
 	0x88: ("GFX88"  , [SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x89: ("GFX89"  , [SCPT_DATA1]),
+	0x89: ("GFX89"  , [SCPT_89DAT]),
 	0x8A: ("GFX8A"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
 	0x8B: ("GFX8B"  , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
 	0x8C: ("GFX8C"  , []),
@@ -378,9 +380,9 @@ def get_string_size(scenedata: bytes, startpos: int, endpos: int, dtype: int) ->
 			pos += 1
 			if c == 0x00:	# end
 				break
-			elif c in [0x01, 0x02, 0x07, 0x09, 0x0A, 0x0B, 0x0C, 0x0D]:
+			elif c in [0x01, 0x02, 0x07, 0x09, 0x0A, 0x0D]:
 				pass	# no parameters
-			elif c in [0x03, 0x04, 0x06, 0x08, 0x0E]:
+			elif c in [0x03, 0x04, 0x06, 0x08, 0x0B, 0x0C, 0x0E]:
 				pos += 1	# 1 parameter byte
 			elif c == 0x05:
 				pos += 2	# 2 parameter bytes
@@ -626,6 +628,14 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				elif label_list[curpos][0] == SCPT_FONTDAT:
 					mode = MODE_DATA
 					endpos = min([curpos + 0x20, endpos])	# font data is usually 0x20 bytes
+				elif label_list[curpos][0] == SCPT_86DAT:
+					mode = MODE_DATA
+					endpos = min([curpos + 0x30 * (9 * 0x02), endpos])	# data is 0x360 bytes
+					cmd_mode = -22	# 2-byte data
+				elif label_list[curpos][0] == SCPT_89DAT:
+					mode = MODE_DATA
+					endpos = min([curpos + 0x30 * (3 * 0x02), endpos])	# data is 0x120 bytes
+					cmd_mode = -23
 				else:
 					mode = MODE_DATA
 		
@@ -658,7 +668,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			darray = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
 			iterat = struct.iter_unpack("<H", darray)
 			cmd_list += [(curpos, cmd_mode, [v[0] for v in iterat])]
-		elif (cmd_mode == -20) or (cmd_mode == -2):
+		elif cmd_mode in [-2, -20, -22]:
 			# do 2-byte word parsing
 			darray = scene_read_array(scenedata, file_usage, curpos, endpos - curpos)
 			iterat = struct.iter_unpack("<H", darray)
@@ -677,7 +687,7 @@ def generate_label_names(label_list: dict) -> None:
 		(par_type, lbl_flags, lbl_name) = label_list[lbl_pos]
 		if not (lbl_name is None or lbl_name == ""):
 			continue
-		if (par_type == SCPT_DATA1) or (par_type == SCPT_DATA2):
+		if par_type in [SCPT_DATA1, SCPT_DATA2, SCPT_86DAT, SCPT_89DAT]:
 			lbl_prefix = "data"
 		elif par_type == SCPT_STR:
 			lbl_prefix = "str"
@@ -855,12 +865,12 @@ def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 			meta_ctrl_code = None
 		elif rem_param_bytes > 0:
 			rem_param_bytes -= 1
-		elif (idx > 0) and (chr_id in [0x01, 0x0D]):
+		elif (idx > 0) and (chr_id in [0x01, 0x0A, 0x0D]):
 			new_chr_mode = 1
 		elif chr_id != 0x00:	# don't split at terminator characters
 			new_chr_mode = 0
 			# handle special character codes
-			if chr_id in [0x03, 0x04, 0x06, 0x08, 0x0E]:
+			if chr_id in [0x03, 0x04, 0x06, 0x08, 0x0B, 0x0C, 0x0E]:
 				rem_param_bytes = 1	# 1 parameter byte
 			elif chr_id == 0x05:
 				rem_param_bytes = 2	# 2 parameter bytes
@@ -940,6 +950,19 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					chrs = [JISCHR_COMMENTS[val] for val in params if val in JISCHR_COMMENTS]
 					if len(chrs) > 0:
 						comment = ", ".join(chrs)
+				elif cmd_id in [-22, -23]:
+					cmd_name = "DW"	# Data: word (hex)
+					group_size = 9 if cmd_id == -22 else 3
+					data_strs = []
+					for (idx, val) in enumerate(params):
+						line_idx = idx % group_size
+						if line_idx == 0:
+							data_str = f"{val}"
+						elif line_idx <= 2:
+							data_str = f"{val:3}"
+						else:
+							data_str = f"0x{val:01X}"
+						data_strs += [data_str]
 				elif cmd_id == -21:
 					cmd_name = "DW"	# Data: word (decimal)
 					data_strs = [f"{val}" for val in params]

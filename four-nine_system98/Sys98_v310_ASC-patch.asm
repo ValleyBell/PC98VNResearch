@@ -1,8 +1,8 @@
-; System-98 v3.10 patch for supporting ANK font (half-width ASCII characters)
+; System-98 v3.10 patch for supporting ASCII characters
 ; made by Valley Bell, 2022-11-19
 ;
 ; Assembling using NASM:
-;	nasm -f bin -o SYS98ANK.EXE -l SYS98ANK.LST "Sys98_ANK-patch.asm"
+;	nasm -f bin -o SYS98A31.EXE -l SYS98A31.LST "Sys98_v310_ASC-patch.asm"
 ;	This requires SYS98.EXE (91 301 bytes) to be in the same folder.
 ;
 ; Note: NASM uses slightly different opcodes compared to the original PC-98 assembler for certain instructions.
@@ -16,7 +16,7 @@ PE_HEADER_SIZE EQU 120h
 	
 	hlt
 	jmp	short $-1	; The function we are overwriting *SHOULD* be unused, but let's freeze here just in case.
-	times 0Dh db 00h	; The function we want to use stats at 0E23h, but one value gets relocated,
+	times 0Dh db 00h	; The function we want to use starts at 0E23h, but one value gets relocated,
 				; so we insert some dummy some data to get a safe location.
 
 ; --- code to get ASCII characters (ANK font) from font ROM ---
@@ -66,7 +66,7 @@ ank_chr_loop:
 	; Note: We overwrite the "xor ax, ax" instruction in order to make space for the 16-bit jump.
 	; In theory, this can cause AH be garbage.
 	; However in this case, no unwanted side effects are caused.
-	;   1. The code path reading Shift-JIS (getchr_jis) uses sets AH to 0 before returning.
+	;   1. The code path reading Shift-JIS (getchr_jis) sets AH to 0 before returning.
 	;   2. The code path that returns a space (getchr_space) does NOT set AH,
 	;      but all callers (GetChrData and loc_125D6) only access AL.
 	lodsb

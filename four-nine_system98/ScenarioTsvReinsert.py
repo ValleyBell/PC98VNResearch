@@ -310,16 +310,26 @@ def tsvdata2asmcommands(text: str) -> list:
 				cmd_type = CMDTYPE_DB
 				token_data = text[pos : pos+chrlen+8]
 				chrlen += 8
-			elif ctrl_chr == 'r':	# reset X position
+			elif ctrl_chr == 'r':	# new line (reset X position, increment Y position by 1)
 				cmd_type = CMDTYPE_DB
 				token_data = 0x0D
+			elif ctrl_chr == 'n':	# scroll line
+				cmd_type = CMDTYPE_DB
+				token_data = 0x0A
 			elif ctrl_chr == 'c':	# set colour
 				cmd_type = CMDTYPE_DB
 				token_data = 0x03
 				param_bytes = 1
-			elif ctrl_chr == 'w':	# wait
+			elif ctrl_chr == 'e':	# paragraph end (wait, then clear text box)
 				cmd_type = CMDTYPE_DB
 				token_data = 0x01
+			elif ctrl_chr == 'w':	# wait
+				cmd_type = CMDTYPE_DB
+				token_data = 0x02
+			elif ctrl_chr == 'p':	# set portrait
+				cmd_type = CMDTYPE_DB
+				token_data = 0x0B
+				param_bytes = 1
 			else:
 				cmd_type = CMDTYPE_DB
 				token_data = text[pos : pos+chrlen]

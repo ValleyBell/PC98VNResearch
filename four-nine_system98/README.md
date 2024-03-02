@@ -24,7 +24,8 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - [text table translation tool](tsvTranslate.py) - takes a TSV text table file and translates all text using Google Translate
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
-- `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
+- Gaogao 1 `SYS98CPP.COM` v1.00 disassembly ([IDB file](SYS98CPP.idb), [ASM file](SYS98CPP.asm))
+- Canaan `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
 - Python tool to convert a four･nine font file (`.FNT`) to an image: [font2img.py](font2img.py) (supports BMP/PNG/... through Pillow library)
 - Gaogao 4 font:
   - an [image conversion of GAO4.FNT](GAO4_FNT.PNG)
@@ -33,14 +34,14 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 ## Extras
 
 - Windows `.bat` scripts to quickly decode data from the game "Canaan".
-- a [patch to support ASCII text](Sys98_ANK-patch.asm) for `SYS98.EXE` v3.10
+- a [patch to support ASCII text](Sys98_v310_ASC-patch.asm) for `SYS98.EXE` v3.10
   - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
-  - A prepatched version is included as [SYS98ANK.EXE](SYS98ANK.EXE).
+  - A prepatched version is included as [SYS98A31.EXE](SYS98A31.EXE).
 - an English translation patch for parts of the game Canaan can be found in the [canaan-en folder](canaan-en)
   - `.ASM` files are decompiled game scripts.
   - `.S` files are compiled game scripts, ready to be inserted into the game.  
     You can just place them in the game's root directory and they will take priority over the files inside the `DISK_#.LIB` archives.
-  - The English translations require the ASCII patch (SYS98ANK) linked above in order to be shown correctly.
+  - The English translations require the ASCII patch (SYS98A31) linked above in order to be shown correctly.
 - NEC PC-9801 JIS ↔ Unicode mapping:
   - [Python Pickle file](NEC-C-6226-lut.pkl), generated from HarJIT's `NEC-C-6226-visual3.txt` (see [z\_misc folder](z_misc/README.md))
   - Shift JIS/JIS ↔ Unicode [Python converter module](nec_jis_conv.py) (used by the scenario decompiler)
@@ -67,6 +68,9 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - The four･nine font file (`.FNT`) stores the 8x8 character parts of the 16x16 font in a *different* order compared to the PC-98 font ROM.
   - PC-98 font ROM 8x8 character order: upper left, lower left, upper right, lower right
   - four･nine font 8x8 character order: upper left, upper right, lower left, lower right
+- System-98 v1.x supports ASCII characters (bytes 20..7F) and prints them correctly with 8 pixels width.
+  However, mirrored ASCII and half-width Katakana (Shift-JIS 8540..869F) are treated as double-width and thus shown incorrectly.
+- System-98 v3.x on the other hand shows mirrored ASCII and half-width Katakana properly, but doesn't support ASCII characters. (They all show up as spaces.)
 
 ## DIANA engine
 

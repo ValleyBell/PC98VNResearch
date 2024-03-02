@@ -126,7 +126,7 @@ def process_data(tsv_data: list) -> list:
 		txitm = textitem_newlist[trdat["text_item"]]
 		text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
 		# for "selection" type, optionally apply Title Case
-		if not config.raw and txitm["mode"] == "sel":
+		if config.title_case and txitm["mode"] == "sel":
 			text = text.title()
 		txitm["text"].append(transdata2txt({**trdat, "data": text}))
 	for txitm in textitem_newlist:
@@ -380,6 +380,7 @@ def main(argv):
 	print("TSV Translator")
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-r", "--raw", action="store_true", help="no remapping of Japanese quotation marks")
+	aparse.add_argument("-t", "--title-case", action="store_true", help="apply Title Case to text items of 'selection' type")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	

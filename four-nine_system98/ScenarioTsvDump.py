@@ -474,20 +474,27 @@ def generate_message_table(cmd_list, label_list) -> list:
 								text += "\\x{:02X}".format(cint)
 								if cint == 0x00:
 									rem_param_bytes = 1
-							elif cint == 0x0D:
+							elif cint == 0x0D:	# new line
 								text += "\\r"
-							elif cint == 0x01:
+							elif cint == 0x0A:	# scroll line
+								text += "\\n"
+							elif cint == 0x01:	# paragraph end
+								text += "\\e"
+							elif cint == 0x02:	# wait
 								text += "\\w"
-							elif cint == 0x03:
+							elif cint == 0x03:	# set colour
 								text += "\\c"
 								rem_param_bytes = 1
-							elif cint in [0x04, 0x06, 0x08, 0x0E]:
+							elif cint == 0x0B:	# set portrait
+								text += "\\p"
+								rem_param_bytes = 1
+							elif cint in [0x04, 0x06, 0x08, 0x0C, 0x0E]:
 								text += c
 								rem_param_bytes = 1
 							elif cint == 0x05:
 								text += c
 								rem_param_bytes = 2	# has 2 parameter bytes
-							elif cint in [0x04, 0x06, 0x08, 0x0E]:
+							elif cint == 0x0F:
 								text += c
 								meta_ctrl_code = True
 							else:

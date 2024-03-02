@@ -132,7 +132,7 @@ SCENE_CMD_LIST = {
 	0x42: ("CMD42"  , [SCPT_BYTE]),
 	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
 	0x44: (None     , []),
-	0x45: (None     , []),
+	0x45: ("CMD45"  , [SCPT_INT]),
 	0x46: (None     , []),
 	0x47: (None     , []),
 	0x48: (None     , []),
