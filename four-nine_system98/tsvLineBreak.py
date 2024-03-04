@@ -114,6 +114,8 @@ def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, 
 	return
 
 def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list:
+	global config
+	
 	# reinsert text items into the TSV column list again
 	tsv_new = tsv_data.copy()
 	for txitm in textitem_list:
@@ -149,6 +151,9 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			chrwidth = 0
 			no_linebreak_now = False
 			if (text[pos] == '\\') and (pos + 1 < len(text)):
+				if can_add_linebreaks and (config.extend_mode == 2):
+					if (text[pos + 1] == 'r') and (len(lines) - tbox_ybase >= tb_height):
+						text[pos + 1] = 'n'	# change \r to \n
 				ctrl_chr = text[pos + 1]
 				chrlen += 1
 				if ctrl_chr == 'x':
@@ -166,12 +171,25 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					ccode = int(text[pos+chrlen : pos+chrlen+8], 0x10)
 					chrwidth = get_cjk_char_width(chr(ccode))
 					chrlen += 8
-				elif ctrl_chr == 'r':	# reset X position
+				elif ctrl_chr == 'r':	# new line
 					lines[-1] += text[pos : pos+chrlen]
+					#lines[-1] += f"<r{len(lines) - tbox_ybase}/{tb_height}>"
 					pos += chrlen
 					lines[-1] += "\\"
 					lines.append("")	# start new line
+					#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
 					xpos = 0
+					continue
+				elif ctrl_chr == 'n':	# scroll 1 line up
+					lines[-1] += text[pos : pos+chrlen]
+					#lines[-1] += f"<n{len(lines) - tbox_ybase}/{tb_height}>"
+					pos += chrlen
+					lines[-1] += "\\"
+					lines.append("")	# start new line
+					#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
+					xpos = 0
+					# move base Y offset to make up for scrolling
+					tbox_ybase += 1
 					continue
 				elif ctrl_chr == '\n':	# new TSV line
 					pos += chrlen
@@ -186,10 +204,11 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 						do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
 					lines[-1] += "\\"
 					lines.append("")	# start new line
+					#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
 					xpos = 0
 					
 					# reset all coordinate data
-					tbox_ybase = len(lines)
+					tbox_ybase = len(lines) - 1	# index of current line
 					max_xpos = xpos
 					last_word_lpos = pos
 					last_word_xpos = xpos
@@ -200,8 +219,29 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					no_linebreak_now = True	# prevent line breaks before spaces
 					last_word_lpos = len(lines[-1]) + chrlen
 					last_word_xpos = xpos + chrwidth
-			if can_add_linebreaks and (xpos + chrwidth > tb_width) and not no_linebreak_now:
+			
+			if len(lines) - tbox_ybase == tb_height:
+				# on the last line of the text box, reserve 2 "characters" for the
+				# icon that tells the user to press a key
+				tb_line_width = tb_width - 2
+			else:
+				tb_line_width = tb_width
+			if can_add_linebreaks and (xpos + chrwidth > tb_line_width) and not no_linebreak_now:
 				# add line breaks only in "txt" mode
+				newline_code = "\\r"	# default: continue on next line
+				if len(lines) - tbox_ybase >= tb_height:
+					if config.extend_mode == 1:
+						# clear text box
+						newline_code = "\\e"
+						# reset all coordinate data
+						tbox_ybase = len(lines) + 1
+						max_xpos = 0
+					elif config.extend_mode == 2:
+						# scroll text box by 1 line
+						newline_code = "\\n"
+						# move base Y offset to make up for scrolling
+						tbox_ybase += 1
+				#newline_code = newline_code + f"<?{len(lines) - tbox_ybase}/{tb_height}>"
 				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace() or \
 					(last_word_xpos < tb_width*0.7):
 					# (a) there were no spaces OR
@@ -209,15 +249,17 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					# (c) the last word is very long (more than 30% of the line)
 					# -> just break in the middle of the word
 					#print(f"Line break after: {str(lines)}")
-					lines[-1] += "\\r\\"
+					lines[-1] += newline_code + "\\"
 					lines.append("")	# start new line
+					#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
 					xpos = 0
 				else:
 					# insert a line break at the beginning of the last word (and strip spaces)
 					#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - last_word_xpos}")
 					#print(f"Line-Beginning: Word Pos {last_word_lpos}, Word XPos {last_word_xpos}, \"{lines[-1][:last_word_lpos]}\"")
 					rem_line = lines[-1][last_word_lpos:]
-					lines[-1] = lines[-1][:last_word_lpos] + "\\r\\"
+					#rem_line = f"<{len(lines) - tbox_ybase + 1}/{tb_height}>" + rem_line
+					lines[-1] = lines[-1][:last_word_lpos] + newline_code + "\\"
 					lines.append(rem_line)
 					xpos -= last_word_xpos
 				last_word_lpos = 0
@@ -267,7 +309,10 @@ def line_breaks_remove(tsv_data: list) -> list:
 				f.write(str(txitm) + "\n")
 	
 	# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
-	SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼❢。？！〉》」』"
+	SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼⁈❢。？！〉》」』・"
+	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2500, 0x2800)])	# add various symbols
+	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2900, 0x2C00)])	# add more arrows
+	SENTENCE_END_CHRS = set(SENTENCE_END_CHRS)	# convert to set for faster lookup
 	for txitm in textitem_list:
 		text = txitm["text"]
 		pos = text.find("\\r")
@@ -280,8 +325,12 @@ def line_breaks_remove(tsv_data: list) -> list:
 				pass	# keep when the string starts with it
 			elif (len(text) <= next_pos) or text[next_pos].isspace():
 				pass	# keep when being followed by a space
-			elif (pos > 1) and (text[pos - 1] in SENTENCE_END_CHRS):
+			elif (pos >= 1) and (text[pos - 1] in SENTENCE_END_CHRS):
 				pass	# keep when the last character is a "sentence/paragraph end" character
+			elif (pos >= 1) and (ord(text[pos - 1]) in range(0x1F000, 0x20000)):
+				pass	# keep when the last character is a symbol or emoji character
+			elif (pos >= 2) and (text[pos-2:pos] in ["\\e", "\\w"]):
+				pass	# keep when the last character is a symbol or emoji character
 			elif txitm["mode"] == "txt":
 				# fuse lines
 				text = text[:pos] + text[next_pos:]
@@ -336,6 +385,7 @@ def main(argv):
 	apgrp.add_argument("-r", "--remove", action="store_true", help="remove line breaks")
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
+	aparse.add_argument("-x", "--extend-mode", type=int, help="how to extend small text boxes. 0 = none, 1 = clear, 2 = scroll", default=0)
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	

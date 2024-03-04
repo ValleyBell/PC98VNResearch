@@ -503,7 +503,7 @@ def generate_message_table(cmd_list, label_list) -> list:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
 						return None
 				if last_chr is not None:
-					if last_chr in [0x0D, 0x01, 0x00]:
+					if last_chr in [0x0D, 0x0A, 0x01, 0x00]:
 						do_flush = True
 					if last_chr == 0x00:
 						text = text[:-4]
