@@ -239,18 +239,18 @@ def load_scene_binary(fn_in: str) -> bytes:
 		#   The game engine skips the first 0x100 bytes and XORs all remaining ones with 0x01.
 		return data[:MOD_DESC_LEN] + bytes([x ^ 0x01 for x in data[MOD_DESC_LEN:]])
 
-def scene_read_array(scenedata: bytes, usage_mask: list, pos: int, array_size: int) -> bytes:
+def scene_read_array(scenedata: bytes, usage_mask: list, pos: int, array_size: int, mask: int = 0x01) -> bytes:
 	try:
 		for ofs in range(array_size):
-			usage_mask[pos + ofs] |= 0x01
+			usage_mask[pos + ofs] |= mask
 		return scenedata[pos : pos + array_size]
 	except Exception as e:
 		print(f"Error in scene_read_array(pos 0x{pos:04X}, array size 0x{array_size:04X}, file size 0x{len(scenedata):04X}): {e}")
 		raise e
 
-def scene_read_int(scenedata: bytes, usage_mask: list, pos: int) -> int:
-	usage_mask[pos + 0x00] |= 0x01
-	usage_mask[pos + 0x01] |= 0x01
+def scene_read_int(scenedata: bytes, usage_mask: list, pos: int, mask: int = 0x01) -> int:
+	usage_mask[pos + 0x00] |= mask
+	usage_mask[pos + 0x01] |= mask
 	return struct.unpack_from("<H", scenedata, pos)[0]
 
 def find_next_label(labels: dict, pos: int) -> int:
@@ -401,6 +401,9 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 	while True:
 		# search for next unparsed section
 		while (curpos < len(scenedata)) and (file_usage[curpos] != 0x00):
+			# TODO: potential speed-up by not scanning the same section multiple times
+			# (I need to figure out what side effects this could cause.)
+			#file_usage[curpos] |= 0x80	# mark as "already scanned"
 			curpos += 1
 		if curpos >= len(scenedata):
 			break
@@ -419,6 +422,8 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 				strsize = get_string_size(scenedata, curpos, endpos, dtype)
 				if strsize > 0:
 					endpos = curpos + strsize
+			#for pos in range(curpos, endpos):
+			#	file_usage[pos] |= 0x80
 			curpos = endpos
 		else:
 			is_code = test_for_code(scenedata, file_usage, curpos)
@@ -428,6 +433,7 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 			else:
 				# skip entire unused block
 				while (curpos < len(scenedata)) and (file_usage[curpos] == 0x00):
+					#file_usage[curpos] |= 0x80
 					curpos += 1
 	return -1
 
@@ -474,17 +480,17 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		if curpos >= len(scenedata):
 			curpos = None
 			continue
-		if file_usage[curpos] != 0x00:
+		if (file_usage[curpos] & 0x0F) != 0x00:
 			curpos = None
 			continue
 		
 		cmd_pos = curpos
-		cmd_id = scene_read_int(scenedata, file_usage, cmd_pos)
+		cmd_id = scene_read_int(scenedata, file_usage, cmd_pos, 0x11)
 		curpos += 0x02
 		if cmd_id >= 0x100:
 			# The game engine treats this as command 0x00. (return to DOS)
 			print(f"Found invalid command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
-			file_usage[cmd_pos+0] &= ~0x01
+			file_usage[cmd_pos+0] &= ~0x01	# remove 0x01, keep 0x10 to enforce skip during code test
 			file_usage[cmd_pos+1] &= ~0x01
 			curpos = None	# stop processing here
 			continue
@@ -595,7 +601,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 	curpos = start_ofs
 	while True:
 		# search for next unparsed section
-		while (curpos < len(scenedata)) and (file_usage[curpos] != 0x00):
+		while (curpos < len(scenedata)) and ((file_usage[curpos] & 0x0F) != 0x00):
 			curpos += 1
 		if curpos >= len(scenedata):
 			break
