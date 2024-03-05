@@ -248,11 +248,15 @@ def sort_text_list(relevant_data: list, ref_labels: dict, cmd_list, label_list) 
 			rd_sl_unref.append(( str_line_id, relev_itm ))
 	
 	rd_keys = [rd[0] for rd in rd_sortlist]
-	for rd in rd_sl_unref:
-		dist = [abs(rd[0] - (rdk & 0xFFFF)) for rdk in rd_keys]
-		mdist = min(dist)
-		midx = dist.index(mdist)
-		rd_sortlist.append(( (rd_keys[midx] & ~0xFFFF) | (rd[0] & 0xFFFF), rd[1]))
+	if len(rd_keys) > 0:
+		for rd in rd_sl_unref:
+			dist = [abs(rd[0] - (rdk & 0xFFFF)) for rdk in rd_keys]
+			mdist = min(dist)
+			midx = dist.index(mdist)
+			rd_sortlist.append(( (rd_keys[midx] & ~0xFFFF) | (rd[0] & 0xFFFF), rd[1]))
+	else:
+		for rd in rd_sl_unref:
+			rd_sortlist.append(( rd[0] & 0xFFFF, rd[1]))
 	
 	rd_sortlist.sort(key=lambda item: item[0])
 	return [rd[1] for rd in rd_sortlist]
@@ -270,17 +274,22 @@ def generate_message_table(cmd_list, label_list) -> list:
 	last_label_item = None
 	print_before_label = None
 	textbox_info = [None] * 0x10
+	if True:
+		# Note: Text box 0 is initialized at the very beginning of the game by GAO1/SNR/RS_OPEN.LSP.
+		textbox_info[0] = ((38 - 2) * 2, 6 - 2)		# TBOPEN	0, 1, 19, 38, 6, 0
 	for (cid, citem) in enumerate(cmd_list):
 		if cid in cmd_lbl_list:
 			print_before_label = None
 		
 		cmdName = citem.cmdName.upper()
 		if cmdName == "PRINT":
-			tb_id = citem.params[0].data
+			tb_id = citem.params[0].data & 0x0F	# The mask is required by GAO1/SNR/RS5S13.ASM.
 			lname = citem.params[1].data.casefold()
 			add_ref_label(ref_labels, lname, 0x01, cid)	# referenced by "print" -> good
 			if textbox_info[tb_id] is not None:
 				label_tboxes[lname] = textbox_info[tb_id]
+				if textbox_info[tb_id][0] <= 16:	# small text box (<=16 wide) -> assume selection
+					ref_labels[lname][0] |= 0x02
 			print_before_label = lname
 		elif cmdName == "PRINTXY":
 			# params[0] = X position
@@ -315,7 +324,7 @@ def generate_message_table(cmd_list, label_list) -> list:
 			add_ref_label(ref_labels, pitem.data, 0x10, cid)
 		elif cmdName == "CALL":
 			pitem = citem.params[0]
-			# some common subroutines for opening/closing text boxes in Canaan
+			# some common subroutines for opening/closing text boxes in "Canaan"
 			if pitem.data == "cloc_07BC":
 				textbox_info[8] = None
 				textbox_info[9] = None
@@ -339,6 +348,13 @@ def generate_message_table(cmd_list, label_list) -> list:
 				textbox_info[8] = None
 				textbox_info[9] = None
 				textbox_info[10] = None
+			# some common subroutines for opening/closing text boxes in "Gaogao 1"
+			elif pitem.data == "cloc_0C34":
+				textbox_info[10] = ((6 - 2) * 2, 7 - 2)		# TBOPEN	10, 7, 16, 6, 7, 2
+				textbox_info[11] = ((21 - 2) * 2, 7 - 2)	# TBOPEN	11, 13, 16, 21, 7, 3
+			elif pitem.data == "cloc_0CAC":
+				textbox_info[10] = None
+				textbox_info[11] = None
 		else:
 			for pitem in citem.params:
 				if pitem.type == TKTP_NAME:

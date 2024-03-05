@@ -158,7 +158,12 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				chrlen += 1
 				if ctrl_chr == 'x':
 					ccode = int(text[pos+chrlen : pos+chrlen+2], 0x10)
-					chrwidth = get_cjk_char_width(chr(ccode))
+					if ccode >= 0x20:
+						chrwidth = get_cjk_char_width(chr(ccode))
+					elif ccode == 0x04:
+						chrwidth = 6	# assume up to 8 chars for names
+					elif ccode == 0x05:
+						chrwidth = 6	# assume up to 6 chars for numbers (5 digits + sign)
 					chrlen += 2
 				elif ctrl_chr == 'j':
 					chrwidth = 2	# assume full-width emoji / custom PC-98 font character
