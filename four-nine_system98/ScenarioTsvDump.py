@@ -351,7 +351,8 @@ def generate_message_table(cmd_list, label_list) -> list:
 			# some common subroutines for opening/closing text boxes in "Gaogao 1"
 			elif pitem.data == "cloc_0C34":
 				textbox_info[10] = ((6 - 2) * 2, 7 - 2)		# TBOPEN	10, 7, 16, 6, 7, 2
-				textbox_info[11] = ((21 - 2) * 2, 7 - 2)	# TBOPEN	11, 13, 16, 21, 7, 3
+#				textbox_info[11] = ((21 - 2) * 2, 7 - 2)	# TBOPEN	11, 13, 16, 21, 7, 3
+				textbox_info[11] = (36, 4)	# keep the border intact nicely
 			elif pitem.data == "cloc_0CAC":
 				textbox_info[10] = None
 				textbox_info[11] = None

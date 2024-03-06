@@ -318,11 +318,29 @@ def build_label_replacement_table(src_data: tuple, inc_data: tuple, match_start_
 	(inc_cmds, inc_labels) = inc_data
 	
 	res = {}
+	# for all labels of the include file, find the respective labels in the source file
+	# and save a mapping "source label" -> "include label"
 	for (ilkey, ilbl) in inc_labels.items():
 		slkey = [l for l in src_labels if src_labels[l].cmdID == match_start_cmd + ilbl.cmdID][0]
 		slbl = src_labels[slkey]
 		#print(f"{slbl.lblName} -> {ilbl.lblName}")
 		res[slkey] = ilkey
+	
+	# go through all commands and search for labels of the include file that reference data from the source file
+	for cid in range(len(inc_cmds)):
+		ic = inc_cmds[cid]
+		sc = src_cmds[match_start_cmd + cid]
+		if ic.cmdName != sc.cmdName:
+			print("Unexpected command mismatch when building include->source label reference list!")
+			break
+		
+		for (pid, ip) in enumerate(ic.params):
+			sp = sc.params[pid]
+			if ip.type == TKTP_NAME and sp.type == TKTP_LBL:
+				# include: unresolved name (-> unreferenced label)
+				# source: resolved label
+				slkey = sp.data.casefold()
+				res[slkey] = ip.data
 	
 	return res
 
@@ -420,9 +438,13 @@ def insert_code_include(fn_in: str, fn_out: str, fn_inc: str) -> int:
 	asm_new_lines = asm_lines[: inc_range[0]] + [f'\tinclude "{inc_filepath}"\n'] + asm_lines[inc_range[1] :]
 	for (lid, line) in enumerate(asm_new_lines):
 		for (srclbl, dstlbl) in lbl_replace_tbl.items():
-			# the keys are casefolded - here I want to use the original label names
-			#line = line.replace(label_list[srclbl].lblName, inc_label_list[dstlbl].lblName)
-			line = lbl_replace_re[srclbl].sub(inc_label_list[dstlbl].lblName, line)
+			if dstlbl in inc_label_list:
+				# the keys are casefolded - here I want to use the original label names
+				#line = line.replace(label_list[srclbl].lblName, inc_label_list[dstlbl].lblName)
+				line = lbl_replace_re[srclbl].sub(inc_label_list[dstlbl].lblName, line)
+			else:
+				# for replacement of labels that the includes only reference via commands
+				line = lbl_replace_re[srclbl].sub(dstlbl, line)
 		asm_new_lines[lid] = line
 	
 	try:
