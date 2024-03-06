@@ -153,7 +153,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			if (text[pos] == '\\') and (pos + 1 < len(text)):
 				if can_add_linebreaks and (config.extend_mode == 2):
 					if (text[pos + 1] == 'r') and (len(lines) - tbox_ybase >= tb_height):
-						text[pos + 1] = 'n'	# change \r to \n
+						text = text[:pos+1] + 'n' + text[pos+2:]	# change \r to \n
 				ctrl_chr = text[pos + 1]
 				chrlen += 1
 				if ctrl_chr == 'x':
@@ -298,6 +298,64 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			txt_lid += 1
 	return tsv_new
 
+def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
+	is_newline = False
+	last_non_spc = '\0x00'
+	last_chr = '\0x00'
+	pos = 0
+	while pos < len(text):
+		chrlen = 1
+		cur_chr = text[pos]
+		if (text[pos] == '\\') and (pos + 1 < len(text)):
+			ctrl_chr = text[pos + 1]
+			cur_chr += ctrl_chr
+			chrlen += 1
+			if ctrl_chr == 'x':
+				ccode = int(text[pos+chrlen : pos+chrlen+2], 0x10)
+				cur_chr = chr(ccode)
+				chrlen += 2
+			elif ctrl_chr == 'j':
+				cur_chr = '\0x00'
+				chrlen += 4
+			elif ctrl_chr == 'u':
+				ccode = int(text[pos+chrlen : pos+chrlen+4], 0x10)
+				cur_chr = chr(ccode)
+				chrlen += 4
+			elif ctrl_chr == 'U':
+				ccode = int(text[pos+chrlen : pos+chrlen+8], 0x10)
+				cur_chr = chr(ccode)
+				chrlen += 8
+			elif ctrl_chr in ['r', 'n']:	# new line / scroll line
+				is_newline = True
+			elif ctrl_chr == '\n':	# new TSV line
+				pass
+		if is_newline:
+			is_newline = False
+			next_pos = pos + chrlen
+			if text[next_pos : next_pos+2] == '\\\n':
+				next_pos += 2	# skip line end marker
+			#print(f"Next: {text[next_pos : next_pos+2]}")
+			if pos == 0:
+				pass	# keep when the string starts with it
+			elif (len(text) <= next_pos) or text[next_pos].isspace():
+				pass	# keep when being followed by a space
+			elif (len(last_non_spc) == 1) and last_non_spc in SENTENCE_END_CHRS:
+				pass	# keep when the last character is a "sentence/paragraph end" character
+			elif (len(last_non_spc) == 1) and (ord(last_non_spc) in range(0x1F000, 0x20000)):
+				pass	# keep when the last character is a symbol or emoji character
+			elif last_non_spc in ["\\e", "\\w"]:
+				pass	# keep when the last character is a "wait" command
+			else:
+				# fuse lines
+				text = text[:pos] + text[next_pos:]
+				chrlen = 0
+		last_chr = cur_chr
+		if not cur_chr.isspace():
+			last_non_spc = last_chr
+		pos += chrlen
+	
+	return text
+
 def line_breaks_remove(tsv_data: list) -> list:
 	global config
 
@@ -319,31 +377,8 @@ def line_breaks_remove(tsv_data: list) -> list:
 	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2900, 0x2C00)])	# add more arrows
 	SENTENCE_END_CHRS = set(SENTENCE_END_CHRS)	# convert to set for faster lookup
 	for txitm in textitem_list:
-		text = txitm["text"]
-		pos = text.find("\\r")
-		while pos >= 0:
-			next_pos = pos + 2
-			if text[next_pos : next_pos+2] == '\\\n':
-				next_pos += 2	# skip line end marker
-			#print(f"Next: {text[next_pos : next_pos+2]}")
-			if pos == 0:
-				pass	# keep when the string starts with it
-			elif (len(text) <= next_pos) or text[next_pos].isspace():
-				pass	# keep when being followed by a space
-			elif (pos >= 1) and (text[pos - 1] in SENTENCE_END_CHRS):
-				pass	# keep when the last character is a "sentence/paragraph end" character
-			elif (pos >= 1) and (ord(text[pos - 1]) in range(0x1F000, 0x20000)):
-				pass	# keep when the last character is a symbol or emoji character
-			elif (pos >= 2) and (text[pos-2:pos] in ["\\e", "\\w"]):
-				pass	# keep when the last character is a symbol or emoji character
-			elif txitm["mode"] == "txt":
-				# fuse lines
-				text = text[:pos] + text[next_pos:]
-				pos -= 1
-			elif txitm["mode"] == "sel":
-				pass	# keep
-			pos = text.find("\\r", pos+1)
-		txitm["text"] = text
+		if txitm["mode"] == "txt":
+			txitm["text"] = remove_break_from_line(txitm["text"], SENTENCE_END_CHRS)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "02_textitems_clean.log", "wt") as f:
 			for txitm in textitem_list:
