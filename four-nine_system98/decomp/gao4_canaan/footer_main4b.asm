@@ -1,3 +1,25 @@
+cloc_0F6F:	; entry point
+	TBOPEN	8, 0, 12, 9, 6, 3
+	PRINT	8, cstr_17EE
+	CMD6A	16, 208, 17, 271
+	CMD3F	i544, i552
+	MENUSEL	i48, i49, csel_086C, cloc_0FAB
+cloc_0F9D:
+	CMD42	1
+	CMD43	i544, i552
+	JP	cloc_0F9D
+
+cloc_0FAB:
+	JTBL	i49
+	DW	cloc_0FBF	; 0
+	DW	cloc_0FB7	; 1
+	DW	cloc_0FBF	; 2
+	DW	cloc_0FB7	; 3
+
+cloc_0FB7:
+	TBCLOSE	8
+	JP	mainloc_back
+
 cloc_0FBF:
 	SUBI	i48, 1
 	JTBL	i48
@@ -8,8 +30,8 @@ cloc_0FBF:
 
 cloc_0FD1:
 	CMD3F	i545, i553
-	CMD6A	496, 176, 497, 287
-	TBOPEN	9, 20, 10, 14, 9, 4
+	CMD6A	32, 192, 33, 303
+	TBOPEN	9, 1, 11, 14, 9, 4
 	PRINT	9, cstr_1752
 	MENUSEL	i48, i49, csel_1045, cloc_100D
 cloc_0FFF:
@@ -42,13 +64,13 @@ cloc_1025:
 	DW	cloc_11A5	; 5
 	DW	cloc_11DD	; 6
 csel_1045:
-	DW	1, 336, 176, 528, 192
-	DW	2, 336, 192, 528, 208
-	DW	3, 336, 208, 528, 224
-	DW	4, 336, 224, 528, 240
-	DW	5, 336, 240, 528, 256
-	DW	6, 336, 256, 528, 272
-	DW	7, 336, 272, 528, 288
+	DW	1, 32, 192, 224, 208
+	DW	2, 32, 208, 224, 224
+	DW	3, 32, 224, 224, 240
+	DW	4, 32, 240, 224, 256
+	DW	5, 32, 256, 224, 272
+	DW	6, 32, 272, 224, 288
+	DW	7, 32, 288, 224, 304
 	DW	0
 
 cloc_108D:
@@ -58,7 +80,8 @@ cloc_108D:
 	FILETM	i17, s2, cfile_178B	; cansav.da1
 	STRCAT	s3, s2
 	STRCPYI	s3, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1833
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -70,7 +93,8 @@ cloc_10C5:
 	FILETM	i17, s2, cfile_1797	; cansav.da2
 	STRCAT	s4, s2
 	STRCPYI	s4, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1840
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -82,7 +106,8 @@ cloc_10FD:
 	FILETM	i17, s2, cfile_17A3	; cansav.da3
 	STRCAT	s5, s2
 	STRCPYI	s5, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_184D
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -94,7 +119,8 @@ cloc_1135:
 	FILETM	i17, s2, cfile_17AF	; cansav.da4
 	STRCAT	s6, s2
 	STRCPYI	s6, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_185A
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -106,7 +132,8 @@ cloc_116D:
 	FILETM	i17, s2, cfile_17BB	; cansav.da5
 	STRCAT	s7, s2
 	STRCPYI	s7, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1867
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -118,7 +145,8 @@ cloc_11A5:
 	FILETM	i17, s2, cfile_17C7	; cansav.da6
 	STRCAT	s8, s2
 	STRCPYI	s8, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1874
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -130,18 +158,18 @@ cloc_11DD:
 	FILETM	i17, s2, cfile_17D3	; cansav.da7
 	STRCAT	s9, s2
 	STRCPYI	s9, cstr_17DF
-	CALL	cloc_080A
+	CALL	cloc_0838
+	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1881
 	PRINT	9, cstr_1821
 cloc_1211:
-	TBCLOSE	9
-	MOVI	i561, 0
+	CALL	cloc_093C
 	JP	cloc_0F6F
 
 cloc_121F:
 	CMD3F	i274, i554
-	CMD6A	496, 176, 497, 287
-	TBOPEN	9, 20, 10, 14, 9, 4
+	CMD6A	32, 192, 33, 303
+	TBOPEN	9, 1, 11, 14, 9, 4
 	PRINT	9, cstr_1752
 	MENUSEL	i16, i17, csel_1045, cloc_1261
 	MOVI	i34, 50
@@ -328,21 +356,18 @@ cloc_1519:
 cloc_152B:
 	SUBI	i679, 1
 cloc_1531:
-	CMPI	i190, 1
+	CMPI	i190, 0
 	JNE	cloc_154D
-	CALL	cloc_0C08
-	MOVI	i190, 0
-	CALL	cloc_0AAA
+	CALL	cloc_0862
+	IMGLOAD	0, 0, 0, 1, cfile_0AE2, 0	; BlackF.g
+	CALL	cloc_097E
+	CALL	cloc_0AEC
 	JP	cloc_156D
 
 cloc_154D:
-	IMGLOAD	65, 128, 0, 0, cfile_1563, 0	; PTY000.g
-	CALL	cloc_0BC6
-	JP	cloc_156D
-
-cfile_1563:
-	DB	1, "PTY000.g", 0
-
+	CALL	cloc_0862
+	IMGLOAD	0, 0, 0, 1, cfile_0AE2, 0	; BlackF.g
+	CALL	cloc_097E
 cloc_156D:
 	BGMFADE
 	MOVI	i575, 255
@@ -350,7 +375,14 @@ cloc_156D:
 
 cloc_1579:
 	TBCLOSE	8
-	CALL	cloc_0C08
+	CALL	cloc_0862
+	IMGLOAD	0, 0, 0, 1, cfile_0AE2, 0	; BlackF.g
+	CALL	cloc_097E
+	CALL	cloc_0914
+	CALL	cloc_0B94
+	PALFADE	0, 1
+	IMGLOAD	0, 0, 0, 0, cfile_15C7, 0	; waku06b.g
+	PALBW	0, 3
 	REGCLR	i48, i95
 	REGCLR	i112, i136
 	REGCLR	i272, i287

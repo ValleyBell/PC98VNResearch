@@ -25,7 +25,7 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
 - Gaogao 1 `SYS98CPP.COM` v1.00 disassembly ([IDB file](SYS98CPP.idb), [ASM file](SYS98CPP.asm))
-- Canaan `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
+- Gaogao 4 Canaan `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
 - Python tool to convert a four･nine font file (`.FNT`) to an image: [font2img.py](font2img.py) (supports BMP/PNG/... through Pillow library)
 - Gaogao 4 font:
   - an [image conversion of GAO4.FNT](GAO4_FNT.PNG)
@@ -45,10 +45,11 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - NEC PC-9801 JIS ↔ Unicode mapping:
   - [Python Pickle file](NEC-C-6226-lut.pkl), generated from HarJIT's `NEC-C-6226-visual3.txt` (see [z\_misc folder](z_misc/README.md))
   - Shift JIS/JIS ↔ Unicode [Python converter module](nec_jis_conv.py) (used by the scenario decompiler)
-- The [ExampleFiles](ExampleFiles) folder contains various files related to scenario script (de-)compilation, extraction and translation
-  - `.asm` files contain code that is shared between many scenario files in Gaogao 4th Canaan
+- The [decomp](decomp) folder contains various files related to scenario script (de-)compilation, extraction and translation
+  - There are separate sub-folders for the respective games.
+  - `.asm` files contain code that is shared between many scenario files
   - `.sh` scripts are quick ways to performs common tasks like (de-)compilation, extraction/reinsertion and text translation
-  - [ExampleFiles/scripts.md](ExampleFiles/scripts.md) contains a short description of the general workflow
+  - [decomp/gao4\_canaan/scripts.md](decomp/gao4_canaan/scripts.md) contains a short description of the general workflow with Gaogao 4th Canaan
 
 ## Notes
 

@@ -324,6 +324,8 @@ def build_label_replacement_table(src_data: tuple, inc_data: tuple, match_start_
 		slkey = [l for l in src_labels if src_labels[l].cmdID == match_start_cmd + ilbl.cmdID][0]
 		slbl = src_labels[slkey]
 		#print(f"{slbl.lblName} -> {ilbl.lblName}")
+		if ilbl.cmdID == len(inc_cmds):
+			continue	# do NOT replace labels that point to EOF of the include file and thus are omitted
 		res[slkey] = ilkey
 	
 	# go through all commands and search for labels of the include file that reference data from the source file
@@ -359,13 +361,10 @@ def get_include_range(src_data: tuple, inc_data: tuple, match_start_cmd: int) ->
 	for (ilkey, ilbl) in inc_labels.items():
 		# Looping based on the labels is inefficient, but I'll go with this for safety.
 		# (i.e. the include file must have a label that we may replace)
-		if ilbl.cmdID == 0 or ilbl.cmdID == len(inc_cmds):
+		if ilbl.cmdID == 0:
 			slkey = [l for l in src_labels if src_labels[l].cmdID == match_start_cmd + ilbl.cmdID][0]
 			slbl = src_labels[slkey]
-			if ilbl.cmdID == 0:
-				line_start = min([line_start, slbl.lineID])
-			elif ilbl.cmdID == len(inc_cmds):
-				line_end = max([line_end, slbl.lineID + 1])
+			line_start = min([line_start, slbl.lineID])
 	#print(f"Adjusted inc range: {(line_start, line_end)}")
 	
 	return (line_start, line_end)

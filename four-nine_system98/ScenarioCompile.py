@@ -664,6 +664,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 		else:
 			print(f"Compile error in {citem.asmFile}:{1+citem.lineID}: Unknown keyword '{citem.cmdName}'")
 			return None
+	cmd_ofs_list += [len(data)]	# for referencing EOF
 	
 	# pad module description with 00s
 	mod_desc = mod_desc[:MOD_DESC_LEN].ljust(MOD_DESC_LEN, b'\x00')
