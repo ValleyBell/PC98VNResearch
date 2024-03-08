@@ -39,7 +39,15 @@ def parse_tsv(lines: list) -> list:
 	return result
 
 def get_cjk_char_width(c: str) -> int:
-	return 2 if unicodedata.east_asian_width(c) in ["W", "F"] else 1 
+	#return 2 if unicodedata.east_asian_width(c) in ["W", "F"] else 1
+	# This matches the usual PC-98 font handling better.
+	ccode = ord(c)
+	if (ccode < 0x80) or (ccode == 0x00A5):	# ASCII or Yen sign
+		return 1
+	elif (ccode >= 0xFF61) and (ccode <= 0xFF9F):	# halfwidth Katakana
+		return 1
+	else:
+		return 2	# everything else should be considered 2 characters wide
 
 def get_cjk_string_width(text: str) -> int:
 	return sum([get_cjk_char_width(c) for c in text])
@@ -151,8 +159,10 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			chrwidth = 0
 			no_linebreak_now = False
 			if (text[pos] == '\\') and (pos + 1 < len(text)):
-				if can_add_linebreaks and (config.extend_mode == 2):
-					if (text[pos + 1] == 'r') and (len(lines) - tbox_ybase >= tb_height):
+				if can_add_linebreaks and (text[pos + 1] == 'r') and (len(lines) - tbox_ybase >= tb_height):
+					if config.extend_mode == 1:
+						text = text[:pos+1] + 'e' + text[pos+2:]	# change \r to \e
+					elif config.extend_mode == 2:
 						text = text[:pos+1] + 'n' + text[pos+2:]	# change \r to \n
 				ctrl_chr = text[pos + 1]
 				chrlen += 1
@@ -270,11 +280,12 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				last_word_lpos = 0
 				last_word_xpos = 0
 			
-			lines[-1] += text[pos : pos+chrlen]
-			if not text[pos : pos+chrlen].isspace():
-				max_xpos = max([xpos, max_xpos])
+			chrdata = text[pos : pos+chrlen]
+			lines[-1] += chrdata
 			xpos += chrwidth
 			pos += chrlen
+			if not chrdata.isspace():
+				max_xpos = max([xpos, max_xpos])
 		if not keep_lines:
 			do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
 		

@@ -71,9 +71,17 @@ def textitems2tsv(textitem_list: list, tsv_data: list) -> list:
 		tsv_new[tsv_lid][5] = txitm["text"]
 	return tsv_new
 
+def do_title_case(text: str) -> str:
+	txtitle = list(text.title())
+	# keep all-caps words like "TV"
+	for (pos, c) in enumerate(txtitle):
+		if (not c.isupper()) and (text[pos].isupper()):
+			txtitle[pos] = text[pos]
+	return "".join(list(txtitle))
+
 def process_data(tsv_data: list) -> list:
 	global config
-
+	
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "00_tsvdata.log", "wt") as f:
 			for cols in tsv_data:
@@ -127,7 +135,7 @@ def process_data(tsv_data: list) -> list:
 		text = translated_texts[trdat["tidx"]] if (trdat["tidx"] >= 0) else ""
 		# for "selection" type, optionally apply Title Case
 		if config.title_case and txitm["mode"] == "sel":
-			text = text.title()
+			text = do_title_case(text)
 		txitm["text"].append(transdata2txt({**trdat, "data": text}))
 	for txitm in textitem_newlist:
 		txitm["text"] = '\n'.join(txitm["text"])
