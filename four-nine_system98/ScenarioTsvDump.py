@@ -5,6 +5,7 @@ import dataclasses
 import struct
 import typing
 import argparse
+import yaml	# requires "PyYAML" pip package
 
 
 @dataclasses.dataclass
@@ -65,6 +66,7 @@ KEYWORDS = {
 }
 
 config = {}
+textbox_data = {}
 
 
 def find_next_token(line: str, startpos: int) -> int:
@@ -261,7 +263,21 @@ def sort_text_list(relevant_data: list, ref_labels: dict, cmd_list, label_list) 
 	rd_sortlist.sort(key=lambda item: item[0])
 	return [rd[1] for rd in rd_sortlist]
 
-def generate_message_table(cmd_list, label_list) -> list:
+def apply_textbox_settings(tb_state: list, tb_settings: list) -> None:
+	for tb in tb_settings:
+		tb_id = tb["box_id"]
+		if ("width" in tb) and ("width" in tb):
+			tb_state[tb_id] = (
+				int(tb["width"]) * 2,
+				int(tb["height"]),
+			)
+		else:
+			tb_state[tb_id] = None	# close text box
+	return
+
+def generate_message_table(cmd_list: list, label_list: list) -> list:
+	global textbox_data
+	
 	cmd_lbl_list = {}
 	#label_list[lbl_nm_cf] = LabelItem(cmdID=len(cmd_list), asmFile=asm_filename, lineID=lid, lblName=label_name)
 	for lname in label_list:
@@ -273,10 +289,10 @@ def generate_message_table(cmd_list, label_list) -> list:
 	label_tboxes = {}
 	last_label_item = None
 	print_before_label = None
+	# initialize text boxes
 	textbox_info = [None] * 0x10
-	if True:
-		# Note: Text box 0 is initialized at the very beginning of the game by GAO1/SNR/RS_OPEN.LSP.
-		textbox_info[0] = ((38 - 2) * 2, 6 - 2)		# TBOPEN	0, 1, 19, 38, 6, 0
+	if "initial" in textbox_data:
+		apply_textbox_settings(textbox_info, textbox_data["initial"])
 	for (cid, citem) in enumerate(cmd_list):
 		if cid in cmd_lbl_list:
 			print_before_label = None
@@ -324,44 +340,11 @@ def generate_message_table(cmd_list, label_list) -> list:
 			add_ref_label(ref_labels, pitem.data, 0x10, cid)
 		elif cmdName == "CALL":
 			pitem = citem.params[0]
-			# some common subroutines for opening/closing text boxes in "Canaan"
-			if pitem.data == "cloc_07BC":
-				textbox_info[8] = None
-				textbox_info[9] = None
-				textbox_info[10] = None
-				# text box for portrait
-				textbox_info[8] = ((7 - 2) * 2, 7 - 2)	# TBOPEN	8, 5, 16, 7, 7, 1
-				# text box for actual text
-				textbox_info[9] = ((22 - 2) * 2, 7 - 2)	# TBOPEN	9, 12, 16, 22, 7, 2
-			elif pitem.data == "cloc_080A":
-				textbox_info[8] = None
-				textbox_info[9] = None
-				textbox_info[10] = None
-				# text box for narrator text
-				#textbox_info[9] = ((37 - 2) * 2, 6 - 2)	# TBOPEN	9, 2, 19, 37, 6, 0
-				textbox_info[9] = (34 * 2, 4)	# The actual text box is 36x6.
-			elif pitem.data == "cloc_0838":
-				textbox_info[8] = None
-				textbox_info[9] = None
-				textbox_info[10] = None
-				# text box for H scene text
-				#textbox_info[9] = ((33 - 2) * 2, 7 - 2)	# TBOPEN	9, 7, 18, 33, 7, 2
-				textbox_info[9] = (30 * 2, 5)	# The actual text box is 32x7.
-			elif pitem.data == "cloc_0914" or pitem.data == "cloc_0AEC":
-				textbox_info[8] = None
-				textbox_info[9] = None
-			elif pitem.data == "cloc_0B94" or pitem.data == "cloc_0BA2":
-				textbox_info[8] = None
-				textbox_info[9] = None
-				textbox_info[10] = None
-			# some common subroutines for opening/closing text boxes in "Gaogao 1"
-			elif pitem.data == "cloc_0C34":
-				textbox_info[10] = ((6 - 2) * 2, 7 - 2)		# TBOPEN	10, 7, 16, 6, 7, 2
-				#textbox_info[11] = ((21 - 2) * 2, 7 - 2)	# TBOPEN	11, 13, 16, 21, 7, 3
-				textbox_info[11] = (18 * 2, 4)	# keep the border intact nicely
-			elif pitem.data == "cloc_0CAC":
-				textbox_info[10] = None
-				textbox_info[11] = None
+			if "calls" in textbox_data:
+				callName = pitem.data.casefold()
+				for (tb_key, tb) in textbox_data["calls"].items():
+					if tb_key.casefold() == callName:
+						apply_textbox_settings(textbox_info, tb)
 		else:
 			for pitem in citem.params:
 				if pitem.type == TKTP_NAME:
@@ -608,13 +591,18 @@ def asm2tsv(in_fns: str, fn_out: str) -> int:
 
 def main(argv):
 	global config
+	global textbox_data
 	
 	print("System-98 Scenario TSV Dumper")
 	aparse = argparse.ArgumentParser()
-	aparse.add_argument("-o", "--out_file", required=True, help="output tab-separated text table (.TSV)")
+	aparse.add_argument("-t", "--text-boxes", help="YAML file that specifies common text boxes")
+	aparse.add_argument("-o", "--out-file", required=True, help="output tab-separated text table (.TSV)")
 	aparse.add_argument("in_files", nargs="+", help="input assembly files (.ASM)")
 	
 	config = aparse.parse_args(argv[1:])
+	if config.text_boxes:
+		with open(config.text_boxes, "rt") as f:
+			textbox_data = yaml.safe_load(f)
 	
 	return asm2tsv(config.in_files, config.out_file)
 

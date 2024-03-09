@@ -15,7 +15,7 @@ Commands
 --------
 00 - invalid
 	no parameters
-	Prints the message "Don't come here.", then wait for a key press. The program will get stuck here.
+	Prints the message "Don't come here.", then waits for a key press. The program will get stuck here.
 01 - exit
 	2 bytes - register ID
 	Copies the value stored in the specified register around and then exits DIANA.

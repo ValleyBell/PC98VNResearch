@@ -1,0 +1,28 @@
+# some common subroutines for opening/closing text boxes in "Gaogao 1"
+# All text boxes have a border of 1 block (16x16 pixels / 1 full-width character) on each side. (top/right/bottom/left)
+initial:
+  # Note: Text box 0 is initialized at the very beginning of the game by GAO1/SNR/RS_OPEN.LSP.
+  - box_id: 0
+    # TBOPEN  0, 1, 19, 38, 6, 0
+    # box size 38x6, but let's use a width of 35 to reserve space for the "wait for user" icon
+    width: 35
+    height: 4
+calls:
+  cloc_0C34:
+    # text box for portrait
+    - box_id: 10
+      # TBOPEN  10, 7, 16, 6, 7, 2
+      # box size 6x7, the portrait is 6x6 (96x96 pixels)
+      width: 6
+      height: 6
+    # text box for actual text
+    - box_id: 11
+      # TBOPEN  11, 13, 16, 21, 7, 3
+      # box size 21x7 according to script, but the graphic occupies only 20x6
+      width: 18
+      height: 4
+  cloc_0CAC:
+    - box_id: 10
+      # close
+    - box_id: 11
+      # close

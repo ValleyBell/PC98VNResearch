@@ -1,0 +1,66 @@
+# some common subroutines for opening/closing text boxes in "Canaan"
+# All text boxes have a border of 1 block (16x16 pixels / 1 full-width character) on each side. (top/right/bottom/left)
+initial:
+  # none
+calls:
+  cloc_07BC:
+    # text box for portrait
+    - box_id: 8
+      # TBOPEN  8, 5, 16, 7, 7, 1
+      # box size 7x7
+      width: 5
+      height: 5
+    # text box for actual text
+    - box_id: 9
+      # TBOPEN  9, 12, 16, 22, 7, 2
+      # box size 22x7
+      width: 20
+      height: 5
+    - box_id: 10
+      # close
+  cloc_080A:
+    # text box for narrator text
+    - box_id: 8
+      # close
+    - box_id: 9
+      # TBOPEN  9, 2, 19, 37, 6, 0
+      # The actual text box size is 36x6.
+      width: 34
+      height: 4
+    - box_id: 10
+      # close
+  cloc_0838:
+    - box_id: 8
+      # close
+    # text box for H scene text
+    - box_id: 9
+      # TBOPEN  9, 7, 18, 33, 7, 2
+      # The actual text box size is 32x7.
+      width: 30
+      height: 5
+    - box_id: 10
+      # close
+  cloc_0914:
+    - box_id: 8
+      # close
+    - box_id: 9
+      # close
+  cloc_0AEC:
+    - box_id: 8
+      # close
+    - box_id: 9
+      # close
+  cloc_0B94:
+    - box_id: 8
+      # close
+    - box_id: 9
+      # close
+    - box_id: 10
+      # close
+  cloc_0BA2:
+    - box_id: 8
+      # close
+    - box_id: 9
+      # close
+    - box_id: 10
+      # close
