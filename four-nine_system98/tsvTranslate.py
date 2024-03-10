@@ -299,6 +299,7 @@ def translate_text(text: str) -> str:
 
 	if not config.raw:
 		text = text.translate(str.maketrans({
+			'\u3000': '  ',
 			'「': '“',
 			'」': '”',
 			'『': '‘',
@@ -352,6 +353,7 @@ def translate_text(text: str) -> str:
 	trans_text = trans_text.replace("``", "“")
 	trans_text = trans_text.replace("''", "”")
 	trans_text = trans_text.replace("\u200B", "")
+	trans_text = trans_text.replace("\uFF5E", "~")
 	trans_text = trans_text.replace("·", ".")
 	return trans_text
 

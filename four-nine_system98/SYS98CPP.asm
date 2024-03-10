@@ -1618,7 +1618,7 @@ GetTextBoxPtr	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-Int2Str_Short	proc near		; CODE XREF: PrintTextSomething+1ECp
+Int2Str_Short	proc near		; CODE XREF: PrintText+1ECp
 					; seg000:33E3p
 		pusha
 		mov	cs:i2sTextBuf, 0
@@ -1640,7 +1640,7 @@ Int2Str_Short	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-Int2Str_Long	proc near		; CODE XREF: PrintTextSomething+203p
+Int2Str_Long	proc near		; CODE XREF: PrintText+203p
 					; seg000:33EBp
 		pusha
 		mov	cs:i2sTextBuf, 0
@@ -3054,8 +3054,8 @@ loc_1144C:				; CODE XREF: seg000:145Bj
 ; =============== S U B	R O U T	I N E =======================================
 
 
-PrintTextSomething proc	near		; CODE XREF: PrintTextSomething+Bj
-					; PrintTextSomething+4Dj ...
+PrintText	proc near		; CODE XREF: PrintText+Bj
+					; PrintText+4Dj ...
 
 ; FUNCTION CHUNK AT 1584 SIZE 00000018 BYTES
 ; FUNCTION CHUNK AT 161F SIZE 000001E2 BYTES
@@ -3065,75 +3065,75 @@ PrintTextSomething proc	near		; CODE XREF: PrintTextSomething+Bj
 		jb	short loc_11478
 		call	PrintChar
 		call	DoPrintChrDelay
-		jmp	short PrintTextSomething
+		jmp	short PrintText
 ; ---------------------------------------------------------------------------
 
-loc_11478:				; CODE XREF: PrintTextSomething+3j
+loc_11478:				; CODE XREF: PrintText+3j
 		lodsb
 		cmp	al, 0
 		jnz	short loc_1147E
 		retn
 ; ---------------------------------------------------------------------------
 
-loc_1147E:				; CODE XREF: PrintTextSomething+10j
+loc_1147E:				; CODE XREF: PrintText+10j
 		cmp	al, 1
 		jnz	short loc_11485
-		jmp	ptx01_wait
+		jmp	ptx01_wait_clear
 ; ---------------------------------------------------------------------------
 
-loc_11485:				; CODE XREF: PrintTextSomething+15j
+loc_11485:				; CODE XREF: PrintText+15j
 		cmp	al, 2
 		jnz	short loc_1148C
-		jmp	loc_11596
+		jmp	ptx02_wait_cont
 ; ---------------------------------------------------------------------------
 
-loc_1148C:				; CODE XREF: PrintTextSomething+1Cj
+loc_1148C:				; CODE XREF: PrintText+1Cj
 		cmp	al, 3
 		jnz	short loc_11493
 		jmp	ptx03_set_color
 ; ---------------------------------------------------------------------------
 
-loc_11493:				; CODE XREF: PrintTextSomething+23j
+loc_11493:				; CODE XREF: PrintText+23j
 		cmp	al, 4
 		jnz	short loc_1149A
 		jmp	ptx04_show_str
 ; ---------------------------------------------------------------------------
 
-loc_1149A:				; CODE XREF: PrintTextSomething+2Aj
+loc_1149A:				; CODE XREF: PrintText+2Aj
 		cmp	al, 5
 		jnz	short loc_114A1
 		jmp	ptx05_show_reg
 ; ---------------------------------------------------------------------------
 
-loc_114A1:				; CODE XREF: PrintTextSomething+31j
+loc_114A1:				; CODE XREF: PrintText+31j
 		cmp	al, 9
 		jnz	short loc_114A8
 		jmp	ptx09_tab
 ; ---------------------------------------------------------------------------
 
-loc_114A8:				; CODE XREF: PrintTextSomething+38j
+loc_114A8:				; CODE XREF: PrintText+38j
 		cmp	al, 0Ah
 		jnz	short loc_114AF
-		jmp	loc_116A7
+		jmp	ptx0A_scroll	; scroll text 1	line up
 ; ---------------------------------------------------------------------------
 
-loc_114AF:				; CODE XREF: PrintTextSomething+3Fj
+loc_114AF:				; CODE XREF: PrintText+3Fj
 		cmp	al, 0Bh
 		jnz	short loc_114B6
-		jmp	loc_1177E
+		jmp	ptx0B_portrait	; show character portrait
 ; ---------------------------------------------------------------------------
 
-loc_114B6:				; CODE XREF: PrintTextSomething+46j
+loc_114B6:				; CODE XREF: PrintText+46j
 		cmp	al, 0Dh
-		jnz	short PrintTextSomething
+		jnz	short PrintText
 		jmp	ptx0D_line_break
-PrintTextSomething endp
+PrintText	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-PrintChar	proc near		; CODE XREF: PrintTextSomething+5p
+PrintChar	proc near		; CODE XREF: PrintText+5p
 		cmp	cs:textBoxID, 10h
 		jb	short loc_114D8
 		mov	dl, cs:ptxPosX
@@ -3225,8 +3225,8 @@ PutChar2TRAM	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-DoPrintChrDelay	proc near		; CODE XREF: PrintTextSomething+8p
-					; PrintTextSomething+280p ...
+DoPrintChrDelay	proc near		; CODE XREF: PrintText+8p
+					; PrintText+280p ...
 		mov	cx, cs:printChrDelay
 		jcxz	short locret_11583
 		push	es
@@ -3252,29 +3252,29 @@ locret_11583:				; CODE XREF: DoPrintChrDelay+5j
 DoPrintChrDelay	endp
 
 ; ---------------------------------------------------------------------------
-; START	OF FUNCTION CHUNK FOR PrintTextSomething
+; START	OF FUNCTION CHUNK FOR PrintText
 
-ptx01_wait:				; CODE XREF: PrintTextSomething+17j
+ptx01_wait_clear:			; CODE XREF: PrintText+17j
 		call	sub_1159C
 		cmp	cs:textBoxID, 10h
 		jnb	short loc_11592
 		call	sub_10DF4
 
-loc_11592:				; CODE XREF: PrintTextSomething+122j
+loc_11592:				; CODE XREF: PrintText+122j
 		inc	di
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-loc_11596:				; CODE XREF: PrintTextSomething+1Ej
+ptx02_wait_cont:			; CODE XREF: PrintText+1Ej
 		call	sub_1159C
-		jmp	PrintTextSomething
-; END OF FUNCTION CHUNK	FOR PrintTextSomething
+		jmp	PrintText
+; END OF FUNCTION CHUNK	FOR PrintText
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1159C	proc near		; CODE XREF: PrintTextSomething:ptx01_waitp
-					; PrintTextSomething:loc_11596p
+sub_1159C	proc near		; CODE XREF: PrintText:ptx01_wait_clearp
+					; PrintText:ptx02_wait_contp
 		mov	cs:word_19FEA, 0E50h
 		cmp	cs:textBoxID, 10h
 		jnb	short loc_115EA
@@ -3330,17 +3330,17 @@ loc_115FE:				; CODE XREF: sub_1159C+68j
 sub_1159C	endp
 
 ; ---------------------------------------------------------------------------
-; START	OF FUNCTION CHUNK FOR PrintTextSomething
+; START	OF FUNCTION CHUNK FOR PrintText
 
-ptx03_set_color:			; CODE XREF: PrintTextSomething+25j
+ptx03_set_color:			; CODE XREF: PrintText+25j
 		lodsb
 		shl	al, 5
 		or	al, 1
 		mov	cs:byte_19FE0, al
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-ptx04_show_str:				; CODE XREF: PrintTextSomething+2Cj
+ptx04_show_str:				; CODE XREF: PrintText+2Cj
 		lodsb
 		cbw
 		push	si
@@ -3352,13 +3352,13 @@ ptx04_show_str:				; CODE XREF: PrintTextSomething+2Cj
 		add	si, ax
 		shl	ax, 2
 		add	si, ax
-		call	PrintTextSomething
+		call	PrintText
 		pop	ds
 		pop	si
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-ptx05_show_reg:				; CODE XREF: PrintTextSomething+33j
+ptx05_show_reg:				; CODE XREF: PrintText+33j
 		lodsw
 		cmp	ax, 400h
 		jnb	short loc_1165C
@@ -3369,7 +3369,7 @@ ptx05_show_reg:				; CODE XREF: PrintTextSomething+33j
 		call	Int2Str_Short
 		jnb	short loc_11671
 
-loc_1165C:				; CODE XREF: PrintTextSomething+1E0j
+loc_1165C:				; CODE XREF: PrintText+1E0j
 		mov	bx, offset ScrVariablesL
 		sub	ax, 400h
 		shl	ax, 2
@@ -3378,26 +3378,26 @@ loc_1165C:				; CODE XREF: PrintTextSomething+1E0j
 		mov	dx, cs:[bx+2]
 		call	Int2Str_Long
 
-loc_11671:				; CODE XREF: PrintTextSomething+1EFj
+loc_11671:				; CODE XREF: PrintText+1EFj
 		push	si
 		push	ds
 		push	cs
 		pop	ds
 		mov	si, offset i2sTextBuf
-		call	PrintTextSomething
+		call	PrintText
 		pop	ds
 		pop	si
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-ptx09_tab:				; CODE XREF: PrintTextSomething+3Aj
+ptx09_tab:				; CODE XREF: PrintText+3Aj
 		cmp	cs:textBoxID, 10h
 		jb	short loc_11691
 		add	cs:ptxPosX, 8
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-loc_11691:				; CODE XREF: PrintTextSomething+21Bj
+loc_11691:				; CODE XREF: PrintText+21Bj
 		mov	bx, offset textBoxMem
 		mov	cl, 12h
 		mov	al, cs:textBoxID
@@ -3405,10 +3405,10 @@ loc_11691:				; CODE XREF: PrintTextSomething+21Bj
 		mul	cl
 		add	bx, ax
 		add	word ptr cs:[bx+0Ch], 8
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-loc_116A7:				; CODE XREF: PrintTextSomething+41j
+ptx0A_scroll:				; CODE XREF: PrintText+41j
 		push	si
 		push	ds
 		cmp	cs:textBoxID, 10h
@@ -3439,10 +3439,10 @@ loc_116A7:				; CODE XREF: PrintTextSomething+41j
 		assume ds:seg000
 		pop	si
 		call	DoPrintChrDelay
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-loc_116F1:				; CODE XREF: PrintTextSomething+244j
+loc_116F1:				; CODE XREF: PrintText+244j
 		mov	ax, 0A000h
 		mov	ds, ax
 		assume ds:nothing
@@ -3469,7 +3469,7 @@ loc_116F1:				; CODE XREF: PrintTextSomething+244j
 		mov	ax, cs:[bx+8]
 		sub	ax, 2
 
-loc_1172C:				; CODE XREF: PrintTextSomething+2D6j
+loc_1172C:				; CODE XREF: PrintText+2D6j
 		mov	cx, cs:[bx+6]
 		shl	cx, 1
 		push	si
@@ -3488,7 +3488,7 @@ loc_1172C:				; CODE XREF: PrintTextSomething+2D6j
 		mov	ax, cs:[bx+8]
 		sub	ax, 2
 
-loc_11754:				; CODE XREF: PrintTextSomething+2FEj
+loc_11754:				; CODE XREF: PrintText+2FEj
 		mov	cx, cs:[bx+6]
 		shl	cx, 1
 		push	si
@@ -3508,10 +3508,10 @@ loc_11754:				; CODE XREF: PrintTextSomething+2FEj
 		assume ds:seg000
 		pop	si
 		call	DoPrintChrDelay
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-loc_1177E:				; CODE XREF: PrintTextSomething+48j
+ptx0B_portrait:				; CODE XREF: PrintText+48j
 		lodsb
 		push	si
 		push	ds
@@ -3564,14 +3564,14 @@ loc_1177E:				; CODE XREF: PrintTextSomething+48j
 		out	0A6h, al	; Interrupt Controller #2, 8259A
 		pop	ds
 		pop	si
-		jmp	PrintTextSomething
-; END OF FUNCTION CHUNK	FOR PrintTextSomething
+		jmp	PrintText
+; END OF FUNCTION CHUNK	FOR PrintText
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_11801	proc near		; CODE XREF: PrintTextSomething+36Bp
-					; PrintTextSomething+375p ...
+sub_11801	proc near		; CODE XREF: PrintText+36Bp
+					; PrintText+375p ...
 		push	ax
 		out	0A6h, al	; Interrupt Controller #2, 8259A
 		mov	ds, dx
@@ -3619,17 +3619,17 @@ loc_1184F:				; CODE XREF: sub_11801+58j
 sub_11801	endp
 
 ; ---------------------------------------------------------------------------
-; START	OF FUNCTION CHUNK FOR PrintTextSomething
+; START	OF FUNCTION CHUNK FOR PrintText
 
-ptx0D_line_break:			; CODE XREF: PrintTextSomething+4Fj
+ptx0D_line_break:			; CODE XREF: PrintText+4Fj
 		cmp	cs:textBoxID, 10h
 		jb	short loc_11872
 		mov	cs:ptxPosX, 0
 		inc	cs:ptxPosY
-		jmp	PrintTextSomething
+		jmp	PrintText
 ; ---------------------------------------------------------------------------
 
-loc_11872:				; CODE XREF: PrintTextSomething+3F7j
+loc_11872:				; CODE XREF: PrintText+3F7j
 		mov	bx, 9D27h
 		mov	cl, 12h
 		mov	al, cs:textBoxID
@@ -3641,8 +3641,8 @@ loc_11872:				; CODE XREF: PrintTextSomething+3F7j
 		add	ax, ax
 		mov	cs:[bx+0Ch], ax
 		inc	word ptr cs:[bx+0Eh]
-		jmp	PrintTextSomething
-; END OF FUNCTION CHUNK	FOR PrintTextSomething
+		jmp	PrintText
+; END OF FUNCTION CHUNK	FOR PrintText
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -7526,7 +7526,7 @@ sShowText_XY:				; DATA XREF: seg000:scriptFuncListo
 		lodsw
 		push	si
 		mov	si, ax
-		call	PrintTextSomething
+		call	PrintText
 		pop	si
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
@@ -7538,7 +7538,7 @@ sShowText_TBox:				; DATA XREF: seg000:scriptFuncListo
 		lodsw
 		push	si
 		mov	si, ax
-		call	PrintTextSomething
+		call	PrintText
 		pop	si
 		jmp	ScriptMainLop
 ; ---------------------------------------------------------------------------
@@ -7564,7 +7564,7 @@ loc_133EE:				; CODE XREF: seg000:33E6j
 		push	cs
 		pop	ds
 		mov	si, offset i2sTextBuf
-		call	PrintTextSomething
+		call	PrintText
 		pop	ds
 		pop	si
 		jmp	ScriptMainLop
@@ -8809,14 +8809,14 @@ aExecUndefined	db '未定義のシステム予約命令を実行しました',0Dh,0Ah,'$'
 					; Undefined system reserved instruction	executed
 		db 4400h dup(0)
 ScrStringBuf	db 4C2h	dup(0)		; DATA XREF: GetStringPtr+2o
-					; PrintTextSomething+1C7o ...
+					; PrintText+1C7o ...
 byte_18701	db 0E0h	dup(0)		; DATA XREF: seg000:sTextClear_01o
 byte_187E1	db 9FEh	dup(0)		; DATA XREF: seg000:sTextClear_E1o
 ScrBufferXY	db 320h	dup(0)		; DATA XREF: seg000:27BDo seg000:27E3o ...
 ScrVariables1	dw 400h	dup(0)		; DATA XREF: GetVarPtr+2o
-					; PrintTextSomething+1E2o ...
+					; PrintText+1E2o ...
 ScrVariablesL	dd 0Ah dup(0)		; DATA XREF: GetLVarPtr+2o
-					; PrintTextSomething:loc_1165Co
+					; PrintText:loc_1165Co
 textBoxMem	db 0, 0, 0, 0, 0, 0, 0,	0, 0, 0, 0, 0, 0, 0, 0,	0, 0, 0
 					; DATA XREF: GetTextBoxPtr+7o
 					; PrintChar:loc_114D8o	...
@@ -8909,7 +8909,7 @@ printChrDelay	dw 0			; DATA XREF: DoPrintChrDelayr
 ptxPosX		db 0			; DATA XREF: PrintChar+8r
 					; PrintChar+15w ...
 ptxPosY		db 0			; DATA XREF: PrintChar+Dr
-					; PrintTextSomething+3FFw ...
+					; PrintText+3FFw ...
 byte_19FE0	db 0E1h			; DATA XREF: PutChar2TRAM+2Fr
 					; PutChar2TRAM+56r ...
 textBoxID	db 0			; DATA XREF: PrintCharr PrintChar+20r	...
@@ -9252,7 +9252,7 @@ byte_1A065	db 0C0h	dup(0)		; DATA XREF: sub_10644+Co
 		db    0,   3, 1Ch
 		db    0,   2, 0Ch
 		db    0,   0,	0
-byte_1A425	db 120h	dup(0)		; DATA XREF: PrintTextSomething+319o
+byte_1A425	db 120h	dup(0)		; DATA XREF: PrintText+319o
 					; seg000:3BB5o	...
 byte_1A545	db 0			; DATA XREF: sub_11801+35r
 					; sub_11801+3Fr ...

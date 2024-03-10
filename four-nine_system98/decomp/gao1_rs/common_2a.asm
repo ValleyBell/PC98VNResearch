@@ -32,6 +32,7 @@ cloc_0424:
 
 cloc_0440:
 	GFX84
+cloc_0442:	; used by RSH001
 	JTBL	i353
 	DW	cloc_045A	; 0
 	DW	cloc_045E	; 1

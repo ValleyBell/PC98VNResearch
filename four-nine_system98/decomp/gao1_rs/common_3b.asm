@@ -25,7 +25,7 @@ cloc_040C:
 cloc_0418:
 	TBCLOSE	9
 	TBCLOSE	12
-	CMD1E	i0
+	WAITKEY	i0
 	JP	mainloc_01A8
 
 cloc_0428:	; entry point

@@ -71,7 +71,7 @@ SCENE_CMD_LIST = {
 	0x1B: ("BGMFADE", []),
 	0x1C: ("BGMSTOP", []),
 	0x1D: ("BGMMODE", [SCPT_REG_INT]),
-	0x1E: ("CMD1E"  , [SCPT_REG_INT]),
+	0x1E: ("WAITKEY", [SCPT_REG_INT]),
 	0x1F: ("LDSCENE", [SCPT_FNAME], SC_EXEC_END),
 	0x20: ("GV02"   , []),
 	0x21: ("WAIT"   , [SCPT_REG_INT]),

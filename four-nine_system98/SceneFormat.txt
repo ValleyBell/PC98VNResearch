@@ -33,11 +33,14 @@ Commands
 	-> 0Ch bytes total
 03 - open text box
 	2 bytes - text box ID (00h..0Fh)
-	2 bytes - start text column (X/16)
-	2 bytes - start text row (Y/16)
+		Text boxes 00h..07h have no borders and simple opaque backgrounds.
+		Text boxes 08h..0Fh can have transparent borders and backgrounds.
+	2 bytes - start column (X/16)
+	2 bytes - start row (Y/16)
+		Note: The first text letter is drawn at position (column+1, row+1) to leave space for the border.
 	2 bytes - width (sizeX/16)
 	2 bytes - height (sizeY/16)
-	2 bytes - ??, sets bx+0Eh
+	2 bytes - text box style (0 = transparent, 1+ = border/background type)
 	-> 0Ch bytes total
 04 - close text box
 	2 bytes - text box ID (00h..0Fh)
@@ -597,5 +600,5 @@ The menu data array consists of a series of tuples with 5 items:
 - selection box: X end
 - selection box: Y end
 
-Both, X and Y coordinates are given in pixels.
+X and Y coordinates are given in pixels.
 A index of 0 ends the list.
