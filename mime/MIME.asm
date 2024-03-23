@@ -1877,7 +1877,7 @@ sub_10AEE	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_10B1A	proc far		; CODE XREF: RNG_Advance+EP
+RNG_Advance	proc far		; CODE XREF: RNG_GetNext+EP
 		push	si
 		xchg	ax, si
 		xchg	ax, dx
@@ -1885,19 +1885,19 @@ sub_10B1A	proc far		; CODE XREF: RNG_Advance+EP
 		jz	short loc_10B23
 		mul	bx
 
-loc_10B23:				; CODE XREF: sub_10B1A+5j
+loc_10B23:				; CODE XREF: RNG_Advance+5j
 		jcxz	short loc_10B2A
 		xchg	ax, cx
 		mul	si
 		add	ax, cx
 
-loc_10B2A:				; CODE XREF: sub_10B1A:loc_10B23j
+loc_10B2A:				; CODE XREF: RNG_Advance:loc_10B23j
 		xchg	ax, si
 		mul	bx
 		add	dx, si
 		pop	si
 		retf
-sub_10B1A	endp
+RNG_Advance	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -7616,7 +7616,7 @@ loc_12E2B:				; CODE XREF: LoadGTAFile+1Ej
 		mov	word_21EAE, 0B800h
 		mov	word_21EB0, 0E000h
 		push	dx
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 
 loc_12E64:				; CODE XREF: LoadGTAFile+29j
@@ -7785,12 +7785,12 @@ RNG_Init	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-RNG_Advance	proc far		; CODE XREF: seg007:846AP seg007:8B4BP
+RNG_GetNext	proc far		; CODE XREF: seg007:846AP seg007:8B4BP
 		mov	cx, word_1DD54
 		mov	bx, word_1DD52
 		mov	dx, 16838
 		mov	ax, 20077
-		call	sub_10B1A
+		call	RNG_Advance
 		add	ax, 12345
 		adc	dx, 0
 		mov	word_1DD54, dx
@@ -7798,7 +7798,7 @@ RNG_Advance	proc far		; CODE XREF: seg007:846AP seg007:8B4BP
 		mov	ax, word_1DD54
 		and	ax, 7FFFh
 		retf
-RNG_Advance	endp
+RNG_GetNext	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -9227,7 +9227,7 @@ word_13FD5	dw 0			; DATA XREF: sub_13EF4+65r
 
 ; Attributes: bp-based frame
 
-sub_13FD7	proc far		; CODE XREF: LoadGTAFile+5CP
+WritePortA6	proc far		; CODE XREF: LoadGTAFile+5CP
 					; sub_14005+Bp	...
 
 arg_0		= word ptr  6
@@ -9240,7 +9240,7 @@ arg_0		= word ptr  6
 		pop	ax
 		pop	bp
 		retf
-sub_13FD7	endp
+WritePortA6	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -9286,7 +9286,7 @@ sub_14005	proc far		; CODE XREF: seg007:7B8FP seg007:7E48P ...
 loc_1400D:				; CODE XREF: sub_14005+EEj
 		push	0
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, 0A800h
 		mov	ds, ax
@@ -9300,7 +9300,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	1
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, cs
 		mov	ds, ax
@@ -9314,7 +9314,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	0
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, 0B000h
 		mov	ds, ax
@@ -9328,7 +9328,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	1
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, cs
 		mov	ds, ax
@@ -9342,7 +9342,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	0
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, 0B800h
 		mov	ds, ax
@@ -9356,7 +9356,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	1
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, cs
 		mov	ds, ax
@@ -9370,7 +9370,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	0
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, 0E000h
 		mov	ds, ax
@@ -9384,7 +9384,7 @@ loc_1400D:				; CODE XREF: sub_14005+EEj
 		rep movsw
 		push	1
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		mov	ax, cs
 		mov	ds, ax
@@ -9810,11 +9810,11 @@ sub_1431D	proc far		; CODE XREF: sub_12FB3+C9P
 					; often	reboots	a compatible; often has	no effect at all
 		push	0
 		push	cs
-		call	near ptr sub_13FD7
+		call	near ptr WritePortA6
 		add	sp, 2
 		push	0
 		push	cs
-		call	near ptr sub_14964
+		call	near ptr WritePortA4
 		add	sp, 2
 		push	cs
 		call	near ptr sub_14316
@@ -10705,7 +10705,7 @@ sub_14920	endp
 
 ; Attributes: bp-based frame
 
-sub_14964	proc far		; CODE XREF: sub_1431D+47p
+WritePortA4	proc far		; CODE XREF: sub_1431D+47p
 					; seg007:7B96P	...
 
 arg_0		= word ptr  6
@@ -10718,7 +10718,7 @@ arg_0		= word ptr  6
 		pop	ax
 		pop	bp
 		retf
-sub_14964	endp
+WritePortA4	endp
 
 seg005		ends
 
@@ -10787,7 +10787,7 @@ sub_1499B	proc far		; CODE XREF: seg007:loc_1C9F4P
 ; ---------------------------------------------------------------------------
 
 loc_149AD:				; CODE XREF: sub_1499B+Cj
-		mov	ah, 16h
+		mov	ah, 16h		; routine 16h -	read joystick
 		int	60h		; call PMD driver
 		not	ax
 		or	al, ah
@@ -11290,10 +11290,10 @@ seg007		segment	byte public 'CODE' use16
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 a0		db '0',0Dh,0Ah,'$'
 byte_14C74	db 0A2h	dup(0)		; DATA XREF: seg007:8F55r
-scrJumpTbl	dw offset scr00_SomePrint; 0 ; DATA XREF: LoadScript+85o
-		dw offset scr01_BGMPlay	; 1
-		dw offset scr02_SomePrint; 2
-		dw offset scr03_End	; 3
+scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
+		dw offset scr01_BGMLoad	; 1
+		dw offset scr02_PrintFSTalk; 2
+		dw offset scr03_NextScript; 3
 		dw offset scr04		; 4
 		dw offset scr05		; 5
 		dw offset scr06_Wait	; 6
@@ -11306,35 +11306,35 @@ scrJumpTbl	dw offset scr00_SomePrint; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr0D		; 0Dh
 		dw offset scr0E		; 0Eh
 		dw offset scr0F		; 0Fh
-		dw offset scr10		; 10h
-		dw offset scr11		; 11h
-		dw offset scr12		; 12h
+		dw offset scr10_VarBitClear; 10h
+		dw offset scr11_VarBitSet; 11h
+		dw offset scr12_VarsSetVal; 12h
 		dw offset scr13_GoSub	; 13h
 		dw offset scr14_Return	; 14h
 		dw offset scr15_Jump	; 15h
 		dw offset scr16_JEQ	; 16h
 		dw offset scr17_JBE	; 17h
 		dw offset scr18_JAE	; 18h
-		dw offset scr19		; 19h
-		dw offset scr19		; 1Ah
+		dw offset scr19_LoadGTA	; 19h
+		dw offset scr19_LoadGTA	; 1Ah
 		dw offset scr1B		; 1Bh
 		dw offset scr1C_SetNextScript; 1Ch
 		dw offset scr1D_ShowMenu; 1Dh
-		dw offset scr1E		; 1Eh
+		dw offset scr1E_Quit	; 1Eh
 		dw offset scr1F		; 1Fh
 		dw offset scr20		; 20h
 		dw offset scr21_LoadSaveGame; 21h
 		dw offset scr22		; 22h
 		dw offset scr23		; 23h
 		dw offset scr24		; 24h
-		dw offset scr25		; 25h
+		dw offset scr25_VarBitTest; 25h
 		dw offset scr26		; 26h
 		dw offset scr27		; 27h
 		dw offset scr28		; 28h
 		dw offset scr29		; 29h
 		dw offset scr2A		; 2Ah
-		dw offset scr2B_BGMThing; 2Bh
-		dw offset scr2C_BGMThing; 2Ch
+		dw offset scr2B_BGMPlay	; 2Bh
+		dw offset scr2C_BGMFadeWait; 2Ch
 		dw offset scr2D		; 2Dh
 		dw offset scr2E		; 2Eh
 		dw offset scr2F		; 2Fh
@@ -11347,13 +11347,13 @@ scrJumpTbl	dw offset scr00_SomePrint; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr36		; 36h
 		dw offset scr37		; 37h
 		dw offset scr38_WriteSaveGame; 38h
-		dw offset scr39		; 39h
+		dw offset scr39_VarRandomVal; 39h
 		dw offset scr3A_PrintASCII; 3Ah
 		dw offset scr3B_PrintVarStr; 3Bh
 		dw offset scr3C_PrintNum_H_5Dig; 3Ch
 		dw offset scr3D		; 3Dh
 		dw offset scr3E		; 3Eh
-		dw offset scr3F_SFXThing; 3Fh
+		dw offset scr3F_PlaySFX_FM; 3Fh
 		dw offset scr40_DiskWait; 40h
 		dw offset scr41		; 41h
 		dw offset scr42_PrintNum_F_5Dig; 42h
@@ -11363,16 +11363,16 @@ scrJumpTbl	dw offset scr00_SomePrint; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr46_VarDigitsAdd; 46h
 		dw offset scr47_VarDigitsSub; 47h
 		dw offset scr48		; 48h
-		dw offset scr49		; 49h
-		dw offset scr4A		; 4Ah
-		dw offset scr4B_BGMThing; 4Bh
+		dw offset scr49_VarDigitsAdd; 49h
+		dw offset scr4A_VarDigitsSub; 4Ah
+		dw offset scr4B_BGMWaitMeasure;	4Bh
 		dw offset scr4C		; 4Ch
 		dw offset scr4D		; 4Dh
-		dw offset scr4E		; 4Eh
-		dw offset scr4F		; 4Fh
-		dw offset scr50		; 50h
-		dw offset scr51		; 51h
-		dw offset scr52		; 52h
+		dw offset scr4E_VarVarCompare; 4Eh
+		dw offset scr4F_MulVarVal; 4Fh
+		dw offset scr50_MulVarVar; 50h
+		dw offset scr51_DivVarVal; 51h
+		dw offset scr52_DivVarVar; 52h
 		dw offset scr53		; 53h
 		dw offset scr54		; 54h
 		dw offset scr55		; 55h
@@ -11380,7 +11380,7 @@ scrJumpTbl	dw offset scr00_SomePrint; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr57		; 57h
 		dw offset scr58		; 58h
 		dw offset scr59		; 59h
-		dw offset scr5A_Var_SetRandom; 5Ah
+		dw offset scr5A_VarRandomVar; 5Ah
 		dw offset scr5B_GetDiskID; 5Bh
 		dw offset scr5C		; 5Ch
 		dw offset scr5D_PrintSJIS; 5Dh
@@ -11390,18 +11390,18 @@ scrJumpTbl	dw offset scr00_SomePrint; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr61_PrintNum_H; 61h
 		dw offset scr62_PrintNum_F; 62h
 		dw offset scr63_SetDiskLetter; 63h
-pdig_nonzeroDig	dw 0			; DATA XREF: seg007:scr00_SomePrintw
+tempVar0	dw 0			; DATA XREF: seg007:scr00_PrintDTalkw
 					; seg007:loc_1BD66r ...
-somePosX1	dw 0			; DATA XREF: seg007:7103r seg007:7110w ...
-somePosY1	dw 0			; DATA XREF: seg007:7CE0w seg007:7D56r ...
-somePosX2	dw 0			; DATA XREF: seg007:7B66w seg007:7BDBr ...
-somePosY2	dw 0			; DATA XREF: seg007:7B7Bw seg007:7C19r ...
-somePosX3	dw 0			; DATA XREF: seg007:7450w seg007:7CA3r ...
-somePosY3	dw 0			; DATA XREF: seg007:7B6Ew seg007:7E6Dr
-somePosX4	dw 0			; DATA XREF: seg007:7B83w seg007:7E68r
-somePosY4	dw 0			; DATA XREF: seg007:74B1w
+tempVar1	dw 0			; DATA XREF: seg007:7103r seg007:7110w ...
+tempVar2	dw 0			; DATA XREF: seg007:7CE0w seg007:7D56r ...
+tempVar3	dw 0			; DATA XREF: seg007:7B66w seg007:7BDBr ...
+tempVar4	dw 0			; DATA XREF: seg007:7B7Bw seg007:7C19r ...
+tempVar5	dw 0			; DATA XREF: seg007:7450w seg007:7CA3r ...
+tempVar6	dw 0			; DATA XREF: seg007:7B6Ew seg007:7E6Dr
+tempVar7	dw 0			; DATA XREF: seg007:7B83w seg007:7E68r
+tempVar8	dw 0			; DATA XREF: seg007:74B1w
 					; seg007:loc_1C130r ...
-word_14DF0	dw 0			; DATA XREF: seg007:7D07w seg007:7D4Fw ...
+tempVar9	dw 0			; DATA XREF: seg007:7D07w seg007:7D4Fw ...
 aZ1010_dat	db 'Z1010.DAT',0        ; DATA XREF: LoadScript+32o
 aZ1020_dat	db 'Z1020.DAT',0        ; DATA XREF: LoadScript+67o
 aZ1030_dat	db 'Z1030.DAT',0        ; DATA XREF: LoadScript+57o
@@ -11409,11 +11409,12 @@ aZ1030_dat	db 'Z1030.DAT',0        ; DATA XREF: LoadScript+57o
 screenSizeX	dw 640			; DATA XREF: seg007:7FC9r
 					; seg007:loc_1CC4Ew
 screenSizeY	dw 400			; DATA XREF: seg007:7FD0r seg007:7FE3w
-word_14E14	dw 0FFFEh,0FFFDh,0FFFBh,0FFF7h ; DATA XREF: seg007:7355o
+bitMask_Clear	dw 0FFFEh,0FFFDh,0FFFBh,0FFF7h ; DATA XREF: seg007:7355o
 		dw 0FFEFh,0FFDFh,0FFBFh,0FF7Fh
 		dw 0FEFFh,0FDFFh,0FBFFh,0F7FFh
 		dw 0EFFFh,0DFFFh,0BFFFh, 7FFFh
-word_14E34	dw	1,     2,     4,     8 ; DATA XREF: seg007:7368o
+bitMask_Set	dw	1,     2,     4,     8 ; DATA XREF: seg007:7368o
+					; seg007:7F20o
 		dw    10h,   20h,   40h,   80h
 		dw   100h,  200h,  400h,  800h
 		dw  1000h, 2000h, 4000h, 8000h
@@ -11422,10 +11423,11 @@ aAScnZ0000_dat	db 'A:SCN\Z0000.DAT',0  ; DATA XREF: LoadScript+11o
 		db '$'
 aProgrammedByBe	db 'programmed by bez$'
 off_14E77	dw offset loc_1DADE, offset loc_1DB46 ;	DATA XREF: seg007:8358o
-ScriptMemory	db 2488h dup(0)		; DATA XREF: seg007:7100o seg007:7213o ...
-byte_17303	db 2958h dup(0)
+ScriptMemory	dw 1244h dup(0)		; DATA XREF: seg007:7100o seg007:7213o ...
+		db 2958h dup(0)
 byte_19C5B	db 156h	dup(0)		; DATA XREF: LoadScript+53o
 byte_19DB1	db 1B02h dup(0)		; DATA XREF: LoadScript+63o
+					; seg007:89F8o
 scrCallStack	dw 2			; DATA XREF: seg007:scr13_GoSubo
 					; seg007:739Fw	...
 		db 10h dup(0)
@@ -11548,8 +11550,7 @@ word_1BCA8	dw 0			; DATA XREF: seg007:836Fw seg007:8E72r ...
 word_1BCAA	dw 0			; DATA XREF: seg007:81EBw seg007:8E8Er ...
 word_1BCAC	dw 0			; DATA XREF: seg007:8376w seg007:8EF4r ...
 word_1BCAE	dw 0			; DATA XREF: seg007:837Dw
-word_1BCB0	dw 0			; DATA XREF: seg007:8347w seg007:83D9r
-word_1BCB2	dw 0			; DATA XREF: seg007:834Bw seg007:83DDr
+OldInt8Vec	dd 0			; DATA XREF: seg007:8347w seg007:83D9r ...
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -11559,7 +11560,7 @@ LoadScript	proc near		; CODE XREF: sub_12FB3:loc_130C7P
 		push	ds
 		push	es
 		push	1
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 		mov	ax, cs
 		mov	ds, ax
@@ -11582,7 +11583,7 @@ LoadScript	proc near		; CODE XREF: sub_12FB3:loc_130C7P
 		push	offset aZ1010_dat ; "Z1010.DAT"
 		call	ReadFile_Compr
 		add	sp, 8
-		mov	ax, word ptr cs:ScriptMemory+1Eh
+		mov	ax, cs:ScriptMemory+1Eh
 		cmp	ax, 0Ah
 		jb	short loc_1BD00
 		sub	al, 0Ah
@@ -11608,7 +11609,7 @@ loc_1BD02:				; CODE XREF: LoadScript+4Aj
 		call	ReadFile_Compr
 		add	sp, 8
 		push	0
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 
 ScriptMainLoop:				; CODE XREF: seg007:7120j seg007:71DCj ...
@@ -11623,13 +11624,13 @@ LoadScript	endp
 
 ; ---------------------------------------------------------------------------
 
-scr00_SomePrint:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0
+scr00_PrintDTalk:			; DATA XREF: seg007:scrJumpTblo
+		mov	cs:tempVar0, 0	; prints text into the text box	in the lower middle of the screen
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
-		mov	di, offset byte_23798
-		mov	bh, 10h
+		mov	di, 5AB8h
+		mov	bh, 16		; 16 full-width	characters per line
 		xor	dl, dl
 		call	WaitForVSync
 
@@ -11643,28 +11644,28 @@ loc_1BD64:				; CODE XREF: seg007:70EFj
 		xor	bl, bl
 
 loc_1BD66:				; CODE XREF: seg007:7134j seg007:715Fj
-		test	cs:pdig_nonzeroDig, 1
+		test	cs:tempVar0, 1
 		jz	short loc_1BD88
 		push	di
 		mov	di, offset ScriptMemory
-		add	di, cs:somePosX1
+		add	di, cs:tempVar1
 		mov	ax, cs:[di]
 		pop	di
 		or	ax, ax
 		jz	short loc_1BD88
-		add	cs:somePosX1, 2
+		add	cs:tempVar1, 2
 		jmp	short loc_1BDA6
 ; ---------------------------------------------------------------------------
 
 loc_1BD88:				; CODE XREF: seg007:70FDj seg007:710Ej
 		mov	ax, [si]
 		add	si, 2
-		cmp	ax, 5C5Ch	; \\
+		cmp	ax, 5C5Ch	; '\\'
 		jz	short ScriptMainLoop
-		cmp	ax, 2323h	; ##
+		cmp	ax, 2323h	; '##'
 		jnz	short loc_1BDA6
-		or	cs:pdig_nonzeroDig, 1
-		mov	cs:somePosX1, 0
+		or	cs:tempVar0, 1
+		mov	cs:tempVar1, 0
 		jmp	short loc_1BD66
 ; ---------------------------------------------------------------------------
 
@@ -11673,7 +11674,7 @@ loc_1BDA6:				; CODE XREF: seg007:7116j seg007:7125j
 		push	ax
 		call	ShiftJIS2JIS
 		add	sp, 2
-		push	word ptr cs:ScriptMemory+0Ch
+		push	cs:ScriptMemory+0Ch ; push ScriptMemory[06h]
 		call	WaitFrames
 		add	sp, 2
 		push	ax
@@ -11699,7 +11700,7 @@ loc_1BDDD:				; CODE XREF: seg007:7163j seg007:7167j
 		jmp	loc_1BD58
 ; ---------------------------------------------------------------------------
 
-scr01_BGMPlay:				; DATA XREF: seg007:scrJumpTblo
+scr01_BGMLoad:				; DATA XREF: seg007:scrJumpTblo
 		push	ds
 		mov	ax, seg	dseg
 		mov	es, ax
@@ -11745,13 +11746,13 @@ loc_1BE1F:				; CODE XREF: seg007:719Fj
 		push	ax
 		or	bx, bx
 		jz	short loc_1BE31
-		mov	ah, 6
+		mov	ah, 6		; routine 06 - get song	data address
 		int	61h		; [MIDI	mode] call MMD driver
 		jmp	short loc_1BE35
 ; ---------------------------------------------------------------------------
 
 loc_1BE31:				; CODE XREF: seg007:71B9j
-		mov	ah, 6
+		mov	ah, 6		; routine 06 - get song	data address
 		int	60h		; [FM mode] call PMD driver
 
 loc_1BE35:				; CODE XREF: seg007:71BFj
@@ -11782,13 +11783,12 @@ loc_1BE4B:				; CODE XREF: seg007:71D6j
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr02_SomePrint:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0
+scr02_PrintFSTalk:			; DATA XREF: seg007:scrJumpTblo
+		mov	cs:tempVar0, 0
 		mov	ax, seg	dseg
 		mov	es, ax
-		assume es:nothing
 		mov	di, 6723h
-		mov	bh, 25h
+		mov	bh, 37		; 37 full-width	characters per line
 		xor	dl, dl
 		call	WaitForVSync
 
@@ -11804,32 +11804,32 @@ loc_1BE72:				; CODE XREF: seg007:71F9j
 		xor	bl, bl
 
 loc_1BE79:				; CODE XREF: seg007:724Aj seg007:7275j ...
-		test	cs:pdig_nonzeroDig, 1
+		test	cs:tempVar0, 1
 		jz	short loc_1BE9B
 		push	di
 		mov	di, offset ScriptMemory
-		add	di, cs:somePosX1
+		add	di, cs:tempVar1
 		mov	ax, cs:[di]
 		pop	di
 		or	ax, ax
 		jz	short loc_1BE9B
-		add	cs:somePosX1, 2
+		add	cs:tempVar1, 2
 		jmp	short loc_1BEBC
 ; ---------------------------------------------------------------------------
 
 loc_1BE9B:				; CODE XREF: seg007:7210j seg007:7221j
 		mov	ax, [si]
 		add	si, 2
-		cmp	ax, 5C5Ch	; \\
+		cmp	ax, 5C5Ch	; '\\'
 		jnz	short loc_1BEA8
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
 loc_1BEA8:				; CODE XREF: seg007:7233j
-		cmp	ax, 2323h	; ##
+		cmp	ax, 2323h	; '##'
 		jnz	short loc_1BEBC
-		or	cs:pdig_nonzeroDig, 1
-		mov	cs:somePosX1, 0
+		or	cs:tempVar0, 1
+		mov	cs:tempVar1, 0
 		jmp	short loc_1BE79
 ; ---------------------------------------------------------------------------
 
@@ -11838,7 +11838,7 @@ loc_1BEBC:				; CODE XREF: seg007:7229j seg007:723Bj
 		push	ax
 		call	ShiftJIS2JIS
 		add	sp, 2
-		push	word ptr cs:ScriptMemory+0Ch
+		push	cs:ScriptMemory+0Ch ; push ScriptMemory[06h]
 		call	WaitFrames
 		add	sp, 2
 		push	ax
@@ -11876,8 +11876,9 @@ loc_1BF0A:				; CODE XREF: seg007:7296j
 		jmp	loc_1BE67
 ; ---------------------------------------------------------------------------
 
-scr03_End:				; DATA XREF: seg007:scrJumpTblo
+scr03_NextScript:			; DATA XREF: seg007:scrJumpTblo
 		pop	es
+		assume es:nothing
 		pop	ds
 		popa
 		xor	ax, ax
@@ -11900,7 +11901,7 @@ scr_fin_4b:				; CODE XREF: seg007:72DFj seg007:72E7j ...
 
 scr05:					; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 
 scr_fin_2b:				; CODE XREF: seg007:72D7j seg007:734Fj ...
@@ -11960,7 +11961,7 @@ scr0D:					; DATA XREF: seg007:scrJumpTblo
 		call	sub_143B8
 		add	sp, 0Ah
 
-loc_1BF8F:				; CODE XREF: seg007:742Dj seg007:7F51j ...
+scr_fin_10b:				; CODE XREF: seg007:742Dj seg007:7F51j ...
 		add	si, 0Ah
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
@@ -11985,27 +11986,27 @@ scr0F:					; DATA XREF: seg007:scrJumpTblo
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr10:					; DATA XREF: seg007:scrJumpTblo
+scr10_VarBitClear:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
-		mov	bx, offset word_14E14
+		mov	bx, offset bitMask_Clear
 		add	ax, ax
 		add	bx, ax
-		mov	ax, cs:[bx]
-		and	cs:[di], ax
+		mov	ax, cs:[bx]	; get mask for bit with	number AX
+		and	cs:[di], ax	; clear	that bit in the	variable
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
-scr11:					; DATA XREF: seg007:scrJumpTblo
+scr11_VarBitSet:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
-		mov	bx, offset word_14E34
+		mov	bx, offset bitMask_Set
 		add	ax, ax
 		add	bx, ax
-		mov	ax, cs:[bx]
-		or	cs:[di], ax
+		mov	ax, cs:[bx]	; get mask for bit with	number AX
+		or	cs:[di], ax	; clear	that bit in the	variable
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
-scr12:					; DATA XREF: seg007:scrJumpTblo
+scr12_VarsSetVal:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVar
 		sub	bx, di
 		mov	cx, bx
@@ -12017,7 +12018,7 @@ scr12:					; DATA XREF: seg007:scrJumpTblo
 		mov	ax, [si+4]
 		rep stosw
 
-loc_1BFFB:				; CODE XREF: seg007:loc_1C04Bj
+scr_fin_6b:				; CODE XREF: seg007:loc_1C04Bj
 					; seg007:73E5j	...
 		add	si, 6
 		jmp	ScriptMainLoop
@@ -12065,24 +12066,24 @@ loc_1C043:				; CODE XREF: seg007:73E3j seg007:73EDj
 ; ---------------------------------------------------------------------------
 
 loc_1C04B:				; CODE XREF: seg007:73D1j
-		jmp	short loc_1BFFB
+		jmp	short scr_fin_6b
 ; ---------------------------------------------------------------------------
 
 scr17_JBE:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		cmp	cs:[di], ax
 		ja	short loc_1C043	; jump when <=
-		jmp	short loc_1BFFB
+		jmp	short scr_fin_6b
 ; ---------------------------------------------------------------------------
 
 scr18_JAE:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		cmp	cs:[di], ax
 		jb	short loc_1C043	; jump when >=
-		jmp	short loc_1BFFB
+		jmp	short scr_fin_6b
 ; ---------------------------------------------------------------------------
 
-scr19:					; DATA XREF: seg007:scrJumpTblo
+scr19_LoadGTA:				; DATA XREF: seg007:scrJumpTblo
 		pusha
 		mov	ax, ds
 		mov	es, ax
@@ -12110,7 +12111,7 @@ scr1B:					; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
 		call	sub_14489
 		add	sp, 0Ah
-		jmp	loc_1BF8F
+		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
 
 scr1C_SetNextScript:			; DATA XREF: seg007:scrJumpTblo
@@ -12135,9 +12136,9 @@ loc_1C0B4:				; CODE XREF: seg007:743Ej
 
 scr1D_ShowMenu:				; DATA XREF: seg007:scrJumpTblo
 		mov	ax, [si]
-		mov	cs:pdig_nonzeroDig, ax
+		mov	cs:tempVar0, ax
 		add	ax, 641
-		mov	cs:somePosX3, ax
+		mov	cs:tempVar5, ax
 		add	si, 2
 		push	2
 		call	sub_13ECE
@@ -12150,7 +12151,7 @@ scr1D_ShowMenu:				; DATA XREF: seg007:scrJumpTblo
 		call	sub_143B8
 		add	sp, 0Ah
 		push	1
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 		push	2
 		push	0
@@ -12166,10 +12167,10 @@ scr1D_ShowMenu:				; DATA XREF: seg007:scrJumpTblo
 		push	0
 		call	sub_143B8
 		add	sp, 0Ah
-		mov	dx, word ptr cs:ScriptMemory+16h
+		mov	dx, cs:ScriptMemory+16h
 		shl	dx, 4
 		or	dx, 2
-		mov	cs:somePosY4, dx
+		mov	cs:tempVar8, dx
 		xor	dx, dx
 		mov	bx, 12
 
@@ -12178,7 +12179,7 @@ loc_1C12B:				; CODE XREF: seg007:74DFj
 		mov	cx, 28h	; '('
 
 loc_1C130:				; CODE XREF: seg007:74D8j
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	ax
 		push	10h
 		push	10h
@@ -12191,17 +12192,17 @@ loc_1C130:				; CODE XREF: seg007:74D8j
 		dec	bx
 		jnz	short loc_1C12B
 		mov	cx, [si]	; read number of menutexts
-		mov	cs:somePosX1, cx
+		mov	cs:tempVar1, cx
 		add	si, 2
 		xor	dh, dh
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
 		xor	bx, bx
-		mov	cx, cs:somePosX1
-		cmp	word ptr cs:ScriptMemory+66h, 1	; menu type == 1 -> show save game list
+		mov	cx, cs:tempVar1
+		cmp	cs:ScriptMemory+66h, 1 ; menu type == 1	-> show	save game list
 		jz	short ShowSavedGames
-		cmp	word ptr cs:ScriptMemory+66h, 3	; menu type == 3 -> show save game list
+		cmp	cs:ScriptMemory+66h, 3 ; menu type == 3	-> show	save game list
 		jz	short ShowSavedGames
 		jmp	ShowMenuTexts
 ; ---------------------------------------------------------------------------
@@ -12210,7 +12211,7 @@ ShowSavedGames:				; CODE XREF: seg007:74FFj seg007:7507j
 		pusha
 		dec	cx
 		mov	cs:SaveGameID, '1'
-		mov	word ptr cs:ScriptMemory+6Eh, 0
+		mov	cs:ScriptMemory+6Eh, 0
 
 ssg_list_loop:				; CODE XREF: seg007:79BBj
 		mov	es:textDrawPtr,	bx
@@ -12359,9 +12360,9 @@ loc_1C2D4:				; CODE XREF: seg007:loc_1C1D4j
 		mov	es:textDrawPtr,	bx
 		push	es:word_21EA6
 		push	es:word_21EA8
-		push	word ptr cs:ScriptMemory+12h
+		push	cs:ScriptMemory+12h
 		pop	es:word_21EA6
-		push	word ptr cs:ScriptMemory+14h
+		push	cs:ScriptMemory+14h
 		pop	es:word_21EA8
 		call	Print_NoData
 		pop	es:word_21EA8
@@ -12616,7 +12617,7 @@ PrintSaveGameName endp
 ; ---------------------------------------------------------------------------
 
 LoadSaveG_Header:			; CODE XREF: seg007:7561j
-		or	word ptr cs:ScriptMemory+6Eh, 1
+		or	cs:ScriptMemory+6Eh, 1
 		pusha
 		push	ds
 		mov	ax, cs
@@ -12748,16 +12749,16 @@ loc_1C5DF:				; CODE XREF: seg007:7967j
 		mov	es:textDrawPtr,	bx
 		push	es:word_21EA6
 		push	es:word_21EA8
-		push	word ptr cs:ScriptMemory+12h
+		push	cs:ScriptMemory+12h
 		pop	es:word_21EA6
-		push	word ptr cs:ScriptMemory+14h
+		push	cs:ScriptMemory+14h
 		pop	es:word_21EA8
 		call	PrintSaveGameName
 		pop	es:word_21EA8
 		pop	es:word_21EA6
 
 loc_1C61F:				; CODE XREF: seg007:769Aj
-		shl	word ptr cs:ScriptMemory+6Eh, 1
+		shl	cs:ScriptMemory+6Eh, 1
 		add	bx, 4D8h
 		dec	cx
 		jz	short loc_1C62E
@@ -12856,9 +12857,9 @@ loc_1C704:				; CODE XREF: seg007:loc_1C62Ej
 		mov	es:textDrawPtr,	bx
 		push	es:word_21EA6
 		push	es:word_21EA8
-		push	word ptr cs:ScriptMemory+12h
+		push	cs:ScriptMemory+12h
 		pop	es:word_21EA6
-		push	word ptr cs:ScriptMemory+14h
+		push	cs:ScriptMemory+14h
 		pop	es:word_21EA8
 		call	Print_Cancel
 		pop	es:word_21EA8
@@ -12888,9 +12889,9 @@ loc_1C74F:				; CODE XREF: seg007:7B3Aj
 		add	es:textDrawPtr,	26h
 		push	es:word_21EA6
 		push	es:word_21EA8
-		push	word ptr cs:ScriptMemory+12h
+		push	cs:ScriptMemory+12h
 		pop	es:word_21EA6
-		push	word ptr cs:ScriptMemory+14h
+		push	cs:ScriptMemory+14h
 		pop	es:word_21EA8
 		push	ax
 		call	PrintFontChar	; draw selected	text (red)
@@ -12924,44 +12925,44 @@ loc_1C7BB:				; CODE XREF: seg007:7AD6j seg007:7B47j
 		mov	dl, dh
 		xor	dh, dh
 		shl	dx, 4
-		mov	cs:somePosX2, dx
+		mov	cs:tempVar3, dx
 		add	dx, 16
-		mov	cs:somePosY3, dx
-		mov	cx, cs:somePosX1
+		mov	cs:tempVar6, dx
+		mov	cx, cs:tempVar1
 		shl	cx, 4
-		mov	cs:somePosY2, cx
+		mov	cs:tempVar4, cx
 		add	cx, 16
-		mov	cs:somePosX4, cx
-		mov	word ptr cs:ScriptMemory+6Ah, 1
+		mov	cs:tempVar7, cx
+		mov	cs:ScriptMemory+6Ah, 1
 		call	sub_14005
 		push	1
-		call	sub_14964
+		call	WritePortA4
 		add	sp, 2
 		push	0
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 		push	1
 		push	3C00h
 		push	cx
 		push	dx
-		push	cs:pdig_nonzeroDig
+		push	cs:tempVar0
 		call	sub_143B8
 		add	sp, 0Ah
-		mov	ax, cs:pdig_nonzeroDig
-		push	cs:somePosY4
+		mov	ax, cs:tempVar0
+		push	cs:tempVar8
 		push	ax
 		push	8
 		push	8
 		push	3C2Ah
 		call	sub_145D6
 		add	sp, 0Ah
-		mov	bx, cs:pdig_nonzeroDig
+		mov	bx, cs:tempVar0
 		inc	bx
-		mov	cx, cs:somePosX2
+		mov	cx, cs:tempVar3
 		shr	cx, 4
 
 loc_1C853:				; CODE XREF: seg007:7BFBj
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	bx
 		push	8
 		push	10h
@@ -12970,7 +12971,7 @@ loc_1C853:				; CODE XREF: seg007:7BFBj
 		add	sp, 0Ah
 		add	bx, 2
 		loop	loc_1C853
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	bx
 		push	8
 		push	8
@@ -12979,18 +12980,18 @@ loc_1C853:				; CODE XREF: seg007:7BFBj
 		add	sp, 0Ah
 		add	ax, 280h
 		add	bx, 280h
-		mov	cx, cs:somePosY2
+		mov	cx, cs:tempVar4
 		shr	cx, 4
 
 loc_1C891:				; CODE XREF: seg007:7C52j
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	ax
 		push	10h
 		push	8
 		push	3EAAh
 		call	sub_145D6
 		add	sp, 0Ah
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	bx
 		push	10h
 		push	8
@@ -13000,14 +13001,14 @@ loc_1C891:				; CODE XREF: seg007:7C52j
 		add	ax, 500h
 		add	bx, 500h
 		loop	loc_1C891
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	ax
 		push	8
 		push	8
 		push	43AAh
 		call	sub_145D6
 		add	sp, 0Ah
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	bx
 		push	8
 		push	8
@@ -13015,11 +13016,11 @@ loc_1C891:				; CODE XREF: seg007:7C52j
 		call	sub_145D6
 		add	sp, 0Ah
 		inc	ax
-		mov	cx, cs:somePosX2
+		mov	cx, cs:tempVar3
 		shr	cx, 4
 
 loc_1C8F7:				; CODE XREF: seg007:7C9Fj
-		push	cs:somePosY4
+		push	cs:tempVar8
 		push	ax
 		push	8
 		push	10h
@@ -13029,14 +13030,14 @@ loc_1C8F7:				; CODE XREF: seg007:7C9Fj
 		add	ax, 2
 		loop	loc_1C8F7
 		xor	bx, bx
-		mov	ax, cs:somePosX3
-		mov	cx, cs:somePosX1
+		mov	ax, cs:tempVar5
+		mov	cx, cs:tempVar1
 
 loc_1C91C:				; CODE XREF: seg007:7CC6j
 		push	2
 		push	ax
 		push	10h
-		push	cs:somePosX2
+		push	cs:tempVar3
 		push	bx
 		call	sub_143B8
 		add	sp, 0Ah
@@ -13044,18 +13045,18 @@ loc_1C91C:				; CODE XREF: seg007:7CC6j
 		add	ax, 500h
 		loop	loc_1C91C
 		push	2
-		push	cs:somePosX3
+		push	cs:tempVar5
 		push	10h
-		push	cs:somePosX2
+		push	cs:tempVar3
 		push	28h ; '('
 		call	sub_143B8
 		add	sp, 0Ah
-		mov	cs:somePosY1, 0
+		mov	cs:tempVar2, 0
 		call	WaitForVSync
 		push	0
-		call	sub_14964
+		call	WritePortA4
 		add	sp, 2
-		mov	word ptr cs:ScriptMemory+6Ah, 0
+		mov	cs:ScriptMemory+6Ah, 0
 		xor	al, al
 		mov	ah, 0Bh
 		int	68h		;  - APPC/PC
@@ -13064,12 +13065,12 @@ loc_1C973:				; CODE XREF: seg007:7DC9j seg007:7DF2j ...
 		mov	ah, 3
 		int	68h		;  - APPC/PC
 					; DS:DX	-> control block
-		mov	cs:word_14DF0, 0
+		mov	cs:tempVar9, 0
 		mov	ah, 5
 		int	68h		;  - APPC/PC - TRANSFER	MSG DATA
 					; DS:DX	-> control block
 		shr	bx, 3
-		mov	ax, cs:somePosX3
+		mov	ax, cs:tempVar5
 		mov	di, dx
 		push	bx
 		mov	bx, 80
@@ -13079,7 +13080,7 @@ loc_1C973:				; CODE XREF: seg007:7DC9j seg007:7DF2j ...
 		pop	bx
 		cmp	bx, dx
 		jb	short loc_1C9DD
-		mov	ax, cs:somePosX2
+		mov	ax, cs:tempVar3
 		shr	ax, 3
 		add	dx, ax
 		cmp	bx, dx
@@ -13088,16 +13089,16 @@ loc_1C973:				; CODE XREF: seg007:7DC9j seg007:7DF2j ...
 		mov	di, cx
 		cmp	dx, cx
 		jb	short loc_1C9DD
-		add	cx, cs:somePosY2
+		add	cx, cs:tempVar4
 		cmp	dx, cx
 		jnb	short loc_1C9DD
 		mov	ax, di
 		sub	dx, ax
 		shr	dx, 4
-		mov	cs:word_14DF0, 1
-		cmp	dx, cs:somePosY1
+		mov	cs:tempVar9, 1
+		cmp	dx, cs:tempVar2
 		jz	short loc_1C9DD
-		mov	cs:word_14DF0, 0
+		mov	cs:tempVar9, 0
 		mov	di, dx
 		call	sub_1DA95
 		mov	ax, di
@@ -13113,7 +13114,7 @@ loc_1C9DD:				; CODE XREF: seg007:7D28j seg007:7D35j ...
 ; ---------------------------------------------------------------------------
 
 loc_1C9E8:				; CODE XREF: seg007:7D73j
-		cmp	word ptr cs:ScriptMemory+66h, 2
+		cmp	cs:ScriptMemory+66h, 2
 		jb	short loc_1C9F4
 		test	al, 1
 		jnz	short loc_1CA73
@@ -13125,7 +13126,7 @@ loc_1C9F4:				; CODE XREF: seg007:7D7Ej
 		call	sub_1DA95
 		cmp	ax, 0
 		jnz	short loc_1CA0D
-		mov	ax, cs:somePosX1
+		mov	ax, cs:tempVar1
 		dec	ax
 		jmp	short loc_1CA0E
 ; ---------------------------------------------------------------------------
@@ -13135,7 +13136,7 @@ loc_1CA0D:				; CODE XREF: seg007:7D94j
 
 loc_1CA0E:				; CODE XREF: seg007:7D6Bj seg007:7D9Bj ...
 		call	sub_1DA6B
-		cmp	cs:word_14DF0, 0
+		cmp	cs:tempVar9, 0
 		jz	short loc_1CA31
 		mov	ax, cx
 		mov	bx, 80
@@ -13162,7 +13163,7 @@ loc_1CA3C:				; CODE XREF: seg007:7D8Cj
 		test	ax, 2
 		jz	short loc_1CA55
 		call	sub_1DA95
-		mov	cx, cs:somePosX1
+		mov	cx, cs:tempVar1
 		dec	cx
 		cmp	ax, cx
 		jnz	short loc_1CA52
@@ -13178,23 +13179,23 @@ loc_1CA52:				; CODE XREF: seg007:7DDCj
 loc_1CA55:				; CODE XREF: seg007:7DCFj
 		test	ax, 10h
 		jnz	short loc_1CA94
-		cmp	word ptr cs:ScriptMemory+66h, 1
+		cmp	cs:ScriptMemory+66h, 1
 		ja	short loc_1CA65
 		jmp	loc_1C973
 ; ---------------------------------------------------------------------------
 
 loc_1CA65:				; CODE XREF: seg007:7DF0j
-		cmp	word ptr cs:ScriptMemory+66h, 0
+		cmp	cs:ScriptMemory+66h, 0
 		test	ax, 0A0h
 		jnz	short loc_1CA73
 		jmp	loc_1C973
 ; ---------------------------------------------------------------------------
 
 loc_1CA73:				; CODE XREF: seg007:7D82j seg007:7DFEj
-		cmp	word ptr cs:ScriptMemory+66h, 2
+		cmp	cs:ScriptMemory+66h, 2
 		jb	short loc_1CA94
-		mov	cs:somePosY1, 0FFFEh
-		cmp	word ptr cs:ScriptMemory+6Ch, 0
+		mov	cs:tempVar2, 0FFFEh
+		cmp	cs:ScriptMemory+6Ch, 0
 		jz	short loc_1CAA4
 		push	ax
 		mov	al, 2
@@ -13205,7 +13206,7 @@ loc_1CA73:				; CODE XREF: seg007:7D82j seg007:7DFEj
 ; ---------------------------------------------------------------------------
 
 loc_1CA94:				; CODE XREF: seg007:7D75j seg007:7DE8j ...
-		cmp	word ptr cs:ScriptMemory+6Ch, 0
+		cmp	cs:ScriptMemory+6Ch, 0
 		jz	short loc_1CAA4
 		push	ax
 		mov	al, 1
@@ -13217,29 +13218,29 @@ loc_1CAA4:				; CODE XREF: seg007:7E18j seg007:7E22j ...
 		mov	ah, 4
 		int	68h		;  - APPC/PC
 					; DS:DX	-> control block
-		mov	ax, cs:somePosY1
+		mov	ax, cs:tempVar2
 		inc	ax
-		mov	word ptr cs:ScriptMemory+10h, ax
-		mov	word ptr cs:ScriptMemory+6Ah, 1
+		mov	cs:ScriptMemory+10h, ax
+		mov	cs:ScriptMemory+6Ah, 1
 		call	sub_14005
 		push	1
-		call	sub_14964
+		call	WritePortA4
 		add	sp, 2
 		push	0
-		call	sub_13FD7
+		call	WritePortA6
 		add	sp, 2
 		push	2
-		push	cs:pdig_nonzeroDig
-		push	cs:somePosX4
-		push	cs:somePosY3
+		push	cs:tempVar0
+		push	cs:tempVar7
+		push	cs:tempVar6
 		push	3C00h
 		call	sub_143B8
 		add	sp, 0Ah
 		call	WaitForVSync
 		push	0
-		call	sub_14964
+		call	WritePortA4
 		add	sp, 2
-		mov	word ptr cs:ScriptMemory+6Ah, 0
+		mov	cs:ScriptMemory+6Ah, 0
 
 loc_1CB03:				; CODE XREF: seg007:7E9Bj
 		call	sub_1499B
@@ -13254,7 +13255,7 @@ loc_1CB0D:				; CODE XREF: seg007:7EA3j
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr1E:					; DATA XREF: seg007:scrJumpTblo
+scr1E_Quit:				; DATA XREF: seg007:scrJumpTblo
 		pop	es
 		assume es:nothing
 		pop	ds
@@ -13323,26 +13324,26 @@ scr22:					; DATA XREF: seg007:scrJumpTblo
 scr23:					; DATA XREF: seg007:scrJumpTblo
 		call	WaitForVSync
 		push	word ptr [si]
-		call	sub_14964
+		call	WritePortA4
 		add	sp, 2
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
 scr24:					; DATA XREF: seg007:scrJumpTblo
-		call	sub_1DA1D
-		mov	word ptr cs:ScriptMemory+0Eh, ax
+		call	GetSomeIndexedVar
+		mov	cs:ScriptMemory+0Eh, ax	; set ScriptMemory[07h]
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr25:					; DATA XREF: seg007:scrJumpTblo
+scr25_VarBitTest:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
-		mov	bx, cs:[di]
+		mov	bx, cs:[di]	; get variable
 		add	ax, ax
-		mov	di, 1C4h
+		mov	di, offset bitMask_Set
 		add	di, ax
-		and	bx, cs:[di]
-		jnz	short loc_1CBA0
-		add	si, 7
+		and	bx, cs:[di]	; extract that bit from	the variable
+		jnz	short loc_1CBA0	; bit is non-zero - advance by 4 bytes
+		add	si, 7		; bit is zero -	advance	by 7 bytes, skipping the next command
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
@@ -13351,7 +13352,7 @@ loc_1CBA0:				; CODE XREF: seg007:7F28j
 ; ---------------------------------------------------------------------------
 
 scr26:					; DATA XREF: seg007:scrJumpTblo
-		mov	ax, word ptr cs:ScriptMemory+2Ah
+		mov	ax, cs:ScriptMemory+2Ah	; get ScriptMemory[15h]
 		shl	ax, 4
 		or	ax, [si+8]
 		push	ax
@@ -13361,7 +13362,7 @@ scr26:					; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
 		call	sub_145D6
 		add	sp, 0Ah
-		jmp	loc_1BF8F
+		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
 
 scr27:					; CODE XREF: seg007:7FDBj seg007:7FEEj
@@ -13378,10 +13379,10 @@ loc_1CBD6:				; CODE XREF: seg007:7F61j
 		test	al, 1
 		jz	short loc_1CC2D
 		or	cx, 20h
-		cmp	word ptr cs:ScriptMemory+4Ch, 1
+		cmp	cs:ScriptMemory+4Ch, 1
 		jz	short loc_1CC2D
-		mov	ax, word ptr cs:ScriptMemory+34h
-		mov	bx, word ptr cs:ScriptMemory+32h
+		mov	ax, cs:ScriptMemory+34h
+		mov	bx, cs:ScriptMemory+32h
 		or	bx, bx
 		jz	short loc_1CBF9
 		cmp	bx, 1
@@ -13416,7 +13417,7 @@ loc_1CC18:				; CODE XREF: seg007:7F9Dj
 		mov	ax, 4
 
 loc_1CC1B:				; CODE XREF: seg007:7F87j seg007:7F93j ...
-		mov	word ptr cs:ScriptMemory+34h, ax
+		mov	cs:ScriptMemory+34h, ax
 		mov	ah, 0Bh
 		int	68h		;  - APPC/PC
 
@@ -13428,7 +13429,7 @@ loc_1CC23:				; CODE XREF: seg007:7FB9j
 		xor	cx, cx
 
 loc_1CC2D:				; CODE XREF: seg007:7F68j seg007:7F73j
-		cmp	word ptr cs:ScriptMemory+4Ch, 1
+		cmp	cs:ScriptMemory+4Ch, 1
 		jnz	short loc_1CC5A
 		mov	ah, 5
 		int	68h		;  - APPC/PC - TRANSFER	MSG DATA
@@ -13460,9 +13461,9 @@ loc_1CC61:				; CODE XREF: seg007:7FECj
 					; DS:DX	-> control block
 
 loc_1CC65:				; CODE XREF: seg007:7FD9j seg007:7FE8j
-		mov	word ptr cs:ScriptMemory+2Ch, cx
-		mov	word ptr cs:ScriptMemory+2Eh, bx
-		mov	word ptr cs:ScriptMemory+30h, dx
+		mov	cs:ScriptMemory+2Ch, cx
+		mov	cs:ScriptMemory+2Eh, bx
+		mov	cs:ScriptMemory+30h, dx
 
 loc_1CC74:				; CODE XREF: seg007:8025j
 		call	sub_1499B
@@ -13501,19 +13502,19 @@ scr29:					; DATA XREF: seg007:scrJumpTblo
 ; ---------------------------------------------------------------------------
 
 scr2A:					; DATA XREF: seg007:scrJumpTblo
-		mov	ax, word ptr cs:ScriptMemory+34h
+		mov	ax, cs:ScriptMemory+34h
 		mov	ah, 0Bh
 		int	68h		;  - APPC/PC
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr2B_BGMThing:				; DATA XREF: seg007:scrJumpTblo
+scr2B_BGMPlay:				; DATA XREF: seg007:scrJumpTblo
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
 		test	es:MiscFlags, 4
 		jz	short loc_1CCC8
-		mov	ah, 0
+		mov	ah, 0		; routine 00 - start playback
 		int	61h		; [MIDI	mode] call MMD driver
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
@@ -13521,29 +13522,29 @@ scr2B_BGMThing:				; DATA XREF: seg007:scrJumpTblo
 loc_1CCC8:				; CODE XREF: seg007:804Fj
 		test	es:MiscFlags, 8
 		jz	short loc_1CCD5
-		mov	ah, 0
+		mov	ah, 0		; routine 00 - start playback
 		int	60h		; [FM mode] call PMD driver
 
 loc_1CCD5:				; CODE XREF: seg007:805Fj
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr2C_BGMThing:				; DATA XREF: seg007:scrJumpTblo
+scr2C_BGMFadeWait:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, seg	dseg
 		mov	es, ax
 		test	es:MiscFlags, 4
 		jz	short loc_1CCFD
 		mov	ax, [si]
 		shr	ax, 2
-		mov	ah, 2
+		mov	ah, 2		; routine 02 - fade out
 		int	61h		; [MIDI	mode] call MMD driver
 
 loc_1CCEF:				; CODE XREF: seg007:8085j
-		mov	ah, 8
+		mov	ah, 8		; routine 08 - get driver attenuation
 		int	61h
 		cmp	al, 0FFh
-		jnz	short loc_1CCEF
-		mov	ah, 1
+		jnz	short loc_1CCEF	; wait until the music stopped (attenuation == 0FFh)
+		mov	ah, 1		; routine 01 - stop music
 		int	61h
 		jmp	short loc_1CD18
 ; ---------------------------------------------------------------------------
@@ -13552,15 +13553,15 @@ loc_1CCFD:				; CODE XREF: seg007:8074j
 		test	es:MiscFlags, 8
 		jz	short loc_1CD18
 		mov	ax, [si]
-		mov	ah, 2
+		mov	ah, 2		; routine 02 - fade out
 		int	60h		; [FM mode] call PMD driver
 
 loc_1CD0C:				; CODE XREF: seg007:80A2j
-		mov	ah, 8
+		mov	ah, 8		; routine 08 - get driver attenuation
 		int	60h
 		cmp	al, 0FFh
-		jnz	short loc_1CD0C
-		mov	ah, 1
+		jnz	short loc_1CD0C	; wait until the music stopped (attenuation == 0FFh)
+		mov	ah, 1		; routine 01 - stop music
 		int	60h
 
 loc_1CD18:				; CODE XREF: seg007:808Bj seg007:8094j
@@ -13580,8 +13581,8 @@ scr2D:					; DATA XREF: seg007:scrJumpTblo
 ; ---------------------------------------------------------------------------
 
 scr2E:					; DATA XREF: seg007:scrJumpTblo
-		call	sub_1DA1D
-		mov	ax, word ptr cs:ScriptMemory+0Eh
+		call	GetSomeIndexedVar
+		mov	ax, cs:ScriptMemory+0Eh	; get ScriptMemory[07h]
 		mov	cs:[bx], ax
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
@@ -13592,20 +13593,20 @@ scr2F:					; DATA XREF: seg007:scrJumpTblo
 		mov	ax, cs
 		mov	ds, ax
 		assume ds:seg007
-		mov	si, offset somePosX2
-		mov	cs:somePosX2, 13h
-		mov	cs:somePosY2, 14h
-		mov	word ptr cs:ScriptMemory+26h, 0
-		mov	word ptr cs:ScriptMemory+28h, 0
+		mov	si, offset tempVar3
+		mov	cs:tempVar3, 13h
+		mov	cs:tempVar4, 14h
+		mov	cs:ScriptMemory+26h, 0
+		mov	cs:ScriptMemory+28h, 0
 
 loc_1CD63:				; CODE XREF: seg007:81C8j
-		call	sub_1DA1D
+		call	GetSomeIndexedVar
 		sub	si, 2
 		mov	cx, ax
 		test	cx, 100h
 		jz	short loc_1CD97
 		or	cx, 8000h
-		mov	cs:pdig_nonzeroDig, cx
+		mov	cs:tempVar0, cx
 		and	cx, 0FFh
 		mov	di, offset byte_1B915
 
@@ -13625,14 +13626,14 @@ loc_1CD91:				; CODE XREF: seg007:8114j
 
 loc_1CD97:				; CODE XREF: seg007:80FFj seg007:811Dj
 		xor	cx, cx
-		mov	cs:pdig_nonzeroDig, cx
+		mov	cs:tempVar0, cx
 
 loc_1CD9E:				; CODE XREF: seg007:8125j
 		mov	di, 518h
-		mov	ax, word ptr cs:ScriptMemory+26h
+		mov	ax, cs:ScriptMemory+26h
 		add	ax, ax
 		add	di, ax
-		mov	ax, word ptr cs:ScriptMemory+28h
+		mov	ax, cs:ScriptMemory+28h
 		mov	dx, 500h
 		mul	dx
 		add	di, ax
@@ -13643,7 +13644,7 @@ loc_1CD9E:				; CODE XREF: seg007:8125j
 		push	cx
 		call	sub_143B8
 		add	sp, 0Ah
-		mov	cx, cs:pdig_nonzeroDig
+		mov	cx, cs:tempVar0
 		test	cx, 8000h
 		jz	short loc_1CE18
 		test	cx, 400h
@@ -13683,8 +13684,8 @@ loc_1CE01:				; CODE XREF: seg007:817Cj
 		add	sp, 0Ah
 
 loc_1CE18:				; CODE XREF: seg007:815Dj seg007:8176j ...
-		mov	ax, word ptr cs:ScriptMemory+26h
-		mov	bx, word ptr cs:ScriptMemory+28h
+		mov	ax, cs:ScriptMemory+26h
+		mov	bx, cs:ScriptMemory+28h
 		inc	ax
 		cmp	ax, 10h
 		jnz	short loc_1CE2A
@@ -13694,20 +13695,20 @@ loc_1CE18:				; CODE XREF: seg007:815Dj seg007:8176j ...
 loc_1CE2A:				; CODE XREF: seg007:81B5j
 		cmp	bx, 10h
 		jz	short loc_1CE3B
-		mov	word ptr cs:ScriptMemory+26h, ax
-		mov	word ptr cs:ScriptMemory+28h, bx
+		mov	cs:ScriptMemory+26h, ax
+		mov	cs:ScriptMemory+28h, bx
 		jmp	loc_1CD63
 ; ---------------------------------------------------------------------------
 
 loc_1CE3B:				; CODE XREF: seg007:81BDj
-		mov	cx, word ptr cs:ScriptMemory+18h
+		mov	cx, cs:ScriptMemory+18h
 		add	cx, cx
 		add	cx, 2
 		mov	di, 518h
-		mov	ax, word ptr cs:ScriptMemory+1Ah
+		mov	ax, cs:ScriptMemory+1Ah
 		add	ax, ax
 		add	di, ax
-		mov	ax, word ptr cs:ScriptMemory+1Ch
+		mov	ax, cs:ScriptMemory+1Ch
 		mov	dx, 500h
 		mul	dx
 		add	di, ax
@@ -13779,10 +13780,10 @@ loc_1CED7:				; CODE XREF: seg007:8262j
 
 scr31:					; DATA XREF: seg007:scrJumpTblo
 		mov	di, offset byte_1EFB6
-		mov	ax, word ptr cs:ScriptMemory+22h
+		mov	ax, cs:ScriptMemory+22h
 		add	ax, ax
 		add	di, ax
-		mov	ax, word ptr cs:ScriptMemory+24h
+		mov	ax, cs:ScriptMemory+24h
 		mov	dx, 1600
 		mul	dx
 		add	di, ax
@@ -13797,10 +13798,10 @@ scr31:					; DATA XREF: seg007:scrJumpTblo
 ; ---------------------------------------------------------------------------
 
 scr32:					; DATA XREF: seg007:scrJumpTblo
-		mov	bx, word ptr cs:ScriptMemory+22h
+		mov	bx, cs:ScriptMemory+22h
 		shl	bx, 4
 		add	bx, 191
-		mov	ax, word ptr cs:ScriptMemory+24h
+		mov	ax, cs:ScriptMemory+24h
 		mov	dx, 20
 		mul	dx
 		mov	dx, ax
@@ -13812,7 +13813,7 @@ scr32:					; DATA XREF: seg007:scrJumpTblo
 ; ---------------------------------------------------------------------------
 
 scr33_NameChgThing:			; DATA XREF: seg007:scrJumpTblo
-		mov	cx, word ptr cs:ScriptMemory+0Eh
+		mov	cx, cs:ScriptMemory+0Eh
 		add	cx, cx
 		mov	ax, seg	dseg
 		mov	es, ax
@@ -13820,9 +13821,9 @@ scr33_NameChgThing:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, offset byte_1E342
 		add	ax, cx
 		mov	es:textDrawPtr,	ax
-		mov	di, word ptr cs:ScriptMemory+22h
+		mov	di, cs:ScriptMemory+22h
 		add	di, di
-		mov	ax, word ptr cs:ScriptMemory+24h
+		mov	ax, cs:ScriptMemory+24h
 		mov	dx, 22h
 		mul	dx
 		add	di, ax
@@ -13841,7 +13842,7 @@ scr33_NameChgThing:			; DATA XREF: seg007:scrJumpTblo
 ; ---------------------------------------------------------------------------
 
 scr34:					; DATA XREF: seg007:scrJumpTblo
-		mov	ax, word ptr cs:ScriptMemory+0Eh
+		mov	ax, cs:ScriptMemory+0Eh
 		add	ax, ax
 		mov	bx, offset ScriptMemory
 		add	bx, ax
@@ -13866,8 +13867,8 @@ scr35:					; DATA XREF: seg007:scrJumpTblo
 		assume es:nothing
 		mov	ax, es:20h
 		mov	dx, es:22h
-		mov	cs:word_1BCB0, ax
-		mov	cs:word_1BCB2, dx
+		mov	word ptr cs:OldInt8Vec,	ax
+		mov	word ptr cs:OldInt8Vec+2, dx
 		xor	ax, ax
 		mov	es, ax
 		mov	bx, [si]
@@ -13936,8 +13937,8 @@ scr36:					; DATA XREF: seg007:scrJumpTblo
 					; (also	sets current address)
 		xor	ax, ax
 		mov	es, ax
-		mov	ax, cs:word_1BCB0
-		mov	dx, cs:word_1BCB2
+		mov	ax, word ptr cs:OldInt8Vec
+		mov	dx, word ptr cs:OldInt8Vec+2
 		mov	es:20h,	ax
 		mov	es:22h,	dx
 		popf
@@ -13972,18 +13973,18 @@ scr38_WriteSaveGame:			; DATA XREF: seg007:scrJumpTblo
 					; AL = day of the week (0=Sunday, 1=Monday, etc.)
 		xor	bx, bx
 		mov	bl, dh
-		mov	word ptr cs:ScriptMemory+96h, bx
+		mov	cs:ScriptMemory+96h, bx
 		xor	dh, dh
-		mov	word ptr cs:ScriptMemory+98h, dx
+		mov	cs:ScriptMemory+98h, dx
 		mov	ah, 2Ch
 		int	21h		; DOS -	GET CURRENT TIME
 					; Return: CH = hours, CL = minutes, DH = seconds
 					; DL = hundredths of seconds
 		xor	bx, bx
 		mov	bl, ch
-		mov	word ptr cs:ScriptMemory+9Ah, bx
+		mov	cs:ScriptMemory+9Ah, bx
 		xor	ch, ch
-		mov	word ptr cs:ScriptMemory+9Ch, cx
+		mov	cs:ScriptMemory+9Ch, cx
 		push	ds
 		mov	dx, si
 		mov	al, 1
@@ -14018,7 +14019,7 @@ loc_1D0CD:				; CODE XREF: seg007:8458j
 		jmp	loc_1BE4B
 ; ---------------------------------------------------------------------------
 
-scr39:					; DATA XREF: seg007:scrJumpTblo
+scr39_VarRandomVal:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	bx, ax
 		push	bx
@@ -14026,7 +14027,7 @@ scr39:					; DATA XREF: seg007:scrJumpTblo
 		push	di
 		push	ds
 		push	es
-		call	RNG_Advance
+		call	RNG_GetNext
 		pop	es
 		assume es:nothing
 		pop	ds
@@ -14104,7 +14105,7 @@ loc_1D144:				; CODE XREF: seg007:84CFj
 ; ---------------------------------------------------------------------------
 
 scr3C_PrintNum_H_5Dig:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0 ;	print number with 5 half-width digits
+		mov	cs:tempVar0, 0	; print	number with 5 half-width digits
 		cmp	word ptr [si], 0FFFFh ;	(right-aligned,	padded with spaces)
 		jz	short loc_1D16F
 		mov	ax, seg	dseg
@@ -14144,7 +14145,7 @@ loc_1D16F:				; CODE XREF: seg007:84F2j
 ; print	digit -	half width, incl. space-padding
 
 PrintDigit_HPS	proc near		; CODE XREF: seg007:850Fp seg007:851Bp ...
-		cmp	cs:pdig_nonzeroDig, 1
+		cmp	cs:tempVar0, 1
 		jz	short loc_1D1C5
 		or	al, al
 		jnz	short PrintDigit_HP
@@ -14158,7 +14159,7 @@ PrintDigit_HPS	endp
 
 PrintDigit_HP	proc near		; CODE XREF: seg007:8538p
 					; PrintDigit_HPS+Aj
-		mov	cs:pdig_nonzeroDig, 1
+		mov	cs:tempVar0, 1
 
 loc_1D1C5:				; CODE XREF: PrintDigit_HPS+6j
 		add	al, '0'
@@ -14189,7 +14190,7 @@ scr3E:					; DATA XREF: seg007:scrJumpTblo
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr3F_SFXThing:				; DATA XREF: seg007:scrJumpTblo
+scr3F_PlaySFX_FM:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
@@ -14198,13 +14199,13 @@ scr3F_SFXThing:				; DATA XREF: seg007:scrJumpTblo
 		mov	ax, [si]
 		or	al, al
 		jnz	short loc_1D203
-		mov	ah, 0Dh
+		mov	ah, 0Dh		; routine 0Dh -	stop FM	SFX
 		int	60h		; [FM mode] call PMD driver
 		jmp	short loc_1D207
 ; ---------------------------------------------------------------------------
 
 loc_1D203:				; CODE XREF: seg007:858Bj
-		mov	ah, 0Ch
+		mov	ah, 0Ch		; routine 0Ch -	play FM	sound effect
 		int	60h		; [FM mode] call PMD driver
 
 loc_1D207:				; CODE XREF: seg007:8585j seg007:8591j
@@ -14239,7 +14240,7 @@ loc_1D221:				; CODE XREF: seg007:85B7j
 		mov	cx, cs
 		mov	ds, cx
 		assume ds:seg007
-		mov	dx, offset pdig_nonzeroDig
+		mov	dx, offset tempVar0
 		mov	cx, 1
 		mov	ah, 3Fh
 		int	21h		; DOS -	2+ - READ FROM FILE WITH HANDLE
@@ -14252,7 +14253,7 @@ loc_1D221:				; CODE XREF: seg007:85B7j
 		pop	ds
 		assume ds:dseg
 		xor	ah, ah
-		mov	al, byte ptr cs:pdig_nonzeroDig
+		mov	al, byte ptr cs:tempVar0
 		sub	al, 'A'
 		cmp	ax, [si+0Ah]	; parameter [si+0Ah]: wanted disk ID
 		jnz	short loc_1D21E	; no match - try reading again
@@ -14267,11 +14268,11 @@ scr41:					; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
 		call	sub_1416A
 		add	sp, 0Ah
-		jmp	loc_1BF8F
+		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
 
 scr42_PrintNum_F_5Dig:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0 ;	print number with 5 full-width digits
+		mov	cs:tempVar0, 0	; print	number with 5 full-width digits
 		cmp	word ptr [si], 0FFFFh ;	(right-aligned,	padded with spaces)
 		jz	short loc_1D27F
 		mov	ax, seg	dseg
@@ -14311,7 +14312,7 @@ loc_1D27F:				; CODE XREF: seg007:8602j
 ; print	digit -	full width, incl. space-padding
 
 PrintDigit_FPS	proc near		; CODE XREF: seg007:861Fp seg007:862Bp ...
-		cmp	cs:pdig_nonzeroDig, 1
+		cmp	cs:tempVar0, 1
 		jz	short loc_1D2D6
 		or	ax, ax
 		jnz	short PrintDigit_FP
@@ -14325,7 +14326,7 @@ PrintDigit_FPS	endp
 
 PrintDigit_FP	proc near		; CODE XREF: seg007:8648p
 					; PrintDigit_FPS+Aj ...
-		mov	cs:pdig_nonzeroDig, 1
+		mov	cs:tempVar0, 1
 
 loc_1D2D6:				; CODE XREF: PrintDigit_FPS+6j
 		xchg	al, ah
@@ -14346,11 +14347,11 @@ PrintDigit_FP	endp
 scr43_VarMulValDiv100:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	bx, ax
-		mov	ax, cs:[di]
+		mov	ax, cs:[di]	; get register contents
 		mul	bx		; [parameter] *	[variable] / 100
 		mov	cx, 100
 		div	cx
-		mov	word ptr cs:ScriptMemory+6Eh, ax
+		mov	cs:ScriptMemory+6Eh, ax	; store	in variable 37h
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
@@ -14368,7 +14369,7 @@ loc_1D309:				; CODE XREF: seg007:86A3j
 ; ---------------------------------------------------------------------------
 
 scr45_Print6Var_F:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0 ;	print digits from 6 consecutive	variables
+		mov	cs:tempVar0, 0	; print	digits from 6 consecutive variables
 		mov	ax, seg	dseg	; as full-width	digits
 		mov	es, ax
 		mov	ax, [si]
@@ -14396,7 +14397,7 @@ scr46_VarDigitsAdd:			; DATA XREF: seg007:scrJumpTblo
 loc_1D35F:				; CODE XREF: seg007:888Fj
 		call	Number2Digits
 		mov	ax, cs:[di+0Ah]
-		add	ax, cs:somePosY2
+		add	ax, cs:tempVar4
 		cmp	ax, 10
 		jb	short loc_1D377
 		sub	ax, 10
@@ -14405,7 +14406,7 @@ loc_1D35F:				; CODE XREF: seg007:888Fj
 loc_1D377:				; CODE XREF: seg007:86FEj
 		mov	cs:[di+0Ah], ax
 		mov	ax, cs:[di+8]
-		add	ax, cs:somePosX2
+		add	ax, cs:tempVar3
 		cmp	ax, 10
 		jb	short loc_1D390
 		sub	ax, 10
@@ -14414,7 +14415,7 @@ loc_1D377:				; CODE XREF: seg007:86FEj
 loc_1D390:				; CODE XREF: seg007:8717j
 		mov	cs:[di+8], ax
 		mov	ax, cs:[di+6]
-		add	ax, cs:somePosY1
+		add	ax, cs:tempVar2
 		cmp	ax, 10
 		jb	short loc_1D3A9
 		sub	ax, 10
@@ -14423,7 +14424,7 @@ loc_1D390:				; CODE XREF: seg007:8717j
 loc_1D3A9:				; CODE XREF: seg007:8730j
 		mov	cs:[di+6], ax
 		mov	ax, cs:[di+4]
-		add	ax, cs:somePosX1
+		add	ax, cs:tempVar1
 		cmp	ax, 10
 		jb	short loc_1D3C2
 		sub	ax, 10
@@ -14432,7 +14433,7 @@ loc_1D3A9:				; CODE XREF: seg007:8730j
 loc_1D3C2:				; CODE XREF: seg007:8749j
 		mov	cs:[di+4], ax
 		mov	ax, cs:[di+2]
-		add	ax, cs:pdig_nonzeroDig
+		add	ax, cs:tempVar0
 		cmp	ax, 10
 		jb	short loc_1D3DA
 		sub	ax, 10
@@ -14460,36 +14461,36 @@ Number2Digits	proc near		; CODE XREF: seg007:loc_1D35Fp
 		xor	dx, dx
 		mov	bx, 10000
 		div	bx
-		mov	cs:pdig_nonzeroDig, ax
+		mov	cs:tempVar0, ax
 		mov	ax, dx
 		xor	dx, dx
 		mov	bx, 1000
 		div	bx
-		mov	cs:somePosX1, ax
+		mov	cs:tempVar1, ax
 		mov	ax, dx
 		xor	dx, dx
 		mov	bx, 100
 		div	bx
-		mov	cs:somePosY1, ax
+		mov	cs:tempVar2, ax
 		mov	ax, dx
 		xor	dx, dx
 		mov	bx, 10
 		div	bx
-		mov	cs:somePosX2, ax
-		mov	cs:somePosY2, dx
+		mov	cs:tempVar3, ax
+		mov	cs:tempVar4, dx
 		retn
 Number2Digits	endp
 
 ; ---------------------------------------------------------------------------
 
 scr47_VarDigitsSub:			; DATA XREF: seg007:scrJumpTblo
-		mov	word ptr cs:ScriptMemory+6Eh, 0
+		mov	cs:ScriptMemory+6Eh, 0
 		call	GetScriptVarVal
 
 loc_1D44C:				; CODE XREF: seg007:88ADj
 		call	Number2Digits
 		mov	ax, cs:[di+0Ah]
-		sub	ax, cs:somePosY2
+		sub	ax, cs:tempVar4
 		or	ax, ax
 		jns	short loc_1D463
 		add	ax, 10
@@ -14498,7 +14499,7 @@ loc_1D44C:				; CODE XREF: seg007:88ADj
 loc_1D463:				; CODE XREF: seg007:87EAj
 		mov	cs:[di+0Ah], ax
 		mov	ax, cs:[di+8]
-		sub	ax, cs:somePosX2
+		sub	ax, cs:tempVar3
 		or	ax, ax
 		jns	short loc_1D47B
 		add	ax, 10
@@ -14507,7 +14508,7 @@ loc_1D463:				; CODE XREF: seg007:87EAj
 loc_1D47B:				; CODE XREF: seg007:8802j
 		mov	cs:[di+8], ax
 		mov	ax, cs:[di+6]
-		sub	ax, cs:somePosY1
+		sub	ax, cs:tempVar2
 		or	ax, ax
 		jns	short loc_1D493
 		add	ax, 10
@@ -14516,7 +14517,7 @@ loc_1D47B:				; CODE XREF: seg007:8802j
 loc_1D493:				; CODE XREF: seg007:881Aj
 		mov	cs:[di+6], ax
 		mov	ax, cs:[di+4]
-		sub	ax, cs:somePosX1
+		sub	ax, cs:tempVar1
 		or	ax, ax
 		jns	short loc_1D4AB
 		add	ax, 10
@@ -14525,7 +14526,7 @@ loc_1D493:				; CODE XREF: seg007:881Aj
 loc_1D4AB:				; CODE XREF: seg007:8832j
 		mov	cs:[di+4], ax
 		mov	ax, cs:[di+2]
-		sub	ax, cs:pdig_nonzeroDig
+		sub	ax, cs:tempVar0
 		or	ax, ax
 		jns	short loc_1D4C2
 		add	ax, 10
@@ -14536,7 +14537,7 @@ loc_1D4C2:				; CODE XREF: seg007:884Aj
 		mov	ax, cs:[di]
 		or	ax, ax
 		jns	short loc_1D4D4
-		mov	word ptr cs:ScriptMemory+6Eh, 0FFFFh
+		mov	cs:ScriptMemory+6Eh, 0FFFFh
 
 loc_1D4D4:				; CODE XREF: seg007:885Bj
 		mov	cs:[di], ax
@@ -14548,26 +14549,26 @@ scr48:					; DATA XREF: seg007:scrJumpTblo
 		mov	es, ax
 		test	es:MiscFlags, 1
 		jnz	short loc_1D4F2
-		mov	word ptr cs:ScriptMemory+6Eh, 0
+		mov	cs:ScriptMemory+6Eh, 0
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
 loc_1D4F2:				; CODE XREF: seg007:8876j
-		mov	word ptr cs:ScriptMemory+6Eh, 1
+		mov	cs:ScriptMemory+6Eh, 1
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr49:					; DATA XREF: seg007:scrJumpTblo
+scr49_VarDigitsAdd:			; DATA XREF: seg007:scrJumpTblo
 		call	sub_1D502
 		jmp	loc_1D35F
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1D502	proc near		; CODE XREF: seg007:scr49p
+sub_1D502	proc near		; CODE XREF: seg007:scr49_VarDigitsAddp
 					; seg007:88AAp
 		call	GetScriptVarVal
-		mov	bx, offset byte_1DEEB
+		mov	bx, offset ScriptMemory
 		mov	ax, [si+2]
 		add	ax, ax
 		add	bx, ax
@@ -14577,13 +14578,13 @@ sub_1D502	endp
 
 ; ---------------------------------------------------------------------------
 
-scr4A:					; DATA XREF: seg007:scrJumpTblo
-		mov	word ptr cs:ScriptMemory+6Eh, 0
+scr4A_VarDigitsSub:			; DATA XREF: seg007:scrJumpTblo
+		mov	cs:ScriptMemory+6Eh, 0
 		call	sub_1D502
 		jmp	loc_1D44C
 ; ---------------------------------------------------------------------------
 
-scr4B_BGMThing:				; DATA XREF: seg007:scrJumpTblo
+scr4B_BGMWaitMeasure:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, seg	dseg
 		mov	es, ax
 		test	es:MiscFlags, 4
@@ -14592,7 +14593,7 @@ scr4B_BGMThing:				; DATA XREF: seg007:scrJumpTblo
 
 loc_1D531:				; CODE XREF: seg007:88CAj
 		mov	dx, 0C0h
-		mov	ah, 5
+		mov	ah, 5		; routine 05h -	get song measure
 		int	61h		; [MIDI	mode] call MMD driver
 		cmp	ax, bx
 		jb	short loc_1D531
@@ -14605,7 +14606,7 @@ loc_1D53E:				; CODE XREF: seg007:88BCj
 		mov	bx, [si]
 
 loc_1D549:				; CODE XREF: seg007:88DFj
-		mov	ah, 5
+		mov	ah, 5		; routine 05h -	get song measure
 		int	60h		; [FM mode] call PMD driver
 		cmp	ax, bx
 		jb	short loc_1D549
@@ -14666,37 +14667,37 @@ loc_1D5A4:				; CODE XREF: seg007:8959j
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr4E:					; DATA XREF: seg007:scrJumpTblo
+scr4E_VarVarCompare:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVar
-		cmp	cs:[bx], cx
-		jz	short loc_1D5EC
-		ja	short loc_1D5E2
-		mov	word ptr cs:ScriptMemory+6Eh, 0FFFFh
+		cmp	cs:[bx], cx	; cmp var2, var1
+		jz	short loc_1D5EC	; var2 == var1 -> 0
+		ja	short loc_1D5E2	; var2 > var1 -> 1
+		mov	cs:ScriptMemory+6Eh, -1	; var2 < var1 -> -1
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
 loc_1D5E2:				; CODE XREF: seg007:8966j
-		mov	word ptr cs:ScriptMemory+6Eh, 1
+		mov	cs:ScriptMemory+6Eh, 1
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
 loc_1D5EC:				; CODE XREF: seg007:8964j
-		mov	word ptr cs:ScriptMemory+6Eh, 0
+		mov	cs:ScriptMemory+6Eh, 0
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
-scr4F:					; DATA XREF: seg007:scrJumpTblo
+scr4F_MulVarVal:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	bx, cs:[di]
-		mul	bx
+		mul	bx		; var *= value
 		mov	cs:[di], ax
 
 loc_1D601:				; CODE XREF: seg007:89A4j seg007:89B5j ...
-		mov	word ptr cs:ScriptMemory+6Eh, dx
+		mov	cs:ScriptMemory+6Eh, dx
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
-scr50:					; DATA XREF: seg007:scrJumpTblo
+scr50_MulVarVar:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVar
 		mov	ax, cs:[bx]
 		mul	cx
@@ -14704,17 +14705,17 @@ scr50:					; DATA XREF: seg007:scrJumpTblo
 		jmp	short loc_1D601
 ; ---------------------------------------------------------------------------
 
-scr51:					; DATA XREF: seg007:scrJumpTblo
+scr51_DivVarVal:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	bx, ax
 		mov	ax, cs:[di]
 		xor	dx, dx
 		div	bx
-		mov	cs:[di], ax
-		jmp	short loc_1D601
+		mov	cs:[di], ax	; store	quotient
+		jmp	short loc_1D601	; store	remainder in ScriptMemory[37h]
 ; ---------------------------------------------------------------------------
 
-scr52:					; DATA XREF: seg007:scrJumpTblo
+scr52_DivVarVar:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVar
 		mov	ax, cs:[bx]
 		xor	dx, dx
@@ -14752,7 +14753,7 @@ scr54:					; DATA XREF: seg007:scrJumpTblo
 		mov	ax, cs:[di]
 		mov	bx, 48h
 		mul	bx
-		mov	bx, offset byte_22E21
+		mov	bx, offset byte_19DB1
 		add	bx, ax
 		push	ds
 		push	si
@@ -14773,7 +14774,7 @@ scr54:					; DATA XREF: seg007:scrJumpTblo
 scr55:					; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
-		mov	cs:pdig_nonzeroDig, ax
+		mov	cs:tempVar0, ax
 		add	si, 2
 		call	GetScriptVarVal
 		mov	bx, cs:[di]
@@ -14790,7 +14791,7 @@ scr55:					; DATA XREF: seg007:scrJumpTblo
 		push	dx
 		push	cx
 		push	bx
-		push	cs:pdig_nonzeroDig
+		push	cs:tempVar0
 		call	sub_143B8
 		add	sp, 0Ah
 		jmp	scr_fin_2b
@@ -14822,7 +14823,7 @@ scr56:					; DATA XREF: seg007:scrJumpTblo
 scr57:					; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
-		mov	cs:pdig_nonzeroDig, ax
+		mov	cs:tempVar0, ax
 		add	si, 2
 		call	GetScriptVarVal
 		mov	bx, cs:[di]
@@ -14839,7 +14840,7 @@ scr57:					; DATA XREF: seg007:scrJumpTblo
 		push	dx
 		push	cx
 		push	bx
-		push	cs:pdig_nonzeroDig
+		push	cs:tempVar0
 		call	sub_14489
 		add	sp, 0Ah
 		jmp	scr_fin_2b
@@ -14848,7 +14849,7 @@ scr57:					; DATA XREF: seg007:scrJumpTblo
 scr58:					; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
-		mov	cs:pdig_nonzeroDig, ax
+		mov	cs:tempVar0, ax
 		add	si, 2
 		call	GetScriptVarVal
 		mov	bx, cs:[di]
@@ -14861,14 +14862,14 @@ scr58:					; DATA XREF: seg007:scrJumpTblo
 		add	si, 2
 		call	GetScriptVarVal
 		mov	di, cs:[di]
-		mov	ax, word ptr cs:ScriptMemory+2Ah
+		mov	ax, cs:ScriptMemory+2Ah	; get ScriptMemory[15h]
 		shl	ax, 4
 		or	ax, di
 		push	ax
 		push	dx
 		push	cx
 		push	bx
-		push	cs:pdig_nonzeroDig
+		push	cs:tempVar0
 		call	sub_145D6
 		add	sp, 0Ah
 		jmp	scr_fin_2b
@@ -14886,15 +14887,15 @@ scr59:					; DATA XREF: seg007:scrJumpTblo
 		pusha
 		push	dx
 		push	cx
-		push	cs
-		push	bx
+		push	cs		; file name segment
+		push	bx		; file name pointer
 		call	LoadGTAFile
 		add	sp, 8
 		popa
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr5A_Var_SetRandom:			; DATA XREF: seg007:scrJumpTblo
+scr5A_VarRandomVar:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVar
 		push	bx
 		push	cx
@@ -14902,7 +14903,7 @@ scr5A_Var_SetRandom:			; DATA XREF: seg007:scrJumpTblo
 		push	di
 		push	ds
 		push	es
-		call	RNG_Advance
+		call	RNG_GetNext
 		pop	es
 		assume es:nothing
 		pop	ds
@@ -14922,7 +14923,7 @@ scr5B_GetDiskID:			; DATA XREF: seg007:scrJumpTblo
 		assume es:dseg
 		test	es:MiscFlags, 1
 		jnz	short loc_1D7E1
-		jmp	loc_1BF8F
+		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
 
 loc_1D7E1:				; CODE XREF: seg007:8B6Cj
@@ -14942,7 +14943,7 @@ loc_1D7E4:				; CODE XREF: seg007:8B7Aj
 		mov	cx, cs
 		mov	ds, cx
 		assume ds:seg007
-		mov	dx, offset pdig_nonzeroDig
+		mov	dx, offset tempVar0
 		mov	cx, 1
 		mov	ah, 3Fh
 		int	21h		; DOS -	2+ - READ FROM FILE WITH HANDLE
@@ -14955,10 +14956,10 @@ loc_1D7E4:				; CODE XREF: seg007:8B7Aj
 		pop	ds
 		assume ds:dseg
 		xor	ah, ah
-		mov	al, byte ptr cs:pdig_nonzeroDig
+		mov	al, byte ptr cs:tempVar0
 		sub	al, 'A'
-		mov	word ptr cs:ScriptMemory+6Eh, ax ; save	resulting disk ID
-		jmp	loc_1BF8F
+		mov	cs:ScriptMemory+6Eh, ax	; save resulting disk ID
+		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
 
 scr5C:					; DATA XREF: seg007:scrJumpTblo
@@ -15074,14 +15075,14 @@ loc_1D8E2:				; CODE XREF: seg007:8C6Dj
 		mov	ah, 5
 		int	68h		;  - APPC/PC - TRANSFER	MSG DATA
 					; DS:DX	-> control block
-		mov	word ptr cs:ScriptMemory+2Ch, cx
-		mov	word ptr cs:ScriptMemory+2Eh, bx
-		mov	word ptr cs:ScriptMemory+30h, dx
+		mov	cs:ScriptMemory+2Ch, cx
+		mov	cs:ScriptMemory+2Eh, bx
+		mov	cs:ScriptMemory+30h, dx
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
 scr61_PrintNum_H:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0
+		mov	cs:tempVar0, 0
 		cmp	word ptr [si], 0FFFFh
 		jz	short loc_1D90F
 		mov	ax, seg	dseg
@@ -15122,7 +15123,7 @@ loc_1D90F:				; CODE XREF: seg007:8C92j
 ; print	digit -	half width, no padding
 
 PrintDigit_HNS	proc near		; CODE XREF: seg007:8CAFp seg007:8CBBp ...
-		cmp	cs:pdig_nonzeroDig, 1
+		cmp	cs:tempVar0, 1
 		jz	short loc_1D964
 		or	al, al
 		jnz	short PrintDigit_HN
@@ -15137,7 +15138,7 @@ PrintDigit_HNS	endp
 
 PrintDigit_HN	proc near		; CODE XREF: seg007:8CD8p
 					; PrintDigit_HNS+Aj
-		mov	cs:pdig_nonzeroDig, 1
+		mov	cs:tempVar0, 1
 
 loc_1D964:				; CODE XREF: PrintDigit_HNS+6j
 		add	al, '0'
@@ -15152,7 +15153,7 @@ PrintDigit_HN	endp
 ; ---------------------------------------------------------------------------
 
 scr62_PrintNum_F:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:pdig_nonzeroDig, 0
+		mov	cs:tempVar0, 0
 		cmp	word ptr [si], 0FFFFh
 		jz	short loc_1D987
 		mov	ax, seg	dseg
@@ -15193,7 +15194,7 @@ loc_1D987:				; CODE XREF: seg007:8D0Aj
 ; print	digit -	full width, no padding
 
 PrintDigit_FNS	proc near		; CODE XREF: seg007:8D27p seg007:8D33p ...
-		cmp	cs:pdig_nonzeroDig, 1
+		cmp	cs:tempVar0, 1
 		jz	short loc_1D9DA
 		or	ax, ax
 		jnz	short PrintDigit_FN
@@ -15201,7 +15202,7 @@ PrintDigit_FNS	proc near		; CODE XREF: seg007:8D27p seg007:8D33p ...
 ; ---------------------------------------------------------------------------
 
 PrintDigit_FN:				; CODE XREF: PrintDigit_FNS+Aj
-		mov	cs:pdig_nonzeroDig, 1
+		mov	cs:tempVar0, 1
 
 loc_1D9DA:				; CODE XREF: PrintDigit_FNS+6j
 		xchg	al, ah
@@ -15258,25 +15259,25 @@ scr63_SetDiskLetter endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1DA1D	proc near		; CODE XREF: seg007:scr24p
+GetSomeIndexedVar proc near		; CODE XREF: seg007:scr24p
 					; seg007:scr2Ep ...
-		mov	ax, word ptr cs:ScriptMemory+1Eh
+		mov	ax, cs:ScriptMemory+1Eh	; AX = ScriptMemory[0Fh]
 		mov	dx, 200h
 		mul	dx
-		add	ax, 5F3h
-		mov	dx, ax
+		add	ax, (offset ScriptMemory+3E8h)
+		mov	dx, ax		; DX = &ScriptMemory[500 + AX*100h]
 		call	GetScriptVarVal
-		mov	bx, cs:[di]
+		mov	bx, cs:[di]	; get variable 1 value
 		add	si, 2
 		call	GetScriptVarVal
-		mov	cx, cs:[di]
+		mov	cx, cs:[di]	; get variable 2 value
 		shl	cx, 4
 		add	bx, cx
 		add	bx, bx
-		add	bx, dx
+		add	bx, dx		; BX = &DX[(var2 << 4) + var1]
 		mov	ax, cs:[bx]
 		retn
-sub_1DA1D	endp
+GetSomeIndexedVar endp
 
 ; ---------------------------------------------------------------------------
 		retn
@@ -15317,17 +15318,17 @@ GetScriptVarVar	endp
 
 
 sub_1DA6B	proc near		; CODE XREF: seg007:loc_1CA0Ep
-		mov	cs:somePosY1, ax
+		mov	cs:tempVar2, ax
 		shl	ax, 4
 		mov	dx, 50h
 		mul	dx
-		mov	cx, cs:somePosX3
+		mov	cx, cs:tempVar5
 		add	cx, ax
 		add	ax, 28h
 		push	2
 		push	cx
 		push	10h
-		push	cs:somePosX2
+		push	cs:tempVar3
 		push	ax
 		call	sub_143B8
 		add	sp, 0Ah
@@ -15342,7 +15343,7 @@ sub_1DA95	proc near		; CODE XREF: seg007:7D66p seg007:7D8Ep ...
 		mov	ah, 4
 		int	68h		;  - APPC/PC
 					; DS:DX	-> control block
-		mov	bx, cs:somePosY1
+		mov	bx, cs:tempVar2
 		mov	ax, bx
 		shl	bx, 4
 		push	ax
@@ -15351,12 +15352,12 @@ sub_1DA95	proc near		; CODE XREF: seg007:7D66p seg007:7D8Ep ...
 		mul	dx
 		mov	bx, ax
 		pop	ax
-		mov	cx, cs:somePosX3
+		mov	cx, cs:tempVar5
 		add	cx, bx
 		push	2
 		push	cx
 		push	10h
-		push	cs:somePosX2
+		push	cs:tempVar3
 		push	bx
 		call	sub_143B8
 		add	sp, 0Ah
@@ -15455,7 +15456,7 @@ loc_1DB46:				; DATA XREF: seg007:off_14E77o
 
 loc_1DB55:				; CODE XREF: seg007:8EE0j
 		mov	cs:word_1BCA8, 1
-		cmp	word ptr cs:ScriptMemory+6Ah, 1
+		cmp	cs:ScriptMemory+6Ah, 1
 		jz	short loc_1DBDA
 		mov	cx, cs:word_1BCAC
 		mov	di, 6
@@ -15738,8 +15739,7 @@ word_1DD3E	dw 0			; DATA XREF: start+19w	start+8Fr ...
 word_1DD40	dw 0			; DATA XREF: start+16w	start+C7r ...
 word_1DD42	dw 0			; DATA XREF: sub_10C86:loc_10CB3w
 					; sub_11BCD:loc_11BF9w
-		db    8
-		db 0BFh	; ¿
+		dw 0BF08h
 word_1DD46	dw 0			; DATA XREF: sub_11940+7r
 					; sub_1197F+4Br
 word_1DD48	dw 0			; DATA XREF: start+87w	sub_11940+3r ...
@@ -15750,8 +15750,8 @@ word_1DD4E	dw 0			; DATA XREF: sub_118CA+69w
 					; sub_11940+1Ar ...
 word_1DD50	dw 0			; DATA XREF: start+21w	start+F5w ...
 word_1DD52	dw 1			; DATA XREF: RNG_Init+Cw
-					; RNG_Advance+4r ...
-word_1DD54	dw 0			; DATA XREF: RNG_Init+6w RNG_Advancer	...
+					; RNG_GetNext+4r ...
+word_1DD54	dw 0			; DATA XREF: RNG_Init+6w RNG_GetNextr	...
 aA		db 'A:',0               ; DATA XREF: LoadGTAFile+71o
 aGtaExtension1	db '.GTA',0             ; DATA XREF: LoadGTAFile+AEo
 aGtaExtension2	db '.GTA',0             ; DATA XREF: LoadGTAFile+107o
@@ -15786,7 +15786,7 @@ word_1DE2A	dw 0			; DATA XREF: seg000:03E1w
 word_1DE2C	dw 0			; DATA XREF: seg000:03D8w
 					; sub_10777:loc_1087Er
 byte_1DE2E	db 0BDh	dup(0)		; DATA XREF: sub_148D5+Do
-byte_1DEEB	db 74h dup(0)		; DATA XREF: sub_1D502+3o
+		db 74h dup(0)
 byte_1DF5F	db 231h	dup(0)		; DATA XREF: sub_13EF4+12o
 byte_1E190	db 1B2h	dup(0)
 byte_1E342	db 0C74h dup(0)		; DATA XREF: seg007:82D1o seg007:8320o
@@ -15832,10 +15832,8 @@ word_21EED	dw 0			; DATA XREF: sub_147D0+20w
 word_21EEF	dw 0			; DATA XREF: sub_147D0+26w
 					; sub_147D0+8Aw
 		db    0
-ScriptData	db 0F2Fh dup(0)		; DATA XREF: LoadScript+1Co
+ScriptData	db 7800h dup(0)		; DATA XREF: LoadScript+1Co
 					; seg007:73A5o	...
-byte_22E21	db 977h	dup(0)		; DATA XREF: seg007:89F8o
-byte_23798	db 5F5Ah dup(0)		; DATA XREF: seg007:70DCo
 scrGtaNameBuf	db '?????',0            ; DATA XREF: seg007:73F6o
 byte_296F8	db 8 dup(0)		; DATA XREF: seg007:8393o
 aAbnormalProgra	db 'Abnormal program termination',0Dh,0Ah,0 ; DATA XREF: sub_10A1E+1o

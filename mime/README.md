@@ -7,9 +7,10 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 - `MIME.EXE` disassembly: [ASM file](MIME.asm) / [IDB database](MIME.idb) / [decompressed executable](MIME.EXE)
 - `MIME_OP.EXE` disassembly: [ASM file](MIME_OP.asm) / [IDB database](MIME_OP.idb)
   - [MIME\_OP-SKIP.EXE](MIME_OP-SKIP.EXE) - a patch to the opening executable that makes it automatically skip the opening (for easier game testing)
+- [scenario format description](SceneFormat.txt)
 - a [patch to support ASCII text](MIME-ASC.asm) in `MIME.EXE` almost everywhere
-  - The game comes with very limited ASCII support for drawing certain texts like "HP" and "MP" using special script commands.  
-    This patch adds ASCII support to almost all functions that originally supported only 2-byte Shift-JIS codes.
+  - The game originally comes with very limited ASCII support for drawing certain texts like "HP" and "MP" using special script commands.  
+    This patch adds ASCII support to almost all functions that supported only 2-byte Shift-JIS codes before.
   - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
   - A prepatched version is included as [MIME-ASC.EXE](MIME-ASC.EXE).
   - I think this is the most complicated patch I made so far.
@@ -24,14 +25,15 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 
 - Scenario files (with `.DAT` extension) are LZSS compressed.
   The nametable is initializated with various different patterns, as with many other Japanese games on the PC-98. (see `LZSS_Decompress` function in the disassembly)
-- LZSS-compressed files can be decompressed using [wolfteam\_dec](https://github.com/ValleyBell/ExtractorsDecoders/blob/master/wolfteam_dec.c)
+- LZSS-compressed files can be decompressed using [lzss-tool](https://github.com/ValleyBell/ExtractorsDecoders/blob/master/lzss-tool.c) with parameters `-a c4,o4 -n p`
 - Save games (`Z100#.DAT`) are uncompressed.
 - Most strings in scenario files are terminated using the backslash/Yen character, byte 0x5C.  
   ASCII strings are terminated with a single `5C` byte.
   Shift-JIS strings end with `5C 5C`, because each character is assumed to be 2 bytes.
 - The game's text rendering routine remaps certain codes to custom font glyphs.  
   Among those are the JIS mirrors of capital ASCII letters (Shift-JIS codes 85 61..85 7A), making actual ASCII the only way of using capital letters.  
-  The table can be found under the label `CustomFontData` in the disassembly. The first word in each line indicates the access code of the font ROM that is redirected.
+  The table can be found under the label `CustomFontData` in the disassembly. The first word in each line indicates the access code of the font ROM that is redirected.  
+  `210Dh` (16-bit word) → ROM access code `0D 21` → JIS `2D21` → Shift-JIS `8740`
 
 ## Game engine trivia
 
