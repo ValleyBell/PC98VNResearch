@@ -27,8 +27,11 @@ WaitFrames EQU 8E59h
 ; include relocation table and patch a few of the EXE relocation entries
 
 	incbin "MIME.EXE", $, 016Eh-($-$$)
-	dw	RelocDummy, 000h	; originally: scr00_PrintTalk: call PrintSeg:ShiftJIS2JIS
-	dw	RelocDummy, 000h	; originally: scr00_PrintTalk: call PrintSeg:PrintFontChar
+	dw	RelocDummy, 000h	; originally: scr00_PrintDTalk: call PrintSeg:ShiftJIS2JIS
+	dw	RelocDummy, 000h	; originally: scr00_PrintDTalk: call PrintSeg:PrintFontChar
+	incbin "MIME.EXE", $, 0186h-($-$$)
+	dw	RelocDummy, 000h	; originally: scr02_PrintFSTalk: call PrintSeg:ShiftJIS2JIS
+	dw	RelocDummy, 000h	; originally: scr02_PrintFSTalk: call PrintSeg:PrintFontChar
 
 	incbin "MIME.EXE", $, 01CAh-($-$$)
 	; patch Print_NoData calls
@@ -78,10 +81,11 @@ saveNamePattern:
 	db	"**/** **:**  Lv**", 0, 0, 0	; shorten "Level" text to just "Lv " (save 3 characters)
 
 ; --- patch scenario script commands, part 1 ---
+; patching scr00_PrintDTalk
 	incbin "MIME.EXE", $, 70DFh - ($-$$-SEG_BASE_OFS)
-	mov	bh, 32		; patch from 16 full-width to 32 half-width characters per line
+	;mov	bh, 32		; patch from 16 full-width to 32 half-width characters per line
+	mov	bh, 31		; use 31, so that mixing half-width and full-width characters does NOT result in a text box overflow
 	incbin "MIME.EXE", $, 70E8h - ($-$$-SEG_BASE_OFS)
-; patching scr00_PrintTalk
 loc_1BD58:
 	mov	[es:41C4h], di
 	or	dl, dl
@@ -144,6 +148,7 @@ scr00_print_name:
 	jmp	short loc_1BD66
 
 scr00_ret:
+scr02_ret:	; shared code
 	add	si, byte 2
 	jmp	ScriptMainLoop
 
@@ -155,7 +160,91 @@ scr00_print_chr:
 
 	times 7174h-($-$$-SEG_BASE_OFS) db 90h
 
-; TODO: patch scr02 (and figure out what it does)
+; patching scr02_PrintFSTalk
+	incbin "MIME.EXE", $, 71EEh - ($-$$-SEG_BASE_OFS)
+	;mov	bh, 74		; patch from 37 full-width to 74 half-width characters per line
+	mov	bh, 73		; use 73, so that mixing half-width and full-width characters does NOT result in a text box overflow
+	incbin "MIME.EXE", $, 71F7h - ($-$$-SEG_BASE_OFS)
+loc_1BE67:
+	mov	[es:41C4h], di
+	or	dl, dl
+	jz	short loc_1BE72
+	add	di, byte 2
+	dec	bh
+	xor	dl, dl
+loc_1BE72:
+	xor	bl, bl
+
+loc_1BE79:
+	test	word [cs:016Eh], 1
+	jz	short loc_1BE9B
+
+	push	di
+	mov	di, 020Bh	; 020Bh = ScriptMemory
+	add	di, [cs:0170h]
+	mov	ax, [cs:di]
+	pop	di
+	or	ax, ax
+	jz	short loc_1BE9B
+
+	push	ax
+	call	scr00_print_chr
+	add	[cs:0170h], cx
+	jmp	short scr02_chr_check
+
+loc_1BE9B:
+	mov	ax, [si]
+	cmp	ax, 5C5Ch	; '\\'
+	jz	scr02_ret
+	cmp	ax, 2323h	; '##'
+	jz	short scr02_print_name
+
+	push	ax
+	call	scr00_print_chr
+	add	si, cx
+scr02_chr_check:
+	add	bl, cl
+
+	pop	cx
+	cmp	bl, bh
+	jae	short loc_1BF04
+	cmp	cx, 7A81h	; Shift-JIS closing bracket
+	jnz	short loc_1BE79
+
+	mov	dl, 1		; enforce line break
+	; Note: The code path with (bl<=7) is responsible for doing talk indentation.
+	; When there is a closing bracket within the first 7 characters,
+	; it assumes that a person is talking.
+	; In that case, the next character will be printed to X position 7 and
+	; all consecutive lines will start at X=7 as well. (instead of X=0)
+	cmp	bl, 7*2		; X position <= 7 full-width characters?
+	ja	short loc_1BEFD
+	mov	bl, 7*2		; yes - set new "base" X position
+	mov	di, 6731h	; and move draw pointer
+	mov	[es:41C4h], di
+loc_1BEF8:
+	mov	dh, bl
+	jmp	loc_1BE79
+
+loc_1BEFD:
+	mov	di, [es:41C4h]
+	jmp	short loc_1BEF8
+
+loc_1BF04:
+	or	dl, dl
+	jz	short loc_1BF0A
+	sub	bh, dh
+loc_1BF0A:
+	add	di, 5A0h
+	jmp	loc_1BE67
+
+scr02_print_name:
+	add	si, byte 2
+	or	word [cs:016Eh], byte 1
+	mov	word [cs:0170h], 0
+	jmp	loc_1BE79
+
+	times 72A1h-($-$$-SEG_BASE_OFS) db 90h
 
 
 ; --- patch save game code ---
