@@ -1,0 +1,54 @@
+Z1010.DAT - item data
+---------
+The file contains a list of item entries. Each entry is 24h bytes long.
+
+Pos	Len	Description
+00	02	item ID
+			The ID begins with 0 and is increased by 1 with every entry.
+02	02	flags
+			Bit 1 (0002h) - consumable?
+			Bit 2 (0004h) - key item?
+04	14	item name (Shift-JIS string, terminated/padded with backslashes, i.e. byte 5Ch)
+18	02	category? (can be 00..07)
+			1 - consumables 1 (HP/MP/... restoration)
+			2 - consumables 2 (magic stones and other)
+			3 - two-hand weapons?
+			4 - single-hand weapons?
+			5 - clothes
+			6 - head gear
+			7 - power coin/earrings?
+1A	02	price (buy)
+1C	02	??
+1E	02	?? (some limit, often 9999, signed value)
+20	02	?? (some limit, often 9999, signed value)
+22	02	?? (some limit, often 9999, signed value)
+
+
+Z1020.DAT - monster data
+---------
+The file contains a list of monster entries. Each entry is 48h bytes long.
+
+Pos	Len	Description
+00	02	monster ID
+			The ID begins with 0 and is increased by 1 with every entry.
+02	06	graphics file title (without file extension)
+			This specifies which .GTA file the monster uses.
+			It is a null-terminated string and thus can only be up to 5 bytes long.
+08	16	monster name (Shift-JIS string, terminated/padded with backslashes, i.e. byte 5Ch)
+1E	02	??
+20	02	??
+22	02	??
+24	02	??
+26	02	??
+28	02	??
+2A	02	??
+2C	02	??
+2E	04	??
+32	04	??
+36	04	??
+3A	04	??
+3E	02	??
+40	02	??
+42	02	??
+44	02	??
+46	02	??
