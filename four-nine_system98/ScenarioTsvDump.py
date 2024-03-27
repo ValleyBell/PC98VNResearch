@@ -313,6 +313,9 @@ def generate_message_table(cmd_list: list, label_list: list) -> list:
 			lname = citem.params[2].data.casefold()
 			add_ref_label(ref_labels, lname, 0x01, cid)	# referenced by "print" -> good
 			print_before_label = lname
+		elif cmdName == "STRCPYI":
+			lname = citem.params[1].data.casefold()
+			add_ref_label(ref_labels, lname, 0x01, cid)
 		elif cmdName == "TBOPEN":
 			tb_id = citem.params[0].data
 			tb_width = citem.params[3].data

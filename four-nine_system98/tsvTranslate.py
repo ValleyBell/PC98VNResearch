@@ -309,7 +309,7 @@ def translate_text(text: str) -> str:
 	#return unicodedata.normalize("NFKC", text)
 	
 	if (translate_req_id % 10) == 0 and translate_req_id > 0:
-		print("Waiting a bit ...")
+		print("Waiting a bit ...", end="", flush=True)
 		time.sleep(60)
 
 	req = requests.get("https://translate.google.com/m",

@@ -69,7 +69,8 @@ def tsv2textitems(tsv_data: list) -> list:
 		text = cols[5]
 		if last_label != lblname:
 			if tstr is not None:
-				textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
+				# stripping the \n ensures the correct termination for "open-ended" lines (ending with a backslash)
+				textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr.rstrip('\n')}]
 			last_label = lblname
 			tlid_start = lid
 			tstr = ""
@@ -82,7 +83,7 @@ def tsv2textitems(tsv_data: list) -> list:
 			tstr = None
 			last_label = None
 	if tstr is not None:
-		textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr}]
+		textitem_list += [{"line_st": tlid_start, "line_end": tlid_end, "mode": tsv_data[tlid_start][3], "text": tstr.rstrip('\n')}]
 	
 	return textitem_list
 
@@ -99,6 +100,8 @@ def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, 
 	(tb_width, tb_height) = tb_size_int
 	if config.textsize_check == 1:
 		(xpos, ypos) = text_size
+		if len(lines) > 0 and len(lines[-1]) == 0:
+			ypos -= 1	# ignore last line when empty
 		if xpos <= tb_width and ypos <= tb_height:
 			return
 		print(f"TSV line {1+txitm['line_st']}: New text ({xpos}x{ypos}) " \
@@ -154,6 +157,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 		# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
 		last_word_lpos = pos	# character position (in *line*) of the beginning of the last "word"
 		last_word_xpos = xpos	# text X position of the beginning of the last "word"
+		param_bytes = 0
 		while pos < len(text):
 			chrlen = 1
 			chrwidth = 0
@@ -167,14 +171,29 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				ctrl_chr = text[pos + 1]
 				chrlen += 1
 				if ctrl_chr == 'x':
-					ccode = int(text[pos+chrlen : pos+chrlen+2], 0x10)
+					ctrl_chr += text[pos+chrlen : pos+chrlen+2].upper()
+					ccode = int(ctrl_chr[1:], 0x10)
 					if ccode >= 0x20:
-						chrwidth = get_cjk_char_width(chr(ccode))
-					elif ccode == 0x04:
-						chrwidth = 6	# assume up to 8 chars for names
-					elif ccode == 0x05:
-						chrwidth = 6	# assume up to 6 chars for numbers (5 digits + sign)
+						chrwidth = 1	# assume half-width (full-width characters will take 2 bytes)
+					elif ccode == 0x01:
+						ctrl_chr = 'e'	# paragraph end
+					elif ccode == 0x02:
+						ctrl_chr = 'w'	# wait
+					elif ccode == 0x03:
+						ctrl_chr = 'c'	# set colour
+					elif ccode == 0x09:
+						ctrl_chr = 't'	# tab
+					elif ccode == 0x0A:
+						ctrl_chr = 'n'	# new line
+					elif ccode == 0x0B:
+						ctrl_chr = 'c'	# set portrait
+					elif ccode == 0x0D:
+						ctrl_chr = 'r'	# carriage return
 					chrlen += 2
+				
+				if param_bytes > 0:
+					chrwidth = 0
+					param_bytes -= 1
 				elif ctrl_chr == 'j':
 					chrwidth = 2	# assume full-width emoji / custom PC-98 font character
 					chrlen += 4
@@ -186,6 +205,14 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					ccode = int(text[pos+chrlen : pos+chrlen+8], 0x10)
 					chrwidth = get_cjk_char_width(chr(ccode))
 					chrlen += 8
+				elif ctrl_chr == 'x04':
+					chrwidth = 8-2	# assume up to 8 chars for names
+					param_bytes = 1
+				elif ctrl_chr == 'x05':
+					chrwidth = 6	# assume up to 6 chars for numbers (5 digits + sign)
+					param_bytes = 2
+				elif ctrl_chr == 't':	# tab
+					chrwidth = 8
 				elif ctrl_chr == 'r':	# new line
 					lines[-1] += text[pos : pos+chrlen]
 					#lines[-1] += f"<r{len(lines) - tbox_ybase}/{tb_height}>"
@@ -209,9 +236,6 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				elif ctrl_chr == '\n':	# new TSV line
 					pos += chrlen
 					continue
-				elif ctrl_chr == 'c':	# set colour
-					xpos -= 1	# This and the following byte don't affect the cursor.
-					# I can't modify chrlen here, because the following byte is a separate "token" of variable length.
 				elif ctrl_chr == 'e':	# paragraph end (wait + clear textbox)
 					lines[-1] += text[pos : pos+chrlen]
 					pos += chrlen
@@ -228,14 +252,23 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					last_word_lpos = pos
 					last_word_xpos = xpos
 					continue
+				elif ctrl_chr in ['c', 'p', 'x03', 'x06', 'x08', 'x0B', 'x0C', 'x0E']:
+					param_bytes = 1
+				elif ctrl_chr == 'x0F':
+					# possible improvement: handle System-98 meta commands properly
+					param_bytes = 2
 			elif ord(text[pos]) >= 0x20:
-				chrwidth = get_cjk_char_width(text[pos])
-				if text[pos].isspace():
-					no_linebreak_now = True	# prevent line breaks before spaces
-					last_word_lpos = len(lines[-1]) + chrlen
-					last_word_xpos = xpos + chrwidth
+				if param_bytes > 0:
+					param_bytes -= 1
+				else:
+					chrwidth = get_cjk_char_width(text[pos])
+					if text[pos].isspace():
+						no_linebreak_now = True	# prevent line breaks before spaces
+						last_word_lpos = len(lines[-1]) + chrlen
+						last_word_xpos = xpos + chrwidth
+			#print(f"CPos {pos}, XPos {xpos}, Lines {len(lines)}, NextChr: '{text[pos:pos+chrlen]}' (width {chrwidth}), LastLine: {lines[-1]}")
 			
-			if len(lines) - tbox_ybase == tb_height:
+			if False and (len(lines) - tbox_ybase == tb_height):
 				# on the last line of the text box, reserve 2 "characters" for the
 				# icon that tells the user to press a key
 				tb_line_width = tb_width - 2
@@ -243,6 +276,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				tb_line_width = tb_width
 			if can_add_linebreaks and (xpos + chrwidth > tb_line_width) and not no_linebreak_now:
 				# add line breaks only in "txt" mode
+				#print(f"    split ({xpos + chrwidth} > {tb_line_width}), word chr-pos {last_word_lpos}, word X-pos {last_word_xpos}, maxlen {tb_width*0.75-4}")
 				newline_code = "\\r"	# default: continue on next line
 				if len(lines) - tbox_ybase >= tb_height:
 					if config.extend_mode == 1:
@@ -258,10 +292,11 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 						tbox_ybase += 1
 				#newline_code = newline_code + f"<?{len(lines) - tbox_ybase}/{tb_height}>"
 				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace() or \
-					(last_word_xpos < tb_width*0.7):
+					(last_word_xpos < (tb_width*0.75 - 4)):
 					# (a) there were no spaces OR
 					# (b) the only spaces were indentation OR
 					# (c) the last word is very long (more than 30% of the line)
+					#     (approximating "30%" with "25% + 4 characters" here for better behaviour with short text boxes)
 					# -> just break in the middle of the word
 					#print(f"Line break after: {str(lines)}")
 					lines[-1] += newline_code + "\\"
