@@ -67,7 +67,7 @@ def dump_item_file(fn_in: str, fn_out: str) -> int:
 			iname_sjis = iname_sjis[:cpos]
 		iname = iname_sjis.decode("cp932")
 		
-		linedata = [fntitle_in, f"0x{namepos:04X}", f"item_{iid}", "sel", f"{namelen}x1", iname]
+		linedata = [fntitle_in, f"0x{namepos:04X}", f"itm_{iid:03}", "sel", f"{namelen}x1", iname]
 		lines += ["\t".join(linedata) + "\n"]
 	try:
 		write_tsv(fn_out, lines)
@@ -101,7 +101,7 @@ def dump_monster_file(fn_in: str, fn_out: str) -> int:
 			iname_sjis = iname_sjis[:cpos]
 		iname = iname_sjis.decode("cp932")
 		
-		linedata = [fntitle_in, f"0x{namepos:04X}", f"item_{iid}", "sel", f"{namelen}x1", iname]
+		linedata = [fntitle_in, f"0x{namepos:04X}", f"mnst_{iid:02}", "sel", f"{namelen}x1", iname]
 		lines += ["\t".join(linedata) + "\n"]
 	try:
 		write_tsv(fn_out, lines)

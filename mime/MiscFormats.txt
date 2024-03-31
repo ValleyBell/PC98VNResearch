@@ -9,16 +9,19 @@ Pos	Len	Description
 			Bit 1 (0002h) - consumable?
 			Bit 2 (0004h) - key item?
 04	14	item name (Shift-JIS string, terminated/padded with backslashes, i.e. byte 5Ch)
-18	02	category? (can be 00..07)
-			1 - consumables 1 (HP/MP/... restoration)
-			2 - consumables 2 (magic stones and other)
-			3 - two-hand weapons?
-			4 - single-hand weapons?
-			5 - clothes
-			6 - head gear
-			7 - power coin/earrings?
-1A	02	price (buy)
-1C	02	??
+18	02	category (can be 00..07)
+			0 - unused slot
+			1 - consumable (HP/MP/... restoration)
+			2 - single-use item (magic stones and other)
+			3 - weapon (right hand)
+			4 - weapon (left hand)
+			5 - armor
+			6 - helmet
+			7 - amulet
+1A	02	price
+			This is the price for buying an item.
+			Items can be sold for half of their price. (result is rounded down)
+1C	02	sub-category?
 1E	02	?? (some limit, often 9999, signed value)
 20	02	?? (some limit, often 9999, signed value)
 22	02	?? (some limit, often 9999, signed value)

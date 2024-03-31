@@ -1,0 +1,91 @@
+#file	offset	label	type	textbox	string
+Z1020.DEC	0x0008	mnst_00	sel	22x1	Green Slime
+Z1020.DEC	0x0050	mnst_01	sel	22x1	Petit Plant
+Z1020.DEC	0x0098	mnst_02	sel	22x1	Rabbit Warrior
+Z1020.DEC	0x00E0	mnst_03	sel	22x1	Trent Jr.
+Z1020.DEC	0x0128	mnst_04	sel	22x1	Slowly.
+Z1020.DEC	0x0170	mnst_05	sel	22x1	Puuu
+Z1020.DEC	0x01B8	mnst_06	sel	22x1	9-bee
+Z1020.DEC	0x0200	mnst_07	sel	22x1	6-bee
+Z1020.DEC	0x0248	mnst_08	sel	22x1	Two-Head Caterpillar
+Z1020.DEC	0x0290	mnst_09	sel	22x1	Mage Mantis
+Z1020.DEC	0x02D8	mnst_10	sel	22x1	Chibi Knight
+Z1020.DEC	0x0320	mnst_11	sel	22x1	Mohawk Pig
+Z1020.DEC	0x0368	mnst_12	sel	22x1	Lizard Worm
+Z1020.DEC	0x03B0	mnst_13	sel	22x1	Mandragora Husband
+Z1020.DEC	0x03F8	mnst_14	sel	22x1	Mandragora Child
+Z1020.DEC	0x0440	mnst_15	sel	22x1	Cat Prong
+Z1020.DEC	0x0488	mnst_16	sel	22x1	Spirit of Cold
+Z1020.DEC	0x04D0	mnst_17	sel	22x1	March Hare
+Z1020.DEC	0x0518	mnst_18	sel	22x1	Shinkai 98
+Z1020.DEC	0x0560	mnst_19	sel	22x1	Achikame
+Z1020.DEC	0x05A8	mnst_20	sel	22x1	Slay Master
+Z1020.DEC	0x05F0	mnst_21	sel	22x1	Wyvern
+Z1020.DEC	0x0638	mnst_22	sel	22x1	Puppuuu
+Z1020.DEC	0x0680	mnst_23	sel	22x1	Chimera
+Z1020.DEC	0x06C8	mnst_24	sel	22x1	Toroi Rocking Horse
+Z1020.DEC	0x0710	mnst_25	sel	22x1	Teddy Bear
+Z1020.DEC	0x0758	mnst_26	sel	22x1	Marionette
+Z1020.DEC	0x07A0	mnst_27	sel	22x1	Cursed Doll
+Z1020.DEC	0x07E8	mnst_28	sel	22x1	Toy Soldiers
+Z1020.DEC	0x0830	mnst_29	sel	22x1	Humpty Dumpty
+Z1020.DEC	0x0878	mnst_30	sel	22x1	Coins
+Z1020.DEC	0x08C0	mnst_31	sel	22x1	Mandragora Beauty
+Z1020.DEC	0x0908	mnst_32	sel	22x1	Mandragoranosuke
+Z1020.DEC	0x0950	mnst_33	sel	22x1	I'm a Plate Man
+Z1020.DEC	0x0998	mnst_34	sel	22x1	Vs.
+Z1020.DEC	0x09E0	mnst_35	sel	22x1	Gel Golem
+Z1020.DEC	0x0A28	mnst_36	sel	22x1	Extra Fin
+Z1020.DEC	0x0A70	mnst_37	sel	22x1	Mermaid
+Z1020.DEC	0x0AB8	mnst_38	sel	22x1	Dizzy Jellyfish
+Z1020.DEC	0x0B00	mnst_39	sel	22x1	Genki Shellfish
+Z1020.DEC	0x0B48	mnst_40	sel	22x1	Colored Shellfish
+Z1020.DEC	0x0B90	mnst_41	sel	22x1	Daphnia
+Z1020.DEC	0x0BD8	mnst_42	sel	22x1	Plankton
+Z1020.DEC	0x0C20	mnst_43	sel	22x1	Siren
+Z1020.DEC	0x0C68	mnst_44	sel	22x1	Stone Golem
+Z1020.DEC	0x0CB0	mnst_45	sel	22x1	Sleepiness
+Z1020.DEC	0x0CF8	mnst_46	sel	22x1	Silent Knight
+Z1020.DEC	0x0D40	mnst_47	sel	22x1	Black Queen
+Z1020.DEC	0x0D88	mnst_48	sel	22x1	White King
+Z1020.DEC	0x0DD0	mnst_49	sel	22x1	Colored Shellfish
+Z1020.DEC	0x0E18	mnst_50	sel	22x1	Shadow
+Z1020.DEC	0x0E60	mnst_51	sel	22x1	Kagema
+Z1020.DEC	0x0EA8	mnst_52	sel	22x1	Kagehiyo
+Z1020.DEC	0x0EF0	mnst_53	sel	22x1	Gargoyle
+Z1020.DEC	0x0F38	mnst_54	sel	22x1	Skull Collector
+Z1020.DEC	0x0F80	mnst_55	sel	22x1	Soul Hunter
+Z1020.DEC	0x0FC8	mnst_56	sel	22x1	Salamander
+Z1020.DEC	0x1010	mnst_57	sel	22x1	Goblin Half
+Z1020.DEC	0x1058	mnst_58	sel	22x1	Arachne
+Z1020.DEC	0x10A0	mnst_59	sel	22x1	Water Spirit (male)
+Z1020.DEC	0x10E8	mnst_60	sel	22x1	Water Sprt. (female)
+Z1020.DEC	0x1130	mnst_61	sel	22x1	Water Guard General
+Z1020.DEC	0x1178	mnst_62	sel	22x1	Fire Spirit (male)
+Z1020.DEC	0x11C0	mnst_63	sel	22x1	Fire Spirit (female)
+Z1020.DEC	0x1208	mnst_64	sel	22x1	Flame Guard General
+Z1020.DEC	0x1250	mnst_65	sel	22x1	Earth Spirit (male)
+Z1020.DEC	0x1298	mnst_66	sel	22x1	Earth Sprt. (female)
+Z1020.DEC	0x12E0	mnst_67	sel	22x1	Wind Spirit (male)
+Z1020.DEC	0x1328	mnst_68	sel	22x1	Wind Spirit (female)
+Z1020.DEC	0x1370	mnst_69	sel	22x1	Wind Guard General
+Z1020.DEC	0x13B8	mnst_70	sel	22x1	Virus
+Z1020.DEC	0x1400	mnst_71	sel	22x1	Merkt
+Z1020.DEC	0x1448	mnst_72	sel	22x1	Ｓ・Ｂ・Ｓ
+Z1020.DEC	0x1490	mnst_73	sel	22x1	Dark Wizard
+Z1020.DEC	0x14D8	mnst_74	sel	22x1	Blood Ax
+Z1020.DEC	0x1520	mnst_75	sel	22x1	Devil Messenger
+Z1020.DEC	0x1568	mnst_76	sel	22x1	Man Eater
+Z1020.DEC	0x15B0	mnst_77	sel	22x1	Death Knight
+Z1020.DEC	0x15F8	mnst_78	sel	22x1	Goddess
+Z1020.DEC	0x1640	mnst_79	sel	22x1	Earth God
+Z1020.DEC	0x1688	mnst_80	sel	22x1	Other-World Morito
+Z1020.DEC	0x16D0	mnst_81	sel	22x1	Vampire Jellyfish
+Z1020.DEC	0x1718	mnst_82	sel	22x1	Hell Cloud
+Z1020.DEC	0x1760	mnst_83	sel	22x1	Other-World Person
+Z1020.DEC	0x17A8	mnst_84	sel	22x1	Plant Worm
+Z1020.DEC	0x17F0	mnst_85	sel	22x1	Heavy Machine God
+Z1020.DEC	0x1838	mnst_86	sel	22x1	Blue Demon
+Z1020.DEC	0x1880	mnst_87	sel	22x1	Demon Spider
+Z1020.DEC	0x18C8	mnst_88	sel	22x1	Chimera Master
+Z1020.DEC	0x1910	mnst_89	sel	22x1	God Eater

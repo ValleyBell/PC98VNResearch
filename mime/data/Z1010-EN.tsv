@@ -1,0 +1,301 @@
+#file	offset	label	type	textbox	string
+Z1010.DEC	0x0004	itm_000	sel	20x1	Dagashi
+Z1010.DEC	0x0028	itm_001	sel	20x1	Sweets
+Z1010.DEC	0x004C	itm_002	sel	20x1	Garlic
+Z1010.DEC	0x0070	itm_003	sel	20x1	Garlic Tabo
+Z1010.DEC	0x0094	itm_004	sel	20x1	Garlic Super
+Z1010.DEC	0x00B8	itm_005	sel	20x1	
+Z1010.DEC	0x00DC	itm_006	sel	20x1	Ponkee Cane
+Z1010.DEC	0x0100	itm_007	sel	20x1	Fairy Dust
+Z1010.DEC	0x0124	itm_008	sel	20x1	
+Z1010.DEC	0x0148	itm_009	sel	20x1	Garanachoco
+Z1010.DEC	0x016C	itm_010	sel	20x1	Chinese Man
+Z1010.DEC	0x0190	itm_011	sel	20x1	Chocolate
+Z1010.DEC	0x01B4	itm_012	sel	20x1	Cookie
+Z1010.DEC	0x01D8	itm_013	sel	20x1	Rice ball
+Z1010.DEC	0x01FC	itm_014	sel	20x1	Mother's Rice Ball
+Z1010.DEC	0x0220	itm_015	sel	20x1	Mabotin
+Z1010.DEC	0x0244	itm_016	sel	20x1	Great Mabotin
+Z1010.DEC	0x0268	itm_017	sel	20x1	Yosaku Rice Balls
+Z1010.DEC	0x028C	itm_018	sel	20x1	Mabotin Imitation 
+Z1010.DEC	0x02B0	itm_019	sel	20x1	
+Z1010.DEC	0x02D4	itm_020	sel	20x1	
+Z1010.DEC	0x02F8	itm_021	sel	20x1	
+Z1010.DEC	0x031C	itm_022	sel	20x1	Mandragora's Elixr
+Z1010.DEC	0x0340	itm_023	sel	20x1	Proto. Devil Fruit
+Z1010.DEC	0x0364	itm_024	sel	20x1	Imprv. Devil Fruit
+Z1010.DEC	0x0388	itm_025	sel	20x1	Tree of Life Fruit
+Z1010.DEC	0x03AC	itm_026	sel	20x1	Muscle Train Cast
+Z1010.DEC	0x03D0	itm_027	sel	20x1	Wise Man Nail Scum
+Z1010.DEC	0x03F4	itm_028	sel	20x1	Fruit of Swiftness
+Z1010.DEC	0x0418	itm_029	sel	20x1	Tree of Pwr. Fruit
+Z1010.DEC	0x043C	itm_030	sel	20x1	Wallet of Ruin
+Z1010.DEC	0x0460	itm_031	sel	20x1	Demon King Majesty
+Z1010.DEC	0x0484	itm_032	sel	20x1	Book of Wise Men
+Z1010.DEC	0x04A8	itm_033	sel	20x1	Emblem of Brave
+Z1010.DEC	0x04CC	itm_034	sel	20x1	Hungry Drum
+Z1010.DEC	0x04F0	itm_035	sel	20x1	Whisper of Nightm.
+Z1010.DEC	0x0514	itm_036	sel	20x1	Return Mirror
+Z1010.DEC	0x0538	itm_037	sel	20x1	Chappa Chups
+Z1010.DEC	0x055C	itm_038	sel	20x1	Silver-Queen Sign
+Z1010.DEC	0x0580	itm_039	sel	20x1	Dark Dice
+Z1010.DEC	0x05A4	itm_040	sel	20x1	Cursed Harmonica
+Z1010.DEC	0x05C8	itm_041	sel	20x1	Spirit's Blessing
+Z1010.DEC	0x05EC	itm_042	sel	20x1	
+Z1010.DEC	0x0610	itm_043	sel	20x1	
+Z1010.DEC	0x0634	itm_044	sel	20x1	
+Z1010.DEC	0x0658	itm_045	sel	20x1	
+Z1010.DEC	0x067C	itm_046	sel	20x1	
+Z1010.DEC	0x06A0	itm_047	sel	20x1	Sorghum
+Z1010.DEC	0x06C4	itm_048	sel	20x1	Golden Apple
+Z1010.DEC	0x06E8	itm_049	sel	20x1	7-Colored Beads
+Z1010.DEC	0x070C	itm_050	sel	20x1	Corner of Utica
+Z1010.DEC	0x0730	itm_051	sel	20x1	Diet Cookies
+Z1010.DEC	0x0754	itm_052	sel	20x1	Drawer Key
+Z1010.DEC	0x0778	itm_053	sel	20x1	
+Z1010.DEC	0x079C	itm_054	sel	20x1	Broken Boy Doll
+Z1010.DEC	0x07C0	itm_055	sel	20x1	
+Z1010.DEC	0x07E4	itm_056	sel	20x1	
+Z1010.DEC	0x0808	itm_057	sel	20x1	
+Z1010.DEC	0x082C	itm_058	sel	20x1	
+Z1010.DEC	0x0850	itm_059	sel	20x1	
+Z1010.DEC	0x0874	itm_060	sel	20x1	
+Z1010.DEC	0x0898	itm_061	sel	20x1	
+Z1010.DEC	0x08BC	itm_062	sel	20x1	
+Z1010.DEC	0x08E0	itm_063	sel	20x1	
+Z1010.DEC	0x0904	itm_064	sel	20x1	Water
+Z1010.DEC	0x0928	itm_065	sel	20x1	
+Z1010.DEC	0x094C	itm_066	sel	20x1	Hokekemohero Drug
+Z1010.DEC	0x0970	itm_067	sel	20x1	Utica Earrings
+Z1010.DEC	0x0994	itm_068	sel	20x1	Unusual Skull
+Z1010.DEC	0x09B8	itm_069	sel	20x1	Super Rare Skull
+Z1010.DEC	0x09DC	itm_070	sel	20x1	
+Z1010.DEC	0x0A00	itm_071	sel	20x1	
+Z1010.DEC	0x0A24	itm_072	sel	20x1	
+Z1010.DEC	0x0A48	itm_073	sel	20x1	
+Z1010.DEC	0x0A6C	itm_074	sel	20x1	Wind Stone
+Z1010.DEC	0x0A90	itm_075	sel	20x1	Guardian Stone
+Z1010.DEC	0x0AB4	itm_076	sel	20x1	Shadow Stone
+Z1010.DEC	0x0AD8	itm_077	sel	20x1	Water Stone
+Z1010.DEC	0x0AFC	itm_078	sel	20x1	Harmony Stone
+Z1010.DEC	0x0B20	itm_079	sel	20x1	Concentrat. Stone
+Z1010.DEC	0x0B44	itm_080	sel	20x1	Fire Stone
+Z1010.DEC	0x0B68	itm_081	sel	20x1	Sacred Stone
+Z1010.DEC	0x0B8C	itm_082	sel	20x1	Dispersion Stone
+Z1010.DEC	0x0BB0	itm_083	sel	20x1	Earth Stone
+Z1010.DEC	0x0BD4	itm_084	sel	20x1	Light Stone
+Z1010.DEC	0x0BF8	itm_085	sel	20x1	Destruction Stone
+Z1010.DEC	0x0C1C	itm_086	sel	20x1	Magic Stone
+Z1010.DEC	0x0C40	itm_087	sel	20x1	Chinto Namakura(R)
+Z1010.DEC	0x0C64	itm_088	sel	20x1	Dagger
+Z1010.DEC	0x0C88	itm_089	sel	20x1	Short Sword
+Z1010.DEC	0x0CAC	itm_090	sel	20x1	Kunai (L)
+Z1010.DEC	0x0CD0	itm_091	sel	20x1	Monk ChkMood Staff
+Z1010.DEC	0x0CF4	itm_092	sel	20x1	Kodachi (R)
+Z1010.DEC	0x0D18	itm_093	sel	20x1	Long Sword
+Z1010.DEC	0x0D3C	itm_094	sel	20x1	Yosaku's Ax (L)
+Z1010.DEC	0x0D60	itm_095	sel	20x1	Mace
+Z1010.DEC	0x0D84	itm_096	sel	20x1	Water Gun
+Z1010.DEC	0x0DA8	itm_097	sel	20x1	Shuriken (L)
+Z1010.DEC	0x0DCC	itm_098	sel	20x1	Evil Sword
+Z1010.DEC	0x0DF0	itm_099	sel	20x1	Iron Pipe
+Z1010.DEC	0x0E14	itm_100	sel	20x1	Shinobi Sword (R)
+Z1010.DEC	0x0E38	itm_101	sel	20x1	Rapier
+Z1010.DEC	0x0E5C	itm_102	sel	20x1	Master Sword
+Z1010.DEC	0x0E80	itm_103	sel	20x1	Shadow NinjaSwd(R)
+Z1010.DEC	0x0EA4	itm_104	sel	20x1	Shamshir
+Z1010.DEC	0x0EC8	itm_105	sel	20x1	Jitte (R)
+Z1010.DEC	0x0EEC	itm_106	sel	20x1	Manji Shuriken (L)
+Z1010.DEC	0x0F10	itm_107	sel	20x1	Devil's Sword
+Z1010.DEC	0x0F34	itm_108	sel	20x1	Aqua Sword
+Z1010.DEC	0x0F58	itm_109	sel	20x1	Harp of the End
+Z1010.DEC	0x0F7C	itm_110	sel	20x1	MC Hammer
+Z1010.DEC	0x0FA0	itm_111	sel	20x1	Enjoy Staff
+Z1010.DEC	0x0FC4	itm_112	sel	20x1	Flame Dancing Swd.
+Z1010.DEC	0x0FE8	itm_113	sel	20x1	Storm Sword
+Z1010.DEC	0x100C	itm_114	sel	20x1	Angel Mace
+Z1010.DEC	0x1030	itm_115	sel	20x1	Flame Killing Swd.
+Z1010.DEC	0x1054	itm_116	sel	20x1	Night Sword
+Z1010.DEC	0x1078	itm_117	sel	20x1	Demonic Sword (L)
+Z1010.DEC	0x109C	itm_118	sel	20x1	Kouma Shuriken (L)
+Z1010.DEC	0x10C0	itm_119	sel	20x1	MoonlitNight Staff
+Z1010.DEC	0x10E4	itm_120	sel	20x1	Zantetsuken (L)
+Z1010.DEC	0x1108	itm_121	sel	20x1	Black Drgn Swd.(R)
+Z1010.DEC	0x112C	itm_122	sel	20x1	Fms. Tsukimaru (L)
+Z1010.DEC	0x1150	itm_123	sel	20x1	Phantom Cane
+Z1010.DEC	0x1174	itm_124	sel	20x1	Crimson Sword
+Z1010.DEC	0x1198	itm_125	sel	20x1	Cane of Utica
+Z1010.DEC	0x11BC	itm_126	sel	20x1	Felion Sword
+Z1010.DEC	0x11E0	itm_127	sel	20x1	Hero's Sword
+Z1010.DEC	0x1204	itm_128	sel	20x1	Riot Saber
+Z1010.DEC	0x1228	itm_129	sel	20x1	
+Z1010.DEC	0x124C	itm_130	sel	20x1	
+Z1010.DEC	0x1270	itm_131	sel	20x1	
+Z1010.DEC	0x1294	itm_132	sel	20x1	
+Z1010.DEC	0x12B8	itm_133	sel	20x1	
+Z1010.DEC	0x12DC	itm_134	sel	20x1	
+Z1010.DEC	0x1300	itm_135	sel	20x1	
+Z1010.DEC	0x1324	itm_136	sel	20x1	
+Z1010.DEC	0x1348	itm_137	sel	20x1	
+Z1010.DEC	0x136C	itm_138	sel	20x1	
+Z1010.DEC	0x1390	itm_139	sel	20x1	
+Z1010.DEC	0x13B4	itm_140	sel	20x1	
+Z1010.DEC	0x13D8	itm_141	sel	20x1	
+Z1010.DEC	0x13FC	itm_142	sel	20x1	
+Z1010.DEC	0x1420	itm_143	sel	20x1	
+Z1010.DEC	0x1444	itm_144	sel	20x1	
+Z1010.DEC	0x1468	itm_145	sel	20x1	
+Z1010.DEC	0x148C	itm_146	sel	20x1	
+Z1010.DEC	0x14B0	itm_147	sel	20x1	
+Z1010.DEC	0x14D4	itm_148	sel	20x1	Small Shield
+Z1010.DEC	0x14F8	itm_149	sel	20x1	Stylish Bracelet
+Z1010.DEC	0x151C	itm_150	sel	20x1	Heater Shield
+Z1010.DEC	0x1540	itm_151	sel	20x1	EnchantingBracelet
+Z1010.DEC	0x1564	itm_152	sel	20x1	Large Shield
+Z1010.DEC	0x1588	itm_153	sel	20x1	Arm Shield
+Z1010.DEC	0x15AC	itm_154	sel	20x1	Master Shield
+Z1010.DEC	0x15D0	itm_155	sel	20x1	Crystal Bracelet
+Z1010.DEC	0x15F4	itm_156	sel	20x1	Angel Bangle
+Z1010.DEC	0x1618	itm_157	sel	20x1	Aqua Shield
+Z1010.DEC	0x163C	itm_158	sel	20x1	Storm Shield
+Z1010.DEC	0x1660	itm_159	sel	20x1	Night Shield
+Z1010.DEC	0x1684	itm_160	sel	20x1	Demon Flame Shield
+Z1010.DEC	0x16A8	itm_161	sel	20x1	Phantom Bracelet
+Z1010.DEC	0x16CC	itm_162	sel	20x1	Hero's Shield
+Z1010.DEC	0x16F0	itm_163	sel	20x1	Earth Spirit
+Z1010.DEC	0x1714	itm_164	sel	20x1	Crimson Shield
+Z1010.DEC	0x1738	itm_165	sel	20x1	Shield of Evil
+Z1010.DEC	0x175C	itm_166	sel	20x1	Flame Spirit
+Z1010.DEC	0x1780	itm_167	sel	20x1	
+Z1010.DEC	0x17A4	itm_168	sel	20x1	
+Z1010.DEC	0x17C8	itm_169	sel	20x1	
+Z1010.DEC	0x17EC	itm_170	sel	20x1	Clothes
+Z1010.DEC	0x1810	itm_171	sel	20x1	White Tuxedo
+Z1010.DEC	0x1834	itm_172	sel	20x1	Black Tuxedo
+Z1010.DEC	0x1858	itm_173	sel	20x1	White Dress
+Z1010.DEC	0x187C	itm_174	sel	20x1	Black Dress
+Z1010.DEC	0x18A0	itm_175	sel	20x1	Nice Dress
+Z1010.DEC	0x18C4	itm_176	sel	20x1	Leather Armor
+Z1010.DEC	0x18E8	itm_177	sel	20x1	Monk-like Clothes
+Z1010.DEC	0x190C	itm_178	sel	20x1	7-Colored Dress
+Z1010.DEC	0x1930	itm_179	sel	20x1	Apprentice Costume
+Z1010.DEC	0x1954	itm_180	sel	20x1	Spc. Atk. Uniform
+Z1010.DEC	0x1978	itm_181	sel	20x1	Chain Mail
+Z1010.DEC	0x199C	itm_182	sel	20x1	Cat Pajamas
+Z1010.DEC	0x19C0	itm_183	sel	20x1	Yosaku Hanten
+Z1010.DEC	0x19E4	itm_184	sel	20x1	Master Armor
+Z1010.DEC	0x1A08	itm_185	sel	20x1	Waitress Clothes
+Z1010.DEC	0x1A2C	itm_186	sel	20x1	Black Costume
+Z1010.DEC	0x1A50	itm_187	sel	20x1	Aqua Mail
+Z1010.DEC	0x1A74	itm_188	sel	20x1	Enchanting Dress
+Z1010.DEC	0x1A98	itm_189	sel	20x1	Ninja Costume
+Z1010.DEC	0x1ABC	itm_190	sel	20x1	Armor of the Sun
+Z1010.DEC	0x1AE0	itm_191	sel	20x1	Angel's Garment
+Z1010.DEC	0x1B04	itm_192	sel	20x1	Storm Mail
+Z1010.DEC	0x1B28	itm_193	sel	20x1	Maid Clothes
+Z1010.DEC	0x1B4C	itm_194	sel	20x1	Illusion Costume
+Z1010.DEC	0x1B70	itm_195	sel	20x1	Fantasy Dress
+Z1010.DEC	0x1B94	itm_196	sel	20x1	Iga Ninja Costume
+Z1010.DEC	0x1BB8	itm_197	sel	20x1	Earthly Garment
+Z1010.DEC	0x1BDC	itm_198	sel	20x1	Suiten Costume
+Z1010.DEC	0x1C00	itm_199	sel	20x1	Hero's Armor
+Z1010.DEC	0x1C24	itm_200	sel	20x1	Crimson Armor
+Z1010.DEC	0x1C48	itm_201	sel	20x1	Windy Armor
+Z1010.DEC	0x1C6C	itm_202	sel	20x1	Fiery Armor
+Z1010.DEC	0x1C90	itm_203	sel	20x1	
+Z1010.DEC	0x1CB4	itm_204	sel	20x1	
+Z1010.DEC	0x1CD8	itm_205	sel	20x1	
+Z1010.DEC	0x1CFC	itm_206	sel	20x1	
+Z1010.DEC	0x1D20	itm_207	sel	20x1	
+Z1010.DEC	0x1D44	itm_208	sel	20x1	
+Z1010.DEC	0x1D68	itm_209	sel	20x1	
+Z1010.DEC	0x1D8C	itm_210	sel	20x1	
+Z1010.DEC	0x1DB0	itm_211	sel	20x1	
+Z1010.DEC	0x1DD4	itm_212	sel	20x1	
+Z1010.DEC	0x1DF8	itm_213	sel	20x1	
+Z1010.DEC	0x1E1C	itm_214	sel	20x1	
+Z1010.DEC	0x1E40	itm_215	sel	20x1	
+Z1010.DEC	0x1E64	itm_216	sel	20x1	
+Z1010.DEC	0x1E88	itm_217	sel	20x1	
+Z1010.DEC	0x1EAC	itm_218	sel	20x1	
+Z1010.DEC	0x1ED0	itm_219	sel	20x1	Face Mask
+Z1010.DEC	0x1EF4	itm_220	sel	20x1	Ribbon
+Z1010.DEC	0x1F18	itm_221	sel	20x1	Happiness Headband
+Z1010.DEC	0x1F3C	itm_222	sel	20x1	Hood
+Z1010.DEC	0x1F60	itm_223	sel	20x1	Safety First Met
+Z1010.DEC	0x1F84	itm_224	sel	20x1	Cat Hat
+Z1010.DEC	0x1FA8	itm_225	sel	20x1	Yosaku Tenugui
+Z1010.DEC	0x1FCC	itm_226	sel	20x1	Master Helm
+Z1010.DEC	0x1FF0	itm_227	sel	20x1	Black Hood
+Z1010.DEC	0x2014	itm_228	sel	20x1	White Flame Helmet
+Z1010.DEC	0x2038	itm_229	sel	20x1	Aqua Helm
+Z1010.DEC	0x205C	itm_230	sel	20x1	Star Slv. Headband
+Z1010.DEC	0x2080	itm_231	sel	20x1	Storm Helm
+Z1010.DEC	0x20A4	itm_232	sel	20x1	Genji's Headband
+Z1010.DEC	0x20C8	itm_233	sel	20x1	Red Dragon Helmet
+Z1010.DEC	0x20EC	itm_234	sel	20x1	Angel Ribbon
+Z1010.DEC	0x2110	itm_235	sel	20x1	Crimson Helm
+Z1010.DEC	0x2134	itm_236	sel	20x1	Red Stone Ring
+Z1010.DEC	0x2158	itm_237	sel	20x1	Phantom Tiara
+Z1010.DEC	0x217C	itm_238	sel	20x1	Iga Hood
+Z1010.DEC	0x21A0	itm_239	sel	20x1	Hero's Helmet
+Z1010.DEC	0x21C4	itm_240	sel	20x1	Wind Spirit
+Z1010.DEC	0x21E8	itm_241	sel	20x1	Ring of Light
+Z1010.DEC	0x220C	itm_242	sel	20x1	Water Spirit
+Z1010.DEC	0x2230	itm_243	sel	20x1	
+Z1010.DEC	0x2254	itm_244	sel	20x1	
+Z1010.DEC	0x2278	itm_245	sel	20x1	
+Z1010.DEC	0x229C	itm_246	sel	20x1	
+Z1010.DEC	0x22C0	itm_247	sel	20x1	
+Z1010.DEC	0x22E4	itm_248	sel	20x1	
+Z1010.DEC	0x2308	itm_249	sel	20x1	
+Z1010.DEC	0x232C	itm_250	sel	20x1	
+Z1010.DEC	0x2350	itm_251	sel	20x1	
+Z1010.DEC	0x2374	itm_252	sel	20x1	Coin of Power
+Z1010.DEC	0x2398	itm_253	sel	20x1	Doping Briefs
+Z1010.DEC	0x23BC	itm_254	sel	20x1	Doping Panties
+Z1010.DEC	0x23E0	itm_255	sel	20x1	Ring of Power
+Z1010.DEC	0x2404	itm_256	sel	20x1	Hero's Briefs
+Z1010.DEC	0x2428	itm_257	sel	20x1	Stylish Panties
+Z1010.DEC	0x244C	itm_258	sel	20x1	Master Briefs
+Z1010.DEC	0x2470	itm_259	sel	20x1	Enchant. Lingerie
+Z1010.DEC	0x2494	itm_260	sel	20x1	Yosaku's Loincloth
+Z1010.DEC	0x24B8	itm_261	sel	20x1	Ring of Evil
+Z1010.DEC	0x24DC	itm_262	sel	20x1	Marine Crystal
+Z1010.DEC	0x2500	itm_263	sel	20x1	Ring of Life
+Z1010.DEC	0x2524	itm_264	sel	20x1	Hero's Cloak
+Z1010.DEC	0x2548	itm_265	sel	20x1	Fantasy High Heels
+Z1010.DEC	0x256C	itm_266	sel	20x1	Sexy Underwear
+Z1010.DEC	0x2590	itm_267	sel	20x1	Iga Loincloth
+Z1010.DEC	0x25B4	itm_268	sel	20x1	Swift Earrings
+Z1010.DEC	0x25D8	itm_269	sel	20x1	Ring of Swiftness
+Z1010.DEC	0x25FC	itm_270	sel	20x1	Iga Muffler
+Z1010.DEC	0x2620	itm_271	sel	20x1	Crimson Feather
+Z1010.DEC	0x2644	itm_272	sel	20x1	ShineStar Talisman
+Z1010.DEC	0x2668	itm_273	sel	20x1	
+Z1010.DEC	0x268C	itm_274	sel	20x1	
+Z1010.DEC	0x26B0	itm_275	sel	20x1	
+Z1010.DEC	0x26D4	itm_276	sel	20x1	
+Z1010.DEC	0x26F8	itm_277	sel	20x1	
+Z1010.DEC	0x271C	itm_278	sel	20x1	
+Z1010.DEC	0x2740	itm_279	sel	20x1	
+Z1010.DEC	0x2764	itm_280	sel	20x1	
+Z1010.DEC	0x2788	itm_281	sel	20x1	
+Z1010.DEC	0x27AC	itm_282	sel	20x1	
+Z1010.DEC	0x27D0	itm_283	sel	20x1	
+Z1010.DEC	0x27F4	itm_284	sel	20x1	
+Z1010.DEC	0x2818	itm_285	sel	20x1	
+Z1010.DEC	0x283C	itm_286	sel	20x1	
+Z1010.DEC	0x2860	itm_287	sel	20x1	
+Z1010.DEC	0x2884	itm_288	sel	20x1	
+Z1010.DEC	0x28A8	itm_289	sel	20x1	
+Z1010.DEC	0x28CC	itm_290	sel	20x1	
+Z1010.DEC	0x28F0	itm_291	sel	20x1	
+Z1010.DEC	0x2914	itm_292	sel	20x1	
+Z1010.DEC	0x2938	itm_293	sel	20x1	
+Z1010.DEC	0x295C	itm_294	sel	20x1	
+Z1010.DEC	0x2980	itm_295	sel	20x1	
+Z1010.DEC	0x29A4	itm_296	sel	20x1	
+Z1010.DEC	0x29C8	itm_297	sel	20x1	
+Z1010.DEC	0x29EC	itm_298	sel	20x1	
+Z1010.DEC	0x2A10	itm_299	sel	20x1	

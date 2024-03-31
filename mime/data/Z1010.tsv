@@ -1,0 +1,301 @@
+#file	offset	label	type	textbox	string
+Z1010.DEC	0x0004	itm_000	sel	20x1	駄菓子
+Z1010.DEC	0x0028	itm_001	sel	20x1	お菓子
+Z1010.DEC	0x004C	itm_002	sel	20x1	にんにく
+Z1010.DEC	0x0070	itm_003	sel	20x1	にんにくたーぼ
+Z1010.DEC	0x0094	itm_004	sel	20x1	にんにくすーぱー
+Z1010.DEC	0x00B8	itm_005	sel	20x1	
+Z1010.DEC	0x00DC	itm_006	sel	20x1	ポンキーステッキ
+Z1010.DEC	0x0100	itm_007	sel	20x1	妖精の粉
+Z1010.DEC	0x0124	itm_008	sel	20x1	
+Z1010.DEC	0x0148	itm_009	sel	20x1	がらなちょこ
+Z1010.DEC	0x016C	itm_010	sel	20x1	中華マン
+Z1010.DEC	0x0190	itm_011	sel	20x1	チョコ
+Z1010.DEC	0x01B4	itm_012	sel	20x1	クッキー
+Z1010.DEC	0x01D8	itm_013	sel	20x1	おむすび
+Z1010.DEC	0x01FC	itm_014	sel	20x1	母のおむすび
+Z1010.DEC	0x0220	itm_015	sel	20x1	マボチン
+Z1010.DEC	0x0244	itm_016	sel	20x1	グレートマボチン
+Z1010.DEC	0x0268	itm_017	sel	20x1	与作のおむすび
+Z1010.DEC	0x028C	itm_018	sel	20x1	マボチンもどき
+Z1010.DEC	0x02B0	itm_019	sel	20x1	
+Z1010.DEC	0x02D4	itm_020	sel	20x1	
+Z1010.DEC	0x02F8	itm_021	sel	20x1	
+Z1010.DEC	0x031C	itm_022	sel	20x1	マンドラゴラの霊薬
+Z1010.DEC	0x0340	itm_023	sel	20x1	試作版　魔の木の実
+Z1010.DEC	0x0364	itm_024	sel	20x1	改良版　魔の木の実
+Z1010.DEC	0x0388	itm_025	sel	20x1	命の木の実
+Z1010.DEC	0x03AC	itm_026	sel	20x1	筋肉養成ギプス
+Z1010.DEC	0x03D0	itm_027	sel	20x1	賢者の爪の垢
+Z1010.DEC	0x03F4	itm_028	sel	20x1	素早さの木の実
+Z1010.DEC	0x0418	itm_029	sel	20x1	力の木の実
+Z1010.DEC	0x043C	itm_030	sel	20x1	破滅の財布
+Z1010.DEC	0x0460	itm_031	sel	20x1	魔王の威吹
+Z1010.DEC	0x0484	itm_032	sel	20x1	賢者の書
+Z1010.DEC	0x04A8	itm_033	sel	20x1	勇者の紋章
+Z1010.DEC	0x04CC	itm_034	sel	20x1	空腹のドラム
+Z1010.DEC	0x04F0	itm_035	sel	20x1	悪夢のささやき
+Z1010.DEC	0x0514	itm_036	sel	20x1	帰り鏡
+Z1010.DEC	0x0538	itm_037	sel	20x1	チャッパチュップス
+Z1010.DEC	0x055C	itm_038	sel	20x1	銀幕女王のサイン
+Z1010.DEC	0x0580	itm_039	sel	20x1	暗黒のダイス
+Z1010.DEC	0x05A4	itm_040	sel	20x1	呪いのハーモニカ
+Z1010.DEC	0x05C8	itm_041	sel	20x1	精霊の祝福
+Z1010.DEC	0x05EC	itm_042	sel	20x1	
+Z1010.DEC	0x0610	itm_043	sel	20x1	
+Z1010.DEC	0x0634	itm_044	sel	20x1	
+Z1010.DEC	0x0658	itm_045	sel	20x1	
+Z1010.DEC	0x067C	itm_046	sel	20x1	
+Z1010.DEC	0x06A0	itm_047	sel	20x1	もろこし
+Z1010.DEC	0x06C4	itm_048	sel	20x1	黄金林檎
+Z1010.DEC	0x06E8	itm_049	sel	20x1	七色の珠
+Z1010.DEC	0x070C	itm_050	sel	20x1	ユティカの角
+Z1010.DEC	0x0730	itm_051	sel	20x1	ダイエットクッキー
+Z1010.DEC	0x0754	itm_052	sel	20x1	引き出しの鍵
+Z1010.DEC	0x0778	itm_053	sel	20x1	
+Z1010.DEC	0x079C	itm_054	sel	20x1	壊れた男の子の人形
+Z1010.DEC	0x07C0	itm_055	sel	20x1	
+Z1010.DEC	0x07E4	itm_056	sel	20x1	
+Z1010.DEC	0x0808	itm_057	sel	20x1	
+Z1010.DEC	0x082C	itm_058	sel	20x1	
+Z1010.DEC	0x0850	itm_059	sel	20x1	
+Z1010.DEC	0x0874	itm_060	sel	20x1	
+Z1010.DEC	0x0898	itm_061	sel	20x1	
+Z1010.DEC	0x08BC	itm_062	sel	20x1	
+Z1010.DEC	0x08E0	itm_063	sel	20x1	
+Z1010.DEC	0x0904	itm_064	sel	20x1	お水
+Z1010.DEC	0x0928	itm_065	sel	20x1	
+Z1010.DEC	0x094C	itm_066	sel	20x1	ほけけもへろ特効薬
+Z1010.DEC	0x0970	itm_067	sel	20x1	ユティカの耳飾り
+Z1010.DEC	0x0994	itm_068	sel	20x1	珍しい頭蓋骨
+Z1010.DEC	0x09B8	itm_069	sel	20x1	超珍しい頭蓋骨
+Z1010.DEC	0x09DC	itm_070	sel	20x1	
+Z1010.DEC	0x0A00	itm_071	sel	20x1	
+Z1010.DEC	0x0A24	itm_072	sel	20x1	
+Z1010.DEC	0x0A48	itm_073	sel	20x1	
+Z1010.DEC	0x0A6C	itm_074	sel	20x1	風石
+Z1010.DEC	0x0A90	itm_075	sel	20x1	守護石
+Z1010.DEC	0x0AB4	itm_076	sel	20x1	影石
+Z1010.DEC	0x0AD8	itm_077	sel	20x1	水石
+Z1010.DEC	0x0AFC	itm_078	sel	20x1	調和石
+Z1010.DEC	0x0B20	itm_079	sel	20x1	集中石
+Z1010.DEC	0x0B44	itm_080	sel	20x1	火石
+Z1010.DEC	0x0B68	itm_081	sel	20x1	聖石
+Z1010.DEC	0x0B8C	itm_082	sel	20x1	分散石
+Z1010.DEC	0x0BB0	itm_083	sel	20x1	地石
+Z1010.DEC	0x0BD4	itm_084	sel	20x1	光石
+Z1010.DEC	0x0BF8	itm_085	sel	20x1	破壊石
+Z1010.DEC	0x0C1C	itm_086	sel	20x1	魔石
+Z1010.DEC	0x0C40	itm_087	sel	20x1	珍刀なまくら（Ｒ）
+Z1010.DEC	0x0C64	itm_088	sel	20x1	ダガー
+Z1010.DEC	0x0C88	itm_089	sel	20x1	ショートソード
+Z1010.DEC	0x0CAC	itm_090	sel	20x1	苦無　　　　（Ｌ）
+Z1010.DEC	0x0CD0	itm_091	sel	20x1	僧侶ちっく気分の杖
+Z1010.DEC	0x0CF4	itm_092	sel	20x1	小太刀　　　（Ｒ）
+Z1010.DEC	0x0D18	itm_093	sel	20x1	ロングソード
+Z1010.DEC	0x0D3C	itm_094	sel	20x1	与作の斧　　（Ｌ）
+Z1010.DEC	0x0D60	itm_095	sel	20x1	メイス
+Z1010.DEC	0x0D84	itm_096	sel	20x1	水鉄砲
+Z1010.DEC	0x0DA8	itm_097	sel	20x1	手裏剣　　　（Ｌ）
+Z1010.DEC	0x0DCC	itm_098	sel	20x1	邪悪刀
+Z1010.DEC	0x0DF0	itm_099	sel	20x1	鉄パイプ
+Z1010.DEC	0x0E14	itm_100	sel	20x1	忍の刀　　　（Ｒ）
+Z1010.DEC	0x0E38	itm_101	sel	20x1	レイピア
+Z1010.DEC	0x0E5C	itm_102	sel	20x1	マスターソード
+Z1010.DEC	0x0E80	itm_103	sel	20x1	影忍の刀　　（Ｒ）
+Z1010.DEC	0x0EA4	itm_104	sel	20x1	シャムシール
+Z1010.DEC	0x0EC8	itm_105	sel	20x1	十手　　　　（Ｒ）
+Z1010.DEC	0x0EEC	itm_106	sel	20x1	卍手裏剣　　（Ｌ）
+Z1010.DEC	0x0F10	itm_107	sel	20x1	破魔の剣
+Z1010.DEC	0x0F34	itm_108	sel	20x1	アクアソード
+Z1010.DEC	0x0F58	itm_109	sel	20x1	終末の竪琴
+Z1010.DEC	0x0F7C	itm_110	sel	20x1	ＭＣハンマー
+Z1010.DEC	0x0FA0	itm_111	sel	20x1	エンジョイスタッフ
+Z1010.DEC	0x0FC4	itm_112	sel	20x1	炎舞の剣
+Z1010.DEC	0x0FE8	itm_113	sel	20x1	ストームソード
+Z1010.DEC	0x100C	itm_114	sel	20x1	エンジェルメイス
+Z1010.DEC	0x1030	itm_115	sel	20x1	炎殺の剣
+Z1010.DEC	0x1054	itm_116	sel	20x1	ナイトソード
+Z1010.DEC	0x1078	itm_117	sel	20x1	降魔の利剣　（Ｌ）
+Z1010.DEC	0x109C	itm_118	sel	20x1	降魔手裏剣　（Ｌ）
+Z1010.DEC	0x10C0	itm_119	sel	20x1	月夜の杖
+Z1010.DEC	0x10E4	itm_120	sel	20x1	斬鉄剣　　　（Ｌ）
+Z1010.DEC	0x1108	itm_121	sel	20x1	妖刀黒龍　　（Ｒ）
+Z1010.DEC	0x112C	itm_122	sel	20x1	名刀月丸　　（Ｌ）
+Z1010.DEC	0x1150	itm_123	sel	20x1	幻の杖
+Z1010.DEC	0x1174	itm_124	sel	20x1	紅炎の剣
+Z1010.DEC	0x1198	itm_125	sel	20x1	ユティカの杖
+Z1010.DEC	0x11BC	itm_126	sel	20x1	フェリオンソード
+Z1010.DEC	0x11E0	itm_127	sel	20x1	勇者の剣
+Z1010.DEC	0x1204	itm_128	sel	20x1	ライオットセイバー
+Z1010.DEC	0x1228	itm_129	sel	20x1	
+Z1010.DEC	0x124C	itm_130	sel	20x1	
+Z1010.DEC	0x1270	itm_131	sel	20x1	
+Z1010.DEC	0x1294	itm_132	sel	20x1	
+Z1010.DEC	0x12B8	itm_133	sel	20x1	
+Z1010.DEC	0x12DC	itm_134	sel	20x1	
+Z1010.DEC	0x1300	itm_135	sel	20x1	
+Z1010.DEC	0x1324	itm_136	sel	20x1	
+Z1010.DEC	0x1348	itm_137	sel	20x1	
+Z1010.DEC	0x136C	itm_138	sel	20x1	
+Z1010.DEC	0x1390	itm_139	sel	20x1	
+Z1010.DEC	0x13B4	itm_140	sel	20x1	
+Z1010.DEC	0x13D8	itm_141	sel	20x1	
+Z1010.DEC	0x13FC	itm_142	sel	20x1	
+Z1010.DEC	0x1420	itm_143	sel	20x1	
+Z1010.DEC	0x1444	itm_144	sel	20x1	
+Z1010.DEC	0x1468	itm_145	sel	20x1	
+Z1010.DEC	0x148C	itm_146	sel	20x1	
+Z1010.DEC	0x14B0	itm_147	sel	20x1	
+Z1010.DEC	0x14D4	itm_148	sel	20x1	スモールシールド
+Z1010.DEC	0x14F8	itm_149	sel	20x1	お洒落ブレスレット
+Z1010.DEC	0x151C	itm_150	sel	20x1	ヒーターシールド
+Z1010.DEC	0x1540	itm_151	sel	20x1	魅惑のブレスレット
+Z1010.DEC	0x1564	itm_152	sel	20x1	ラージシールド
+Z1010.DEC	0x1588	itm_153	sel	20x1	アームシールド
+Z1010.DEC	0x15AC	itm_154	sel	20x1	マスターシールド
+Z1010.DEC	0x15D0	itm_155	sel	20x1	水晶のブレスレット
+Z1010.DEC	0x15F4	itm_156	sel	20x1	天使の腕輪
+Z1010.DEC	0x1618	itm_157	sel	20x1	アクアシールド
+Z1010.DEC	0x163C	itm_158	sel	20x1	ストームシールド
+Z1010.DEC	0x1660	itm_159	sel	20x1	ナイトシールド
+Z1010.DEC	0x1684	itm_160	sel	20x1	魔炎の楯
+Z1010.DEC	0x16A8	itm_161	sel	20x1	幻の腕輪
+Z1010.DEC	0x16CC	itm_162	sel	20x1	勇者の楯
+Z1010.DEC	0x16F0	itm_163	sel	20x1	地霊
+Z1010.DEC	0x1714	itm_164	sel	20x1	紅炎の楯
+Z1010.DEC	0x1738	itm_165	sel	20x1	破邪の楯
+Z1010.DEC	0x175C	itm_166	sel	20x1	炎霊
+Z1010.DEC	0x1780	itm_167	sel	20x1	
+Z1010.DEC	0x17A4	itm_168	sel	20x1	
+Z1010.DEC	0x17C8	itm_169	sel	20x1	
+Z1010.DEC	0x17EC	itm_170	sel	20x1	服
+Z1010.DEC	0x1810	itm_171	sel	20x1	ホワイトタキシード
+Z1010.DEC	0x1834	itm_172	sel	20x1	ブラックタキシード
+Z1010.DEC	0x1858	itm_173	sel	20x1	ホワイトドレス
+Z1010.DEC	0x187C	itm_174	sel	20x1	ブラックドレス
+Z1010.DEC	0x18A0	itm_175	sel	20x1	すてきなドレス
+Z1010.DEC	0x18C4	itm_176	sel	20x1	レザーアーマー
+Z1010.DEC	0x18E8	itm_177	sel	20x1	僧侶ちっく気分の服
+Z1010.DEC	0x190C	itm_178	sel	20x1	七色のドレス
+Z1010.DEC	0x1930	itm_179	sel	20x1	見習い装束
+Z1010.DEC	0x1954	itm_180	sel	20x1	特攻服
+Z1010.DEC	0x1978	itm_181	sel	20x1	チェインメイル
+Z1010.DEC	0x199C	itm_182	sel	20x1	ねこさんパジャマ
+Z1010.DEC	0x19C0	itm_183	sel	20x1	与作のはんてん
+Z1010.DEC	0x19E4	itm_184	sel	20x1	マスターアーマー
+Z1010.DEC	0x1A08	itm_185	sel	20x1	ウエイトレスの服
+Z1010.DEC	0x1A2C	itm_186	sel	20x1	黒装束
+Z1010.DEC	0x1A50	itm_187	sel	20x1	アクアメイル
+Z1010.DEC	0x1A74	itm_188	sel	20x1	魅惑のドレス
+Z1010.DEC	0x1A98	itm_189	sel	20x1	忍装束
+Z1010.DEC	0x1ABC	itm_190	sel	20x1	太陽の鎧
+Z1010.DEC	0x1AE0	itm_191	sel	20x1	天使の衣
+Z1010.DEC	0x1B04	itm_192	sel	20x1	ストームメイル
+Z1010.DEC	0x1B28	itm_193	sel	20x1	メイドの服
+Z1010.DEC	0x1B4C	itm_194	sel	20x1	幻影装束
+Z1010.DEC	0x1B70	itm_195	sel	20x1	幻のドレス
+Z1010.DEC	0x1B94	itm_196	sel	20x1	伊賀忍装束
+Z1010.DEC	0x1BB8	itm_197	sel	20x1	地天の衣
+Z1010.DEC	0x1BDC	itm_198	sel	20x1	水天装束
+Z1010.DEC	0x1C00	itm_199	sel	20x1	勇者の鎧
+Z1010.DEC	0x1C24	itm_200	sel	20x1	紅炎の鎧
+Z1010.DEC	0x1C48	itm_201	sel	20x1	風天の鎧
+Z1010.DEC	0x1C6C	itm_202	sel	20x1	炎天の鎧
+Z1010.DEC	0x1C90	itm_203	sel	20x1	
+Z1010.DEC	0x1CB4	itm_204	sel	20x1	
+Z1010.DEC	0x1CD8	itm_205	sel	20x1	
+Z1010.DEC	0x1CFC	itm_206	sel	20x1	
+Z1010.DEC	0x1D20	itm_207	sel	20x1	
+Z1010.DEC	0x1D44	itm_208	sel	20x1	
+Z1010.DEC	0x1D68	itm_209	sel	20x1	
+Z1010.DEC	0x1D8C	itm_210	sel	20x1	
+Z1010.DEC	0x1DB0	itm_211	sel	20x1	
+Z1010.DEC	0x1DD4	itm_212	sel	20x1	
+Z1010.DEC	0x1DF8	itm_213	sel	20x1	
+Z1010.DEC	0x1E1C	itm_214	sel	20x1	
+Z1010.DEC	0x1E40	itm_215	sel	20x1	
+Z1010.DEC	0x1E64	itm_216	sel	20x1	
+Z1010.DEC	0x1E88	itm_217	sel	20x1	
+Z1010.DEC	0x1EAC	itm_218	sel	20x1	
+Z1010.DEC	0x1ED0	itm_219	sel	20x1	フェースマスク
+Z1010.DEC	0x1EF4	itm_220	sel	20x1	リボン
+Z1010.DEC	0x1F18	itm_221	sel	20x1	幸せのカチューシャ
+Z1010.DEC	0x1F3C	itm_222	sel	20x1	頭巾
+Z1010.DEC	0x1F60	itm_223	sel	20x1	安全第一メット
+Z1010.DEC	0x1F84	itm_224	sel	20x1	ねこさんぼうし
+Z1010.DEC	0x1FA8	itm_225	sel	20x1	与作のてぬぐい
+Z1010.DEC	0x1FCC	itm_226	sel	20x1	マスターヘルム
+Z1010.DEC	0x1FF0	itm_227	sel	20x1	黒頭巾
+Z1010.DEC	0x2014	itm_228	sel	20x1	白炎の兜
+Z1010.DEC	0x2038	itm_229	sel	20x1	アクアヘルム
+Z1010.DEC	0x205C	itm_230	sel	20x1	星銀のカチューシャ
+Z1010.DEC	0x2080	itm_231	sel	20x1	ストームヘルム
+Z1010.DEC	0x20A4	itm_232	sel	20x1	源氏のはちまき
+Z1010.DEC	0x20C8	itm_233	sel	20x1	赤竜の兜
+Z1010.DEC	0x20EC	itm_234	sel	20x1	天使のリボン
+Z1010.DEC	0x2110	itm_235	sel	20x1	紅炎の兜
+Z1010.DEC	0x2134	itm_236	sel	20x1	紅石の輪
+Z1010.DEC	0x2158	itm_237	sel	20x1	幻のティアラ
+Z1010.DEC	0x217C	itm_238	sel	20x1	伊賀頭巾
+Z1010.DEC	0x21A0	itm_239	sel	20x1	勇者の兜
+Z1010.DEC	0x21C4	itm_240	sel	20x1	風霊
+Z1010.DEC	0x21E8	itm_241	sel	20x1	光使の輪
+Z1010.DEC	0x220C	itm_242	sel	20x1	水霊
+Z1010.DEC	0x2230	itm_243	sel	20x1	
+Z1010.DEC	0x2254	itm_244	sel	20x1	
+Z1010.DEC	0x2278	itm_245	sel	20x1	
+Z1010.DEC	0x229C	itm_246	sel	20x1	
+Z1010.DEC	0x22C0	itm_247	sel	20x1	
+Z1010.DEC	0x22E4	itm_248	sel	20x1	
+Z1010.DEC	0x2308	itm_249	sel	20x1	
+Z1010.DEC	0x232C	itm_250	sel	20x1	
+Z1010.DEC	0x2350	itm_251	sel	20x1	
+Z1010.DEC	0x2374	itm_252	sel	20x1	力のコイン
+Z1010.DEC	0x2398	itm_253	sel	20x1	ドーピングブリーフ
+Z1010.DEC	0x23BC	itm_254	sel	20x1	ドーピングパンティ
+Z1010.DEC	0x23E0	itm_255	sel	20x1	力の指輪
+Z1010.DEC	0x2404	itm_256	sel	20x1	勇者のブリーフ
+Z1010.DEC	0x2428	itm_257	sel	20x1	おしゃれなパンティ
+Z1010.DEC	0x244C	itm_258	sel	20x1	マスターブリーフ
+Z1010.DEC	0x2470	itm_259	sel	20x1	魅惑のランジェリー
+Z1010.DEC	0x2494	itm_260	sel	20x1	与作のふんどし
+Z1010.DEC	0x24B8	itm_261	sel	20x1	破邪の指輪
+Z1010.DEC	0x24DC	itm_262	sel	20x1	マリンクリスタル
+Z1010.DEC	0x2500	itm_263	sel	20x1	命の指輪
+Z1010.DEC	0x2524	itm_264	sel	20x1	勇者のマント
+Z1010.DEC	0x2548	itm_265	sel	20x1	幻のハイヒール
+Z1010.DEC	0x256C	itm_266	sel	20x1	悩殺の下着
+Z1010.DEC	0x2590	itm_267	sel	20x1	伊賀のふんどし
+Z1010.DEC	0x25B4	itm_268	sel	20x1	素早さのピアス
+Z1010.DEC	0x25D8	itm_269	sel	20x1	素早さの指輪
+Z1010.DEC	0x25FC	itm_270	sel	20x1	伊賀のマフラー
+Z1010.DEC	0x2620	itm_271	sel	20x1	紅炎の羽
+Z1010.DEC	0x2644	itm_272	sel	20x1	輝ける星の護符
+Z1010.DEC	0x2668	itm_273	sel	20x1	
+Z1010.DEC	0x268C	itm_274	sel	20x1	
+Z1010.DEC	0x26B0	itm_275	sel	20x1	
+Z1010.DEC	0x26D4	itm_276	sel	20x1	
+Z1010.DEC	0x26F8	itm_277	sel	20x1	
+Z1010.DEC	0x271C	itm_278	sel	20x1	
+Z1010.DEC	0x2740	itm_279	sel	20x1	
+Z1010.DEC	0x2764	itm_280	sel	20x1	
+Z1010.DEC	0x2788	itm_281	sel	20x1	
+Z1010.DEC	0x27AC	itm_282	sel	20x1	
+Z1010.DEC	0x27D0	itm_283	sel	20x1	
+Z1010.DEC	0x27F4	itm_284	sel	20x1	
+Z1010.DEC	0x2818	itm_285	sel	20x1	
+Z1010.DEC	0x283C	itm_286	sel	20x1	
+Z1010.DEC	0x2860	itm_287	sel	20x1	
+Z1010.DEC	0x2884	itm_288	sel	20x1	
+Z1010.DEC	0x28A8	itm_289	sel	20x1	
+Z1010.DEC	0x28CC	itm_290	sel	20x1	
+Z1010.DEC	0x28F0	itm_291	sel	20x1	
+Z1010.DEC	0x2914	itm_292	sel	20x1	
+Z1010.DEC	0x2938	itm_293	sel	20x1	
+Z1010.DEC	0x295C	itm_294	sel	20x1	
+Z1010.DEC	0x2980	itm_295	sel	20x1	
+Z1010.DEC	0x29A4	itm_296	sel	20x1	
+Z1010.DEC	0x29C8	itm_297	sel	20x1	
+Z1010.DEC	0x29EC	itm_298	sel	20x1	
+Z1010.DEC	0x2A10	itm_299	sel	20x1	
