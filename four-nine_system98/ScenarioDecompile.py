@@ -587,26 +587,39 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						if curpos in label_list:
 							break
 						ptrval = scene_read_int(scenedata, file_usage, curpos)
-						if ptrval < start_ofs:
-							# Note: Some tables begin with a "dummy" value in the range 0x00..0xFF.
-							# (Most files in Canaan use 0x80..0x8F, but there are also 0x70..0x7F used in a few files.)
-							# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" command.
-							# In this case, we have to just accept the pointer.
-							# In all other cases, we probably want to exit, so that we don't accidentally interpret code as a pointer.
-							if curpos > cmd_pos:
-								ptrval = 0xFFFF	# finish reading
-							elif not (ptrval == 0 or (ptrval >= 0x70 and ptrval <= 0x8F)):
-								print(f"Warning: Jump table dummy value 0x{ptrval:04X} at offset 0x{cmd_pos:04X}!")
-						if ptrval >= len(scenedata):
-							# remove usage mask (-> assume that we didn't process this value)
-							# important for unused code
-							file_usage[curpos+0] &= ~0x01
-							file_usage[curpos+1] &= ~0x01
-							break
+						
+						# Note: Some tables begin with a "dummy" value.
+						# (Most files in Canaan use 0x80..0x8F, but there are also 0x70..0x7F used in a few files.
+						#  In Gaogao 2, the value seems to be random offsets inside the file.)
+						# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" command.
+						# In this case, we have to just accept the pointer.
+						# In all other cases, we probably want to exit, so that we don't accidentally interpret code as a pointer.
+						dst_cmd = 0xFFFF
+						if curpos <= cmd_pos:
+							# handle 1st value
+							if ptrval < start_ofs:
+								if not (ptrval == 0 or (ptrval >= 0x70 and ptrval <= 0x8F)):
+									print(f"Warning: Jump table dummy value 0x{ptrval:04X} at offset 0x{cmd_pos:04X}!")
+							elif ptrval + 0x01 < len(scenedata):
+								dst_cmd = struct.unpack_from("<H", scenedata, ptrval)[0]
+						else:	# if curpos > cmd_pos:
+							# 2nd and later values
+							if ptrval < start_ofs:
+								ptrval = 0xFFFF	# probably code, finish reading
+							elif ptrval + 0x01 < len(scenedata):
+								dst_cmd = struct.unpack_from("<H", scenedata, ptrval)[0]
+								if dst_cmd >= 0x100:
+									ptrval = 0xFFFF	# invalid command - assume bad pointer
+							if ptrval + 0x01 >= len(scenedata):
+								# remove usage mask (-> assume that we didn't process this value)
+								# important for unused code
+								file_usage[curpos+0] &= ~0x01
+								file_usage[curpos+1] &= ~0x01
+								break
 						params += [ptrval]
 						curpos += 0x02
 						
-						if ptrval >= start_ofs:
+						if dst_cmd < 0x100:
 							label_list[ptrval] = (SCPT_JUMP, 0x00, None)
 							remaining_code_locs.append(ptrval)
 							if ptrval > cmd_pos and ptrval < endpos:
