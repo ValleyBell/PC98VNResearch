@@ -185,6 +185,26 @@ SCENE_CMD_LIST = {
 	0x8D: ("GFX8D"  , []),
 	0x8E: ("GFX8E"  , []),
 }
+TEXT_CMD_LIST = {
+	0x00: 0,
+	0x01: 0,
+	0x02: 0,
+	0x03: 1,
+	0x04: 1,
+	0x05: 2,
+	0x06: 1,
+	0x07: 0,
+	0x08: 1,
+	0x09: 0,
+	0x0A: 0,
+	0x0B: 1,
+	0x0C: 1,
+	0x0D: 0,
+	0x0E: 1,
+	0x0F: {
+		0x00: 1,
+	},
+}
 
 MODULE_PATH = os.path.dirname(__file__)
 JISCHR_COMMENTS = {}
@@ -265,10 +285,12 @@ def is_sjis_str(data: bytes) -> bool:
 		if not sjis_2nd:
 			if c >= 0x20 and c <= 0x7E:
 				pass
-			elif c <= 0x0F:
-				pass	# allow for text control commands
+			elif c >= 0xA1 and c <= 0xDF:
+				pass	# used by System98 v1 game scripts for halfwidth Katakana
 			elif c == 0x00:
 				break
+			elif c <= 0x0F:
+				pass	# allow for text control commands
 			elif (c >= 0x81 and c <= 0x9F) or (c >= 0xE0 and c <= 0xEF):
 				sjis_2nd = True
 			else:
@@ -380,19 +402,19 @@ def get_string_size(scenedata: bytes, startpos: int, endpos: int, dtype: int) ->
 			pos += 1
 			if c == 0x00:	# end
 				break
-			elif c in [0x01, 0x02, 0x07, 0x09, 0x0A, 0x0D]:
-				pass	# no parameters
-			elif c in [0x03, 0x04, 0x06, 0x08, 0x0B, 0x0C, 0x0E]:
-				pos += 1	# 1 parameter byte
-			elif c == 0x05:
-				pos += 2	# 2 parameter bytes
-			elif c == 0x0F:	# special control code
-				if pos >= endpos:
-					break
-				c = scenedata[pos]
-				pos += 1
-				if c == 0x00:
+			elif c in TEXT_CMD_LIST:
+				par_bytes = TEXT_CMD_LIST[c]
+				while type(par_bytes) is dict:
+					if pos >= endpos:
+						par_bytes = 0
+						break
+					c = scenedata[pos]
 					pos += 1
+					if c in par_bytes:
+						par_bytes = par_bytes[c]
+					else:
+						par_bytes = 0	# invalid command - assume no parameters
+				pos += par_bytes
 	return min([pos, endpos]) - startpos
 
 def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, start_ofs: int) -> int:
@@ -712,6 +734,8 @@ def generate_label_names(label_list: dict) -> None:
 	return
 
 def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
+	global necjis
+	
 	#if not config.inline_sjis_bytes:
 	#	return [(startpos, -11, str_data)]	# this line simplifies the output by inlining Shift-JIS data.
 	
@@ -724,17 +748,22 @@ def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
 	new_data = None
 	result = []
 	sjis_1st = None
+	rem_param_bytes = 0
 	chrpos = 0
 	for (pos, c) in enumerate(str_data):
 		new_type = -12
-		if sjis_1st is None:
-			if c >= 0x80:
-				sjis_1st = c
-				new_data = None
+		if type(rem_param_bytes) is dict:
+			# meta command
+			new_data = bytes([c])
+			if c in rem_param_bytes:
+				rem_param_bytes = rem_param_bytes[c]
 			else:
-				new_data = bytes([c])
-			chrpos = pos	# save start position of current character
-		else:
+				rem_param_bytes = 0	# invalid command - assume no parameters
+		elif rem_param_bytes > 0:
+			# remaining parameter bytes of text commands
+			new_data = bytes([c])
+			rem_param_bytes -= 1
+		elif sjis_1st is not None:
 			sjis = (sjis_1st << 8) | (c << 0)
 			jis = necjis.sjis2jis(sjis)
 			if (jis is not None) and (jis not in necjis.jis_uc_lut):
@@ -745,6 +774,17 @@ def get_sjis_str_items(str_data: bytes, startpos: int) -> list:
 				new_data = bytes([sjis_1st, c])
 			sjis_1st = None
 			# do NOT set chrpos
+		else:
+			if c in TEXT_CMD_LIST:
+				# text command
+				new_data = bytes([c])
+				rem_param_bytes = TEXT_CMD_LIST[c]	# text command - get number of parameter bytes
+			elif (c >= 0x81 and c <= 0x9F) or (c >= 0xE0 and c <= 0xFC):
+				sjis_1st = c
+				new_data = None
+			else:
+				new_data = bytes([c])
+			chrpos = pos	# save start position of current character
 		
 		if new_data is not None:
 			if last_type != new_type:
@@ -793,6 +833,8 @@ def str2asm_ascii(str_data: bytes) -> typing.List[str]:
 	return res_items
 
 def str2asm_sjis(str_data: bytes) -> typing.List[str]:
+	global necjis
+	
 	# convert binary array to ASM string
 	# This outputs a list of "tokens", consisting of either
 	#   - a quoted string or
@@ -800,21 +842,21 @@ def str2asm_sjis(str_data: bytes) -> typing.List[str]:
 	# This also takes care of converting Shift-JIS characters to UTF-8 where possible.
 	res_chrs = []
 	sjis_1st = None
+	rem_param_bytes = 0
 	for c in str_data:
-		if sjis_1st is None:
-			if c >= 0x80:
-				sjis_1st = c
-			elif c >= 0x20 and c <= 0x7E:
-				res_chrs.append(chr(c))
+		if type(rem_param_bytes) is dict:
+			# meta command
+			res_chrs.append(c)
+			if c in rem_param_bytes:
+				rem_param_bytes = rem_param_bytes[c]
 			else:
-				res_chrs.append(c)
-		else:
-			#try:
-			#	sjis_str = bytes([sjis_1st, c]).decode("shift-jis")
-			#except:
-			#	sjis_str = None
-			# manual conversion to catch all the special PC-9801 font ROM characters as well
-			#sjis_str = necjis.sjis_decode_str(bytes([sjis_1st, c]))
+				rem_param_bytes = 0	# invalid command - assume no parameters
+		elif rem_param_bytes > 0:
+			# remaining parameter bytes of text commands
+			res_chrs.append(c)	# just print as number
+			rem_param_bytes -= 1
+		elif sjis_1st is not None:
+			# 2nd byte of a 2-byte Shift-JIS character
 			sjis_str = necjis.sjis_decode_chr((sjis_1st << 8) | (c << 0))
 			if type(sjis_str) is str:
 				res_chrs.append(sjis_str)
@@ -822,6 +864,24 @@ def str2asm_sjis(str_data: bytes) -> typing.List[str]:
 				res_chrs.append(sjis_1st)
 				res_chrs.append(c)
 			sjis_1st = None
+		else:
+			if c in TEXT_CMD_LIST:
+				# handle text command
+				res_chrs.append(c)
+				rem_param_bytes = TEXT_CMD_LIST[c]	# text command - get number of parameter bytes
+			elif (c >= 0x81 and c <= 0x9F) or (c >= 0xE0 and c <= 0xFC):
+				sjis_1st = c
+			elif c >= 0xA1 and c <= 0xDF:
+				# special halfwidth Katakana codes (used by System-98 v1)
+				sjis_str = necjis.sjis_decode_chr(0x859F + (c - 0xA1))
+				if type(sjis_str) is str:
+					res_chrs.append(sjis_str)
+				else:
+					res_chrs.append(c)
+			elif c >= 0x20 and c <= 0x7E:
+				res_chrs.append(chr(c))	# ASCII character - print as actual text character
+			else:
+				res_chrs.append(c)	# control code - print byte as number
 	
 	res_items = []
 	mode = 0
@@ -855,7 +915,6 @@ def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 	chr_mode = None
 	new_chr_mode = None
 	rem_param_bytes = 0
-	meta_ctrl_code = None
 	result = []
 	for (idx, itm) in enumerate(data_items):
 		if itm.startswith('"'):
@@ -864,11 +923,11 @@ def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 			chr_id = int(itm, 0)
 		# ignore first character (disk drive in file names)
 		# but split at 0D/01 -> text
-		if meta_ctrl_code is not None:
-			if meta_ctrl_code == 0x0F:
-				if chr_id == 0x00:
-					rem_param_bytes = 1
-			meta_ctrl_code = None
+		if type(rem_param_bytes) is dict:
+			if chr_id in rem_param_bytes:
+				rem_param_bytes = rem_param_bytes[chr_id]
+			else:
+				rem_param_bytes = 0	# invalid command - assume no parameters
 		elif rem_param_bytes > 0:
 			rem_param_bytes -= 1
 		elif (idx > 0) and (chr_id in [0x01, 0x0A, 0x0D]):
@@ -876,12 +935,8 @@ def gen_string_groups(data_items: typing.List[str]) -> typing.List[int]:
 		elif chr_id != 0x00:	# don't split at terminator characters
 			new_chr_mode = 0
 			# handle special character codes
-			if chr_id in [0x03, 0x04, 0x06, 0x08, 0x0B, 0x0C, 0x0E]:
-				rem_param_bytes = 1	# 1 parameter byte
-			elif chr_id == 0x05:
-				rem_param_bytes = 2	# 2 parameter bytes
-			elif chr_id == 0x0F:	# special control code
-				meta_ctrl_code = chr_id
+			if chr_id in TEXT_CMD_LIST:
+				rem_param_bytes = TEXT_CMD_LIST[chr_id]
 
 		if new_chr_mode == 0 and chr_mode == 1:
 			result.append(idx)

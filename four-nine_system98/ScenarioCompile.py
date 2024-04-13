@@ -490,7 +490,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
 				elif pitem.type == TKTP_STR:
-					value = necjis.sjis_encode_str(pitem.data)
+					value = necjis.sjis_encode_str(pitem.data, config.ascii)
 					if type(value) is not bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
 						return None
@@ -530,7 +530,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
 						return None
 				elif pitem.type == TKTP_STR:
-					value = necjis.sjis_encode_str(pitem.data)
+					value = necjis.sjis_encode_str(pitem.data, config.ascii)
 					if type(value) is not bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
 						return None
@@ -842,6 +842,8 @@ def main(argv):
 	aparse.add_argument("-b", "--base-ofs", type=auto_int, help="set base/load offset of the scenario file", default=0x0000)
 	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
 	aparse.add_argument("-u", "--unscrambled", action="store_true", help="output the file unscrambled")
+	#aparse.add_argument("-a", "--ascii", action="store_true", help="use single-byte codes for ASCII and half-width Katakana")
+	aparse.add_argument("-a", "--ascii", action="store_true", help="use single-byte codes for half-width Katakana")
 	aparse.add_argument("in_file", help="input assembly file (.ASM)")
 	aparse.add_argument("out_file", help="output scenario file (.S)")
 	

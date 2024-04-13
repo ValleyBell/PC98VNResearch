@@ -123,13 +123,15 @@ class JISConverter:
 
 	# encode Python character (str) into Shift JIS character (int)
 	# returns a tuple of (Shift JIS character, consumed str characters)
-	def sjis_encode_chr(self, chr_str: str) -> typing.Union[typing.Tuple[int, int], None]:
+	def sjis_encode_chr(self, chr_str: str, short_katakana: bool = False) -> typing.Union[typing.Tuple[int, int], None]:
 		res_data = self.jis_encode_chr(chr_str)
 		if res_data is None:
 			return None
 		sjis_chr = self.jis2sjis(res_data[0])
 		if sjis_chr is None:
 			return None
+		if short_katakana and (sjis_chr >= 0x859F and sjis_chr <= 0x85DD):
+			sjis_chr = sjis_chr - 0x859F + 0xA1
 		return (sjis_chr, res_data[1])
 
 	# decode Shift JIS dat (bytes) to a Python String
@@ -139,10 +141,17 @@ class JISConverter:
 		sjis_1st = None
 		for (pos, c) in enumerate(str_data):
 			if sjis_1st is None:
-				if c >= 0x80:
-					sjis_1st = c
-				else:
+				if (c <= 0x80) or (c == 0xA0) or (c >= 0xFD):
 					res_str += chr(c)
+				elif (c >= 0xA1) and (c < 0xE0):
+					# Some games use this "shortcut" code and it is supported by the graphics chip.
+					sjis_chr = 0x859F + (c - 0xA1)
+					uchar = self.sjis_decode_chr(sjis_chr)
+					if uchar is None:
+						return (pos, res_str)
+					res_str += uchar
+				else:
+					sjis_1st = c
 			else:
 				sjis_chr = (sjis_1st << 8) | (c << 0)
 				uchar = self.sjis_decode_chr(sjis_chr)
@@ -154,11 +163,11 @@ class JISConverter:
 
 	# encode Python str into Shift JIS (bytes)
 	# returns either a "bytes" object OR a tuple of (position of unconvertable input character, converted data)
-	def sjis_encode_str(self, data: str) -> typing.Union[bytes, tuple]:
+	def sjis_encode_str(self, data: str, short_katakana: bool = False) -> typing.Union[bytes, tuple]:
 		result = bytearray()
 		idx = 0
 		while idx < len(data):
-			cdata = self.sjis_encode_chr(data[idx:])
+			cdata = self.sjis_encode_chr(data[idx:], short_katakana)
 			if cdata is None:
 				return (idx, bytes(result))
 			if cdata[0] < 0x80:

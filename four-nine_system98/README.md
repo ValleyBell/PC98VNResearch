@@ -70,6 +70,7 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
   - PC-98 font ROM 8x8 character order: upper left, lower left, upper right, lower right
   - four･nine font 8x8 character order: upper left, upper right, lower left, lower right
 - System-98 v1.x supports ASCII characters (bytes 20..7F) and prints them correctly with 8 pixels width.
+  Half-width Katakana are supported via bytes A1..DF. (same as to Shift-JIS 859F..85DD)
   However, mirrored ASCII and half-width Katakana (Shift-JIS 8540..869F) are treated as double-width and thus shown incorrectly.
 - System-98 v3.x on the other hand shows mirrored ASCII and half-width Katakana properly, but doesn't support ASCII characters. (They all show up as spaces.)
 
