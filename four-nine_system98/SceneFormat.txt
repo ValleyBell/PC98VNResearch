@@ -15,7 +15,7 @@ Commands
 --------
 00 - exit to DOS, return code 0
 	no parameters
-01 - [v1.00] text box related
+01 - [v1.xx] text box related
 	2 bytes - text box ID (00h..0Fh)
 	2 bytes - ??
 	2 bytes - ??
@@ -177,10 +177,10 @@ Commands
 	2 bytes - source register ID
 	2 bytes - register ID with X position
 	2 bytes - register ID with Y position
-2B - [v1.00] save full register buffer to file (2048 bytes)
+2B - [v1.xx] save full register buffer to file (2048 bytes)
 	2 bytes - file offset of file name
 2B - [v3.10] undefined
-2C - [v1.00] load register buffer from file (2048 bytes)
+2C - [v1.xx] load register buffer from file (2048 bytes)
 	2 bytes - file offset of file name
 2C - [v3.10] undefined
 2D - clear registers
@@ -276,7 +276,7 @@ Commands
 40 - run menu selection
 	2 bytes - register ID, receives selected menu entry
 	2 bytes - register ID, receives user action
-	2 bytes - file offset to menu data
+	2 bytes - file offset of menu data
 	2 bytes - destination file offset to continue execution at
 41 - ??
 	2 bytes - register ID -> address to word_1D1E9
@@ -288,18 +288,18 @@ Commands
 43 - ?? (screen resolution related?)
 	2 bytes - register ID <- word_1D202
 	2 bytes - register ID <- word_1D204
-44 - [v1.00] dummy (does nothing)
+44 - [v1.xx] dummy (does nothing)
 44 - [v3.10] undefined
-45 - [v1.00] some GFX effect
+45 - [v1.xx] some GFX effect
 	2 bytes - ??
 45 - [v3.10] undefined
-46 - [v1.00] same as command 56
+46 - [v1.xx] same as command 56
 46 - [v3.10] undefined
-47 - [v1.00] same as command 56
+47 - [v1.xx] same as command 56
 47 - [v3.10] undefined
-48 - [v1.00] same as command 56
+48 - [v1.xx] same as command 56
 48 - [v3.10] undefined
-49 - [v1.00] same as command 56
+49 - [v1.xx] same as command 56
 49 - [v3.10] undefined
 4A - save register buffer to file
 	2 bytes - [HB-pad] buffer (00 = buffer 1, 1000 bytes, 01..FF = buffer 2, 1048 bytes)
@@ -421,7 +421,8 @@ Commands
 68 - ?? (GFX related)
 	2 bytes - register ID
 	2 bytes - register ID
-69 - ?? (GFX related)
+69 - [v1.xx] undefined
+69 - [v3.10] ?? (GFX related)
 	2 bytes - register ID reg1, content description:
 		Bits 0..2 (0007): bit mask index (0 = 80h, 1 = 40h, ..., 7 = 01h)
 		Bits 3..15 (FFF8): value
@@ -443,17 +444,17 @@ Commands
 	2 bytes - destination register ID
 	2 bytes - source string ID
 	Puts the length of the source string (without terminator character) into the destination register.
-6F - [v1.00] convert long to 2 short registers
+6F - [v1.xx] convert long to 2 short registers
 	2 bytes - destination register ID [short]
 	2 bytes - source register ID [long]
 	Reads src, then puts the high word into src+0 and the low word into src+1. (effectively swapping the words)
 6F - [v3.10] undefined
-70 - [v1.00] read 2 short registers and save into 1 long-word register
+70 - [v1.xx] read 2 short registers and save into 1 long-word register
 	2 bytes - destination register ID [long]
 	2 bytes - source register ID [short]
 	Reads src+0 and src+1 and writes it into dst with src+0 = high word, src+1 = low word.
 70 - [v3.10] undefined
-71 - [v1.00] compare two long registers
+71 - [v1.xx] compare two long registers
 	2 bytes - register ID of reg1 [long]
 	2 bytes - register ID of reg2 [long]
 	Same as command 0C, except that two long registers are compared with their full 4-byte longwords.
@@ -483,11 +484,21 @@ Commands
 78 - set "idle animation" X/Y position
 	2 bytes - X position
 	2 bytes - Y position
-79 - ?? (copies some script data around)
-	2 bytes - ??
-7A - set script loop counter from register
+79 - [v1.00] undefined
+79 - [v1.10+] ?? (copies data to some buffer at the end of the script data)
+	2 bytes - file offset of data
+		Data format:
+			[loop start]
+				2 bytes - bit mask
+				[for each bit set] 6 bytes - some data
+				2 bytes - ??
+			[loop end]
+			2 bytes - bit mask with value 0000h
+7A - [v1.00] undefined
+7A - [v1.10+] set script loop counter from register
 	2 bytes - register ID
-7B - conditional jump based on script loop counter
+7B - [v1.00] undefined
+7B - [v1.10+] conditional jump based on script loop counter
 	2 bytes - register ID
 	2 bytes - destination file offset to continue execution at
 	The conditional jump is taken when (loop counter < register contents).
@@ -512,34 +523,42 @@ Commands
 	no parameters
 85 - ?? (some GFX transition effect)
 	no parameters
-86 - ??
-	2 bytes - file offset of ?? data
-	The data is 30h items * 12h bytes/item = 360h bytes long. All data values are 2-byte words.
+86 - set all Portrait Data (v1)
+	2 bytes - file offset of portrait data (coordinates / palette)
+	The data is 30h portrait * 12h bytes/portrait = 360h bytes long. All data values are 2-byte words.
 	The 12h data per items equals the same as the parameters to command 87 after the index.
-87 - ??
-	2 bytes - ?? (some index)
-	2 bytes - [HB-pad] ??
-	2 bytes - ?? (some X position)
-	2 bytes - ?? (some Y position)
-	2 bytes - [HB-pad] ??
-	2 bytes - [HB-pad] ??
-	2 bytes - [HB-pad] ??
-	2 bytes - [HB-pad] ??
-	2 bytes - [HB-pad] ??
-	2 bytes - [HB-pad] ??
+87 - set single Portrait Data (v1)
+	2 bytes - Portrait Index (00..3F)
+	2 bytes - [HB-pad] ?? (some mask)
+	2 bytes - portrait start column (X/8) in portrait collection image
+	2 bytes - portrait start row (Y) in portrait collection image
+	2 bytes - [HB-pad] palette 0D: red
+	2 bytes - [HB-pad] palette 0D: green
+	2 bytes - [HB-pad] palette 0D: blue
+	2 bytes - [HB-pad] palette 0E: red
+	2 bytes - [HB-pad] palette 0E: green
+	2 bytes - [HB-pad] palette 0E: blue
 	-> 14h bytes total
 88 - ?? (GFX related)
 	2 bytes - [HB-pad] GCD plane ID (0..3)
 	2 bytes - ?? (some X position)
 	2 bytes - ?? (some Y position)
-89 - [v1.10+] ?? (GFX related)
-	2 bytes - file offset of ?? data
+89 - [v1.10+] set all Portrait Data (size-optimized data)
+	2 bytes - file offset of portrait data
 	The data is 30h items * 06h bytes/item = 120h bytes long. All data values are 2-byte words.
-8A - [v1.10+] ?? (GFX related)
-	2 bytes - register ID
-	2 bytes - register ID
-	2 bytes - register ID
-	2 bytes - register ID
+	The data contains the same information as the data in for command 86. However this command stores it in the same way as the engine's internal storage.
+	Data format per line:
+		1 byte - mask (for I/O port 0A6h)
+		2 bytes - start offset in portrait collection image (= start_row * 50h + start_column)
+		2 bytes - palette data
+		1 byte - high nibble = palette 0Dh green, low nibble = palette 0Dh red
+		1 byte - high nibble = palette 0Dh blue, low nibble = palette 0Eh green
+		1 byte - high nibble = palette 0Eh red, low nibble = palette 0Eh blue
+8A - [v1.10+] set Portrait start position
+	2 bytes - register ID: portrait Index
+	2 bytes - register ID: ?? mask
+	2 bytes - register ID: start column (X/8)
+	2 bytes - register ID: start row (Y)
 8B - [v1.10+] ?? (GFX related)
 	2 bytes - register ID (contains GDC plane ID)
 	2 bytes - ?? (some X position)
@@ -557,6 +576,10 @@ Commands
 [short] - 2-byte register (ID 000h..3FFh)
 [long] - 4-byte register (ID 400h..40Ah)
 
+System-98 v1.00 supports commands 00..88.
+System-98 v1.10 supports commands 00..8C.
+System-98 v3.10 supports commands 00..8E.
+
 File names
 ----------
 - The first byte of a file name seems to be the disk drive or data archive ID and is usually ignored by the game engine. Aside from that, file names are usual null-terminated strings.
@@ -564,6 +587,7 @@ File names
 Text box strings
 ----------------
 - Strings use Shift-JIS encoding. They may include non-standard NEC-specific JIS characters, as well as custom ones from GAO4.FNT.
+- [v1.xx] All Shift-JIS characters are assumed to be full-width. (16 pixels wide) Half-width characters are supported using byte codes 20h..7Fh (ASCII) and A0h..DFh (half-width Katakana).
 - [v3.10] Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
 - Special characters:
   - 00h - end string
@@ -573,21 +597,22 @@ Text box strings
   - 04h ii - print register string ii (00/01 = character names)
   - 05h aa bb - print integer register bbaa (printed as decimal numbers, full-width Shift-JIS 854F..8558)
   - 06h - [v1.00] ignored
-  - 06h pp - [v3.10] portrait related (pp can be 00..3F)
+  - 06h pp - [v1.10+] overlay portrait (pp can be 00..3F), draws transparent portrait on top of the existing one)
   - 07h - [v1.00] ignored
-  - 07h - [v3.10] some GFX effect
+  - 07h - [v1.10+] clear portrait
   - 08h - [v1.00] ignored
-  - 08h xx - [v3.10] ?? (sets byte_1E5C6)
+  - 08h xx - [v1.10+] ?? (sets byte_1E5C6)
   - 09h - tab (print 8 spaces)
-  - 0Ah - [v1.00] scroll text by 1 line
+  - 0Ah - [v1.xx] scroll text by 1 line
   - 0Ah - [v3.10] no effect
-  - 0Bh pp - show portrait (pp can be 00..3F)
+  - 0Bh pp - show portrait (pp can be 00..3F), also loads palettes 0Dh and 0Eh from portrait memory
   - 0Ch - [v1.00] ignored
-  - 0Ch pp - [v3.10] portrait related (pp can be 00..3F)
+  - 0Ch pp - [v1.10+] show portrait (pp can be 00..3F), but does NOT load any palettes
   - 0Dh - next line
   - 0Eh - [v1.00] ignored
+  - 0Eh xx - [v1.10] ?? (related to TextRAM flags)
   - 0Eh xx - [v3.10] no effect (parameter is ignored)
-  - 0Fh - [v1.00] ignored
+  - 0Fh - [v1.xx] ignored
   - 0Fh cc - [v3.10] special code
   - 0Fh 00h xx - [v3.10] sets some flag (value can be 00 or 01)
 

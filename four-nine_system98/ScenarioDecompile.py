@@ -162,7 +162,7 @@ SCENE_CMD_LIST = {
 	0x76: ("IDLECHR", [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
 	0x77: ("IDLEDLY", [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
 	0x78: ("IDLEXY" , [SCPT_INT, SCPT_INT]),
-	0x79: ("CMD79"  , [SCPT_INT]),
+	0x79: ("CMD79"  , [SCPT_DATA2]),
 	0x7A: ("LOOPSTR", [SCPT_REG_INT]),
 	0x7B: ("LOOPJPR", [SCPT_REG_INT, SCPT_JUMP]),
 	0x7C: (None     , []),
@@ -677,8 +677,8 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 					cmd_mode = -22	# 2-byte data
 				elif label_list[curpos][0] == SCPT_89DAT:
 					mode = MODE_DATA
-					endpos = min([curpos + 0x30 * (3 * 0x02), endpos])	# data is 0x120 bytes
-					cmd_mode = -23
+					endpos = min([curpos + 0x30 * 6, endpos])	# data is 0x120 bytes
+					cmd_mode = -13
 				else:
 					mode = MODE_DATA
 		
@@ -1026,9 +1026,9 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					chrs = [JISCHR_COMMENTS[val] for val in params if val in JISCHR_COMMENTS]
 					if len(chrs) > 0:
 						comment = ", ".join(chrs)
-				elif cmd_id in [-22, -23]:
+				elif cmd_id == -22:
 					cmd_name = "DW"	# Data: word (hex)
-					group_size = 9 if cmd_id == -22 else 3
+					group_size = 9
 					data_strs = []
 					for (idx, val) in enumerate(params):
 						line_idx = idx % group_size
@@ -1061,7 +1061,9 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					cmd_name = "DB"	# Data: byte (decimal)
 					data_strs = [f"{val}" for val in params]
 				else:
-					cmd_name = "DB"	# Data: word (hex)
+					if cmd_id == -13:
+						group_size = 6
+					cmd_name = "DB"	# Data: byte (hex)
 					data_strs = [f"0x{val:02X}" for val in params]
 				
 				if group_list is None:
