@@ -7,6 +7,7 @@ import unicodedata
 import requests
 import html
 import time
+import yaml
 
 DEBUG_OUTPUT_PATH = None
 #DEBUG_OUTPUT_PATH = "/tmp/tsvtrans_"
@@ -16,6 +17,7 @@ LANGUAGE_TGT = "en"	# English
 TRANSLATE_MAX_CHARS = 500	# maximum characters that are translated per request
 
 config = {}
+var_dict = {"words": []}
 
 def load_tsv(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
@@ -153,6 +155,8 @@ def process_data(tsv_data: list) -> list:
 	return tsv_newdata
 
 def text2transdata(text: str) -> dict:
+	global var_dict
+	
 	MODE_CTRL = 1
 	MODE_TEXT = 0
 	txt_begin = ""
@@ -168,9 +172,23 @@ def text2transdata(text: str) -> dict:
 	#	- take note of "control characters" at the beginning/end of the line (-> txt_begin/txt_end)
 	#	- replace control characters in the middle with "{1}" / "{2}" / ...)
 	while pos < len(text):
+		text_var = None
+		for tv in var_dict["words"]:
+			tvkey = tv["key"]
+			tkvlen = len(tvkey)
+			if text[pos : pos+tkvlen] == tvkey:
+				text_var = tv
+				break
+		
 		chrtype = None
 		chrlen = 1
-		if (text[pos] == '\\') and (pos + 1 < len(text)):
+		if text_var is not None:
+			chrlen = len(text_var["key"])
+			if ("punctuation" in text_var) and (text_var["punctuation"]):
+				chrtype = 2
+			else:
+				chrtype = 0
+		elif (text[pos] == '\\') and (pos + 1 < len(text)):
 			ctrl_chr = text[pos + 1]
 			chrtype = 2
 			chrlen += 1
@@ -194,13 +212,15 @@ def text2transdata(text: str) -> dict:
 				txt_begin = tkey
 				key_id += 1
 			else:
-				keyname = "{" + f"{key_id}" + "}"
+				keyname = "[" + f"{key_id}" + "]"
 				while keyname in text:
 					key_id += 1
-					keyname = "{" + f"{key_id}" + "}"
+					keyname = "[" + f"{key_id}" + "]"
 				keys[keyname] = tkey
 				tnew += keyname
 				key_id += 1
+				if text_var is not None:
+					tnew += " "	# insert an additional space for better sentence splits
 			tkey = None
 		elif mode == MODE_TEXT and chrtype == 2:
 			# text -> control
@@ -216,7 +236,20 @@ def text2transdata(text: str) -> dict:
 		if mode == MODE_CTRL:
 			tkey += text[pos : pos+chrlen]
 		elif mode == MODE_TEXT:
-			tnew += text[pos : pos+chrlen]
+			if text_var is not None:
+				# Google Translate seems to be a bit picky about the control characters.
+				#  "ばかだな・・・猫舌のくせに{0}あらあら" -> The translation misses the "あらあら" part.
+				#  "ばかだな・・・猫舌のくせに[0]あらあら" -> "あらあら" translates to "Oh no."
+				# Thus I will use "{0}" for words and "[0]" for sentence splits.
+				keyname = "{" + f"{key_id}" + "}"
+				while keyname in text:
+					key_id += 1
+					keyname = "{" + f"{key_id}" + "}"
+				keys[keyname] = text[pos : pos+chrlen]
+				tnew += keyname
+				key_id += 1
+			else:
+				tnew += text[pos : pos+chrlen]
 		pos += chrlen
 	if mode == MODE_CTRL:
 		# control -> text
@@ -241,6 +274,7 @@ def transdata2txt(tdata: dict) -> str:
 
 def translate_items(texts: list) -> list:
 	TEXT_SEP = '\n'
+	RETRY_ATTEMPS = 2
 	
 	text_groups = [[]]
 	tgrp_size = -len(TEXT_SEP)	# un-count separator for last line
@@ -255,25 +289,33 @@ def translate_items(texts: list) -> list:
 	line_base = 0
 	for (gid, grp) in enumerate(text_groups):
 		if True:
-			# translate the whole text group as one block
-			grptxt_count = len(grp)
-			grptext = TEXT_SEP.join(grp)
-			
-			print(f"Translating lines {1+line_base}..{line_base+grptxt_count} / {len(texts)} "
-				f"({len(grptext)} characters) ...", end="", flush=True)
-			t_start = time.time()
-			grp_translated = translate_text(grptext)
-			t_end = time.time()
-			print(f"   {t_end - t_start:.2f} s", flush=True)
-			
-			if grp_translated is None:
-				print("Failed to call web service")
-			else:
-				grptrans = grp_translated.split(TEXT_SEP) if grp_translated is not None else []
+			for retry in range(RETRY_ATTEMPS):
+				# translate the whole text group as one block
+				try_sep = TEXT_SEP * (retry+1)
+				grptxt_count = len(grp)
+				grptext = try_sep.join(grp)
+				
+				print(f"Translating lines {1+line_base}..{line_base+grptxt_count} / {len(texts)} "
+					f"({len(grptext)} characters) ...", end="", flush=True)
+				t_start = time.time()
+				grp_translated = translate_text(grptext)
+				t_end = time.time()
+				print(f"   {t_end - t_start:.2f} s", flush=True)
+				
+				if grp_translated is None:
+					print("Failed to call web service")
+					break
+				
+				grptrans = grp_translated.split(try_sep) if grp_translated is not None else []
 				if len(grptrans) == grptxt_count:
 					text_groups[gid] = grptrans
+					break
 				else:
-					print("Warning: Translation returned {len(text_groups[gid])} lines when only {grptxt_count} were expected - ignoring results.")
+					print(f"Warning: Translation returned {len(grptrans)} lines when {grptxt_count} were expected - ", end='')
+					if retry == (RETRY_ATTEMPS - 1):
+						print("ignoring results.")
+					else:
+						print("trying again.")
 			line_base += grptxt_count
 		else:
 			# translate each line separately
@@ -391,10 +433,16 @@ def main(argv):
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-r", "--raw", action="store_true", help="no remapping of Japanese quotation marks")
 	aparse.add_argument("-t", "--title-case", action="store_true", help="apply Title Case to text items of 'selection' type")
+	aparse.add_argument("-v", "--variables", type=str, help="YAML file that contains variables, can help with translation formatting")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	
 	config = aparse.parse_args(argv[1:])
+	
+	if config.variables:
+		global var_dict
+		with open(config.variables, "rb") as f:
+			var_dict = yaml.safe_load(f)
 	
 	return translate_tsv(config.in_file, config.out_file)
 

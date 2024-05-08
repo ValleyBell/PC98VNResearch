@@ -1,0 +1,13 @@
+cloc_89BD:
+	MOVI	i160, 0
+	MOVI	i161, 399
+	MOVI	i0, 0
+cloc_89CF:
+	WAIT	i1001
+	CMD62	i160, i161
+	SUBI	i161, 16
+	CMPI	i0, 0
+	JEQ	cloc_89CF
+	CMD62	i160, i160
+	RET
+

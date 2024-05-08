@@ -1,0 +1,141 @@
+# "words" attributes:
+# - "key": The code of the variable in the text file.
+# - "newlines": Set to the total number of "line break" characters for multi-line variables. In this case, "length" specifies the length of the last line. *LB
+# - "length": length of the variable's contents *LB
+# - "value": actual variable contents, used to calculate "length" when that field is not specified *LB
+# - "punctuation": set to True to mark this as punctuation data (default is to treat it as a word) *T
+# *LB - used by tsvLineBreak
+# *T - used by tsvTranslate
+
+words:
+  # main character's name
+  - key: "\\x04\\x01"
+    #jvalue: "ジャッキー"
+    value: "Jackie"
+    # "12" is the maximum number of characters you can enter on the rename screen.
+    length: 12
+  # various terms and names
+  - key: "\\x04\\x0A"
+    #jvalue: "ルシア"
+    value: "Lucia"
+  - key: "\\x04\\x0B"
+    #jvalue: "・・・"
+    value: "..."
+    punctuation: True
+  - key: "\\x04\\x0C"
+    #jvalue: "ドーム"
+    value: "dome"
+  - key: "\\x04\\x0D"
+    #jvalue: "クラブＨＴ１"
+    value: "Club HT1"
+  - key: "\\x04\\x0E"
+    #jvalue: "です"
+    value: "desu"
+  - key: "\\x04\\x0F"
+    #jvalue: "だけど"
+    value: "However"
+  - key: "\\x04\\x10"
+    #jvalue: "ちゃった"
+    value: "It happened"
+  - key: "\\x04\\x11"
+    #jvalue: "なんだ"
+    value: "what"
+  - key: "\\x04\\x12"
+    #jvalue: "なんで"
+    value: "why"
+  - key: "\\x04\\x13"
+    #jvalue: "研究所"
+    value: "research institute"
+  - key: "\\x04\\x14"
+    #jvalue: "にこにこ"
+    value: "smilingly"
+  - key: "\\x04\\x15"
+    #jvalue: "イリューヌ"
+    value: "Illune"
+  - key: "\\x04\\x16"
+    #jvalue: "ナギ"
+    value: "Nagi"
+  - key: "\\x04\\x17"
+    #jvalue: "ライラ"
+    value: "Lyra"
+  - key: "\\x04\\x18"
+    #jvalue: "リア"
+    value: "Ria"
+  - key: "\\x04\\x19"
+    #jvalue: "コンピュータ"
+    value: "Computer"
+  - key: "\\x04\\x1A"
+    #jvalue: "・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・"
+    value: "................................."
+    punctuation: True
+  - key: "\\x04\\x1E"
+    #jvalue: "ごめん"
+    value: "sorry"
+  - key: "\\x04\\x1F"
+    #jvalue: "シティ"
+    value: "city"
+  - key: "\\x04\\x20"
+    #jvalue: "樹海"
+    value: "sea of trees"
+  - key: "\\x04\\x21"
+    #jvalue: "ダイナマイト・ミルク・パイ"
+    value: "dynamite milk pie"
+  - key: "\\x04\\x22"
+    #jvalue: "いらない"
+    value: "I do not need"
+  - key: "\\x04\\x23"
+    #jvalue: "ひどい"
+    value: "terrible"
+  - key: "\\x04\\x24"
+    #jvalue: "メグ"
+    value: "Meg"
+  - key: "\\x04\\x25"
+    #jvalue: "    見  る    \\r    話  す    \\r"
+    value: "     Look     \\r     Talk     \\r"
+    # Set "punctuation" property, because it ends with a newline.
+    punctuation: True
+    newlines: 2
+    # The last "line" ends up at position 0.
+    length: 0
+  - key: "\\x04\\x26"
+    #jvalue: "    見  る    \\r    話  す    \\r    聞  く    \\r"
+    value: "     Look     \\r     Talk     \\r    Listen    \\r"
+    punctuation: True
+    newlines: 3
+    length: 0
+  - key: "\\x04\\x27"
+    #jvalue: "    見  る    \\r    話  す    \\r    聞  く    \\r    移  動    \\r"
+    value: "     Look     \\r     Talk     \\r    Listen    \\r     Move     \\r"
+    punctuation: True
+    newlines: 4
+    length: 0
+  - key: "\\x04\\x28"
+    #jvalue: "だった"
+    value: "was"
+  - key: "\\x04\\x29"
+    #jvalue: "なんか"
+    value: "Something"
+  - key: "\\x04\\x2A"
+    #jvalue: "ている"
+    value: "ing"
+  - key: "\\x04\\x2B"
+    #jvalue: "僕は"
+    value: "I"
+  - key: "\\x04\\x2C"
+    #jvalue: "から"
+    value: "from"
+  - key: "\\x04\\x2D"
+    #jvalue: "する"
+    value: "do"
+  - key: "\\x04\\x2E"
+    #jvalue: "好き"
+    value: "like"
+  - key: "\\x04\\x2F"
+    #jvalue: "でいる"
+    value: "I'm there"
+  - key: "\\x04\\x30"
+    #jvalue: "しい"
+    value: "New"
+  - key: "\\x04\\x31"
+    #jvalue: "そう"
+    value: "yes"

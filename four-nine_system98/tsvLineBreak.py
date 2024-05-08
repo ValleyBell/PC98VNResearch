@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
+# TODO: Analyse indentation and put an "\i" at the respective places.
 import sys
 import os
 import typing
 import argparse
 import unicodedata
+import yaml
 
 DEBUG_OUTPUT_PATH = None
 #DEBUG_OUTPUT_PATH = "/tmp/linebrk_"
 
 config = {}
+var_dict = {"words": []}
 
 def load_tsv(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
@@ -44,6 +47,8 @@ def get_cjk_char_width(c: str) -> int:
 	ccode = ord(c)
 	if (ccode < 0x80) or (ccode == 0x00A5):	# ASCII or Yen sign
 		return 1
+	elif ccode == 0xF87F:
+		return 0	# meta-code for special character combinations
 	elif (ccode >= 0xFF61) and (ccode <= 0xFF9F):	# halfwidth Katakana
 		return 1
 	else:
@@ -94,13 +99,13 @@ def get_last_tbox_size(tsv_data: list, line: int) -> str:
 		line -= 1
 	return "999x999"
 
-def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, lines, text_size):
+def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, lines, text_size, xpos):
 	global config
 	
 	(tb_width, tb_height) = tb_size_int
 	if config.textsize_check == 1:
 		(xpos, ypos) = text_size
-		if len(lines) > 0 and len(lines[-1]) == 0:
+		if len(lines) > 0 and xpos <= 0:
 			ypos -= 1	# ignore last line when empty
 		if xpos <= tb_width and ypos <= tb_height:
 			return
@@ -126,6 +131,7 @@ def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, 
 
 def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list:
 	global config
+	global var_dict
 	
 	# reinsert text items into the TSV column list again
 	tsv_new = tsv_data.copy()
@@ -159,10 +165,28 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 		last_word_xpos = xpos	# text X position of the beginning of the last "word"
 		param_bytes = 0
 		while pos < len(text):
+			text_var = None
+			for tv in var_dict["words"]:
+				tvkey = tv["key"]
+				tkvlen = len(tvkey)
+				if text[pos : pos+tkvlen] == tvkey:
+					text_var = tv
+					break
+			
 			chrlen = 1
 			chrwidth = 0
 			no_linebreak_now = False
-			if (text[pos] == '\\') and (pos + 1 < len(text)):
+			if text_var is not None:
+				chrlen = len(text_var["key"])
+				if ("newlines" in text_var) and (text_var["newlines"] > 0):
+					# move base Y offset to make up for lines written by the variable
+					tbox_ybase -= text_var["newlines"]
+					xpos = 0
+				if ("length" not in text_var) and ("value" in text_var):
+					text_var["length"] = get_cjk_string_width(text_var["value"])
+				chrwidth = text_var["length"]
+				# afterwards, we process it as a normal "word" (including line splitting etc.)
+			elif (text[pos] == '\\') and (pos + 1 < len(text)):
 				if can_add_linebreaks and (text[pos + 1] == 'r') and (len(lines) - tbox_ybase >= tb_height):
 					if config.extend_mode == 1:
 						text = text[:pos+1] + 'e' + text[pos+2:]	# change \r to \e
@@ -240,7 +264,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					lines[-1] += text[pos : pos+chrlen]
 					pos += chrlen
 					if not keep_lines:
-						do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
+						do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 					lines[-1] += "\\"
 					lines.append("")	# start new line
 					#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
@@ -322,7 +346,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			if not chrdata.isspace():
 				max_xpos = max([xpos, max_xpos])
 		if not keep_lines:
-			do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase))
+			do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 		
 		# make sure that we can replace the lines exactly
 		while len(lines) < line_count:
@@ -349,6 +373,7 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 	last_non_spc = '\0x00'
 	last_chr = '\0x00'
 	pos = 0
+	keep_next_nl = True
 	while pos < len(text):
 		chrlen = 1
 		cur_chr = text[pos]
@@ -373,18 +398,24 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 				chrlen += 8
 			elif ctrl_chr in ['r', 'n']:	# new line / scroll line
 				is_newline = True
+			elif ctrl_chr == 'e':	# "paragraph end" control code
+				keep_next_nl = True
 			elif ctrl_chr == '\n':	# new TSV line
 				pass
+		elif ord(text[pos]) >= 0x0020:
+			keep_next_nl = False	# when the actual text starts, start removing line breaks
+		
 		if is_newline:
 			is_newline = False
 			next_pos = pos + chrlen
 			if text[next_pos : next_pos+2] == '\\\n':
 				next_pos += 2	# skip line end marker
 			#print(f"Next: {text[next_pos : next_pos+2]}")
-			if pos == 0:
-				pass	# keep when the string starts with it
-			elif (len(text) <= next_pos) or text[next_pos].isspace():
-				pass	# keep when being followed by a space
+			if keep_next_nl:
+				pass	# keep at the beginning of the text
+			# This heavily breaks indented text.
+			#elif (len(text) <= next_pos) or text[next_pos].isspace():
+			#	pass	# keep when being followed by a space
 			elif (len(last_non_spc) == 1) and last_non_spc in SENTENCE_END_CHRS:
 				pass	# keep when the last character is a "sentence/paragraph end" character
 			elif (len(last_non_spc) == 1) and (ord(last_non_spc) in range(0x1F000, 0x20000)):
@@ -472,12 +503,17 @@ def main(argv):
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
 	aparse.add_argument("-x", "--extend-mode", type=int, help="how to extend small text boxes. 0 = none, 1 = clear, 2 = scroll", default=0)
+	aparse.add_argument("-v", "--variables", type=str, help="YAML file that contains variables to be replaced with words during line length calculation")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	
 	config = aparse.parse_args(argv[1:])
 	
-	#return tsv_linebreaks(config.in_file, config.out_file, config)
+	if config.variables and config.add:
+		global var_dict
+		with open(config.variables, "rb") as f:
+			var_dict = yaml.safe_load(f)
+	
 	try:
 		tsv_lines = load_tsv(config.in_file)
 	except IOError:

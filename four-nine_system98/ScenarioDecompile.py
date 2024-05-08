@@ -287,6 +287,8 @@ def is_sjis_str(data: bytes) -> bool:
 				pass
 			elif c >= 0xA1 and c <= 0xDF:
 				pass	# used by System98 v1 game scripts for halfwidth Katakana
+			elif c <= 0x0F:
+				pass	# allow for text control commands
 			elif c == 0x00:
 				break
 			elif c <= 0x0F:

@@ -1,0 +1,46 @@
+# some common subroutines for opening/closing text boxes in "Gaogao 2"
+# All text boxes have a border of 1 block (16x16 pixels / 1 full-width character) on each side. (top/right/bottom/left)
+initial:
+  # Note: Text box 15 is initialized by PW/SNR/PW_OPEN.LSP.
+  - box_id: 15 # see common_2e.asm
+    # TBOPEN  15, 1, 19, 38, 6, 4
+    # box size 36x6, but let's use a width of 35 to reserve space for the "wait for user" icon
+    width: 35
+    height: 4
+calls:
+  cloc_2E5A:    # see common_1a.asm
+    # text box for portrait
+    - box_id: 10
+      # TBOPEN  10, 6, 15, 7, 8, 2
+      # box size 7x8, the portrait is 6x6 (96x96 pixels)
+      width: 6
+      height: 6
+    # text box for actual text
+    - box_id: 11
+      # TBOPEN  11, 13, 15, 21, 8, 3
+      # box size 21x8 according to script, but the background graphic occupies only 20x6
+      # The effective height would be 4 lines, BUT - the code assumes a height of 6 and automatically prints an empty line when opening the box.
+      # So I think a height of 5 is a good compromise.
+      width: 18
+      height: 5
+  cloc_2E80:    # see common_1a.asm
+    - box_id: 10
+      # close
+    - box_id: 11
+      # close
+  cloc_16B8:    # see common_2c.asm
+    # text box for portrait
+    - box_id: 10
+      # TBOPEN  10, 6, 15, 7, 8, 2
+      width: 6
+      height: 6
+    # text box for actual text
+    - box_id: 11
+      # TBOPEN  11, 13, 15, 21, 8, 3
+      width: 18
+      height: 5
+  cloc_16DE:    # see common_2c.asm
+    - box_id: 10
+      # close
+    - box_id: 11
+      # close

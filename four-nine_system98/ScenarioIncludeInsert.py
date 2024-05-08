@@ -321,7 +321,10 @@ def build_label_replacement_table(src_data: tuple, inc_data: tuple, match_start_
 	# for all labels of the include file, find the respective labels in the source file
 	# and save a mapping "source label" -> "include label"
 	for (ilkey, ilbl) in inc_labels.items():
-		slkey = [l for l in src_labels if src_labels[l].cmdID == match_start_cmd + ilbl.cmdID][0]
+		slkey = [l for l in src_labels if src_labels[l].cmdID == match_start_cmd + ilbl.cmdID]
+		if len(slkey) == 0:
+			continue	# skip when include label does not exist in source file
+		slkey = slkey[0]
 		slbl = src_labels[slkey]
 		#print(f"{slbl.lblName} -> {ilbl.lblName}")
 		if ilbl.cmdID == len(inc_cmds):
