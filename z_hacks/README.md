@@ -33,6 +33,28 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         This will jump to the credits screen directly.
       - variant 2: while viewing the first dialogue line (file `BL_001.SO3`), search for `b:\bl_002.so3` and overwrite it with `b:\bl_015.so3`
         After many dialogue lines, it will jump to one of the endings (NSFW!).
+- Gaogao 3: Wild Force
+  - jump to an arbitrary chapter:
+    - while on the main menu, search for `25 0B 04 00 09 00 18 00 2D 01 00` and repalce the last `00` with any number from 00 to 09
+    - then select the first menu entry ("start from beginning")
+    - Note 1: Chapter 1 will show the game's main title.
+    - Note 2: `2D 01` specifies the register number 301, which contains the chapter ID. Register 302 contains the scene ID.
+  - jump to final scene:
+    - while on the main menu, search for `25 0B 04 00 09 00 18 00 2D 01 00 00 18 00 2E 01 00`
+    - replace `2D 01 00` with `2D 01 09` (chapter = 9) and replace `2D 01 00` with `2E 01 02` (scene = 2)
+    - (For some reason, the scenes are ordered 8 -> 2 -> end)
+    - then select the first menu entry ("start from beginning")
+- Gaogao 4 Canaan
+  - jump to a certain chapter from main menu
+    - While on the main menu, search for `prolog.s` and overwrite it with `csXX_YY.s` + a `00` byte. (XX = 2-digit chapter ID, YY = 2-digit scene ID) Then choose "Start Opening".
+    - Alternatively search for `CS01_01.s` and overwrite it with `csXX_YY.s`. Then choose "Start Main Story".
+    - The difference between the two is, that the "Opening" version can show the chapter intro screen while the "Main Story" entry won't show it.
+  - jump to ending from main menu
+    - While on the main menu, search for `prolog.s` and overwrite it with `ending.s`. Then choose "Start Opening".
+  - hacking info:
+    - register 185 contains the chapter ID (1..28)
+    - register 186 contains the scene ID (1+, range depends on chapter)
+    - The ending is chapter 28, scene 7.
 - Irium
   - jump to ending from main menu
     - while on the main menu (NOT in a sub-menu like music mode), search for `A:\IRMEMO.SCC` and overwrite it with `A:\B_BOSSB.SCC` + a `00` byte
@@ -74,6 +96,17 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
   - In decrypted scripts, the following byte sequence is used to play a song:
     - `1800 2002 nnnn  5400 2041` where `nnnn` is the song ID
     - for searching in encrypted files, XOR all bytes with 01h
+- Mahjong Fantasia the 3rd Stage
+  - save game editing:
+    - The save file files are called `MG3STMD#.SAV`. (`1..4` = save 1..4, `L` = last auto-save)
+    - At the bottom of the file, there is the file name of the current scenario, e.g. `C:MF3_01.hgo`.
+      You can set it to `C:MF3_25.hgo` to reach the last scenario.
+    - `MG3STMD4.SAV` is a save game right at the ending scene.
+  - Scenario file editing:
+    - The game stores the files compressed. You will need to perform edits in the PC-98 emulator's RAM while the respective file is loaded.
+    - Skip final boss: Seach for `@MENBER_1` until you find it in the middle of lots of Shift-JIS encoded text. (There is `@A:WAKU` slightly below.)
+      There it prepares loading the final boss match.  
+      From there, search for `0B 8B 0B 80 0B 05 01` and replace it with `04 53 6B 69 70 5C 50`. (`04` introduces a text block.)
 - Merry Go Round
   - replace opening scene with ending/staff roll
     - in `DISK1.NDX` replace `OPENING.OVL` with `#PENING.OVL`
