@@ -12,6 +12,8 @@
   - [twilight_decompress.py](twilight_decompress.py) - original Python port of the Twilight decompression code
 - Twilight `TW.EXE` disassembly: [ASM file](TW.asm) / [IDB database](TW.idb)
 - [visitte_packer.py](visitte_packer.py) - archive (un-)packer for `DISK#.LBX` archives used by the game "Visitte", published by Mischief [^1]
+- [valkyrie_save-decoder.py](valkyrie_save-decoder.py) - de-/encryption tool for story save games (`DATA#.SAV`) of "Valkyrie: The Power Beauties", published by DISCOVERY
+- Valkyrie `GSIC.EXE` disassembly: [ASM file](valkyrie_GSIC.asm) / [IDB database](valkyrie_GSIC.idb)
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
 - Python tool to convert the NEC PC-9801 `FONT.ROM` to an image: [fontrom2img.py](fontrom2img.py) (supports BMP/PNG/... through Pillow library)

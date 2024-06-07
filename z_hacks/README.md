@@ -215,6 +215,27 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - `US02.BIN`/`US03.BIN`/`US04.BIN` - ?? (loads parts of the match, unuseable without loading data first, eventually redirects to CG scenes, assuming you have won)
       - `US05.BIN` - Continue Screen
       - `US06.BIN` - Staff Roll
+- Valkyrie: The Power Beauties
+  - Swapping files unfortunately doesn't work here and will cause the game to crash.
+  - jump to ending scene
+    - Take `VA_END.SAV` and put it as `DATA1.SAV` into the game's main folder.
+    - Then load the save game.
+  - Save game editing hints:
+    - Use the [Save Decoder](../z_misc/valkyrie_save-decoder.py) to decrypt the save game, so that it becomes readable.
+    - The 2-byte word at offset 0x08 indicates the length of the save's name, which is stored at offset 0x40.
+    - At offset `0x40+nameLen`, the script register memory begins.
+    - Useful register IDs (file offset = `0x40 + nameLen + registerID*2`)
+      - game statistics:
+        - register 40 - total damage taken
+        - register 41 - total rounds lost
+        - register 42 - total continues
+      - registers 300..: round statistics
+        - 300..304 - round 1, ..., 325..329 - round 6
+        - 300/305/... - opponent ID?
+        - 301/306/... - damage taken
+        - 302/307/... - rounds lost
+        - 303/308/... - continues
+        - 304/309/... - unused?
 - Waku Waku Mahjong Panic! ~Shikigami Denshou~
   - skip intro:
     - while on tht title screen, search for `1500 08 BD0D` and overwrite it with `0A00 E70B 0D` (file `BEGINF.DSD`)
