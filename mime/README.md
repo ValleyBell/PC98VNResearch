@@ -11,6 +11,9 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 - [item/monster list format description](MiscFormats.txt)
 - [item/monster list name extraction/reinsertion tool](list-tsv.py)
   - The resulting file can be used with the [text table translation tool](../four-nine_system98/tsvTranslate.py) from the four-nine folder.
+- a [patch to support ASCII text](MIME_OP-ASC.asm) in `MIME_OP.EXE`
+  - It reads the text from `MIME_OP-Text.bin`. The "line end" marker consists of two forward slashes (bytes `2F 2F`).
+  - A prepatched version is included as [MIME_OP-ASC.EXE](MIME_OP-ASC.EXE).
 - a [patch to support ASCII text](MIME-ASC.asm) in `MIME.EXE` almost everywhere
   - The game originally comes with very limited ASCII support for drawing certain texts like "HP" and "MP" using special script commands.  
     This patch adds ASCII support to almost all functions that supported only 2-byte Shift-JIS codes before.

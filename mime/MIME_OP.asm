@@ -22,9 +22,6 @@ seg000		segment	byte public 'CODE' use16
 
 		public start
 start		proc near
-
-; FUNCTION CHUNK AT 6C6F SIZE 0000007E BYTES
-
 		cld
 		mov	cs:byte_16CEE, 0
 		mov	ss:byte_18250+0AFh, 0
@@ -65,7 +62,7 @@ loc_10039:				; CODE XREF: start+1Cj	start+29j ...
 		mov	dx, offset aAStssp_env ; "A:STSSP.ENV"
 		call	fopen1_r
 		jnb	short loc_10049
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10049:				; CODE XREF: start+44j
@@ -73,7 +70,7 @@ loc_10049:				; CODE XREF: start+44j
 		mov	cx, 5
 		call	fread1
 		jnb	short loc_10057
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10057:				; CODE XREF: start+52j
@@ -131,7 +128,7 @@ loc_10079:				; CODE XREF: start+72j
 		int	21h		; DOS -	2+ - ALLOCATE MEMORY
 					; BX = number of 16-byte paragraphs desired
 		jnb	short loc_100BA
-		jmp	ErrExitB
+		jmp	ErrExit_malloc
 ; ---------------------------------------------------------------------------
 
 loc_100BA:				; CODE XREF: start+B5j
@@ -140,7 +137,7 @@ loc_100BA:				; CODE XREF: start+B5j
 		mov	cx, 8000h
 		call	DoSomeMalloc
 		jnb	short loc_100CB
-		jmp	ErrExitB
+		jmp	ErrExit_malloc
 ; ---------------------------------------------------------------------------
 
 loc_100CB:				; CODE XREF: start+C6j
@@ -148,7 +145,7 @@ loc_100CB:				; CODE XREF: start+C6j
 		mov	cx, 8000h
 		call	DoSomeMalloc
 		jnb	short loc_100D9
-		jmp	ErrExitB
+		jmp	ErrExit_malloc
 ; ---------------------------------------------------------------------------
 
 loc_100D9:				; CODE XREF: start+D4j
@@ -156,7 +153,7 @@ loc_100D9:				; CODE XREF: start+D4j
 		mov	cx, 8000h
 		call	DoSomeMalloc
 		jnb	short loc_100E7
-		jmp	ErrExitB
+		jmp	ErrExit_malloc
 ; ---------------------------------------------------------------------------
 
 loc_100E7:				; CODE XREF: start+E2j
@@ -216,7 +213,7 @@ loc_10168:				; CODE XREF: start+16Dj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_10193
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10193:				; CODE XREF: start+18Ej
@@ -304,7 +301,7 @@ loc_10284:				; CODE XREF: start+289j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_102AB
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_102AB:				; CODE XREF: start+2A6j
@@ -318,7 +315,7 @@ loc_102AB:				; CODE XREF: start+2A6j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_102D3
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_102D3:				; CODE XREF: start+2CEj
@@ -332,7 +329,7 @@ loc_102D3:				; CODE XREF: start+2CEj
 		mov	word_1793C, 200
 		call	LoadGTA
 		jnb	short loc_102FB
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_102FB:				; CODE XREF: start+2F6j
@@ -346,7 +343,7 @@ loc_102FB:				; CODE XREF: start+2F6j
 		mov	word_1793C, 200
 		call	LoadGTA
 		jnb	short loc_10323
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10323:				; CODE XREF: start+31Ej
@@ -360,7 +357,7 @@ loc_10323:				; CODE XREF: start+31Ej
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1034B
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1034B:				; CODE XREF: start+346j
@@ -374,7 +371,7 @@ loc_1034B:				; CODE XREF: start+346j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_10373
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10373:				; CODE XREF: start+36Ej
@@ -390,7 +387,7 @@ loc_10373:				; CODE XREF: start+36Ej
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1039F
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1039F:				; CODE XREF: start+39Aj
@@ -406,7 +403,7 @@ loc_1039F:				; CODE XREF: start+39Aj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_103CB
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_103CB:				; CODE XREF: start+3C6j
@@ -427,7 +424,7 @@ loc_103CB:				; CODE XREF: start+3C6j
 		mov	bl, 0
 		call	PlayBGM		; play music OP_1
 		jnb	short loc_10407
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10407:				; CODE XREF: start+402j
@@ -594,7 +591,7 @@ loc_1059E:				; CODE XREF: start+59Aj
 loc_105B1:				; CODE XREF: start+5B6j
 		cmp	byte_17922, 0
 		jnz	short loc_105B1
-		mov	si, offset OpeningText ; "/"
+		mov	si, offset OpeningText ; "//"
 		mov	DispTextPtr, si
 		mov	byte_17932, 1
 		mov	DestFrmWaitTick, 0C78h
@@ -1124,7 +1121,7 @@ loc_10BA1:				; CODE XREF: start+BA6j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_10BF1
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10BF1:				; CODE XREF: start+BECj
@@ -1138,7 +1135,7 @@ loc_10BF1:				; CODE XREF: start+BECj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_10C19
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10C19:				; CODE XREF: start+C14j
@@ -1152,7 +1149,7 @@ loc_10C19:				; CODE XREF: start+C14j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_10C41
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10C41:				; CODE XREF: start+C3Cj
@@ -1161,7 +1158,7 @@ loc_10C41:				; CODE XREF: start+C3Cj
 		mov	bl, 1
 		call	PlayBGM		; play music OP_2
 		jnb	short loc_10C53
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_10C53:				; CODE XREF: start+C4Ej
@@ -1557,7 +1554,7 @@ loc_10FF9:				; CODE XREF: start+FFEj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11020
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11020:				; CODE XREF: start+101Bj
@@ -1632,7 +1629,7 @@ loc_110D7:				; CODE XREF: start+10DCj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_110FE
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_110FE:				; CODE XREF: start+10F9j
@@ -1646,7 +1643,7 @@ loc_110FE:				; CODE XREF: start+10F9j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11126
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11126:				; CODE XREF: start+1121j
@@ -1660,7 +1657,7 @@ loc_11126:				; CODE XREF: start+1121j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1114E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1114E:				; CODE XREF: start+1149j
@@ -1719,7 +1716,7 @@ loc_111C8:				; CODE XREF: start+FEBj start+11CDj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_111EF
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_111EF:				; CODE XREF: start+11EAj
@@ -1843,7 +1840,7 @@ loc_112DF:				; CODE XREF: start+12E4j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11322
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11322:				; CODE XREF: start+131Dj
@@ -1961,7 +1958,7 @@ loc_11404:				; CODE XREF: start+1409j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11447
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11447:				; CODE XREF: start+1442j
@@ -2170,7 +2167,7 @@ loc_115F3:				; CODE XREF: start+15E1j start+15EEj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1162F
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1162F:				; CODE XREF: start+162Aj
@@ -2184,7 +2181,7 @@ loc_1162F:				; CODE XREF: start+162Aj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11657
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11657:				; CODE XREF: start+1652j
@@ -2198,7 +2195,7 @@ loc_11657:				; CODE XREF: start+1652j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1167F
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1167F:				; CODE XREF: start+167Aj
@@ -2492,7 +2489,7 @@ loc_11917:				; CODE XREF: start+191Cj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1193E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1193E:				; CODE XREF: start+1939j
@@ -2506,7 +2503,7 @@ loc_1193E:				; CODE XREF: start+1939j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11966
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11966:				; CODE XREF: start+1961j
@@ -2520,7 +2517,7 @@ loc_11966:				; CODE XREF: start+1961j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1198E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1198E:				; CODE XREF: start+1989j
@@ -2869,7 +2866,7 @@ loc_11CB7:				; CODE XREF: start+1CBCj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11CDE
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11CDE:				; CODE XREF: start+1CD9j
@@ -2883,7 +2880,7 @@ loc_11CDE:				; CODE XREF: start+1CD9j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11D06
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11D06:				; CODE XREF: start+1D01j
@@ -2897,7 +2894,7 @@ loc_11D06:				; CODE XREF: start+1D01j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_11D2E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_11D2E:				; CODE XREF: start+1D29j
@@ -3472,7 +3469,7 @@ loc_12270:				; CODE XREF: start+2275j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12297
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12297:				; CODE XREF: start+2292j
@@ -3547,7 +3544,7 @@ loc_1234E:				; CODE XREF: start+2353j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12375
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12375:				; CODE XREF: start+2370j
@@ -3561,7 +3558,7 @@ loc_12375:				; CODE XREF: start+2370j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1239D
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1239D:				; CODE XREF: start+2398j
@@ -3620,7 +3617,7 @@ loc_12417:				; CODE XREF: start+2262j start+241Cj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1243E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1243E:				; CODE XREF: start+2439j
@@ -3867,7 +3864,7 @@ loc_12667:				; CODE XREF: start+2655j start+2662j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12687
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12687:				; CODE XREF: start+2682j
@@ -4050,7 +4047,7 @@ loc_12812:				; CODE XREF: start+2800j start+280Dj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12832
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12832:				; CODE XREF: start+282Dj
@@ -4321,7 +4318,7 @@ loc_12A70:				; CODE XREF: start+2A5Ej start+2A6Bj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12AAC
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12AAC:				; CODE XREF: start+2AA7j
@@ -4335,7 +4332,7 @@ loc_12AAC:				; CODE XREF: start+2AA7j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12AD4
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12AD4:				; CODE XREF: start+2ACFj
@@ -4349,7 +4346,7 @@ loc_12AD4:				; CODE XREF: start+2ACFj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12AFC
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12AFC:				; CODE XREF: start+2AF7j
@@ -4658,7 +4655,7 @@ loc_12DBC:				; CODE XREF: start+2DC1j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12DE3
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12DE3:				; CODE XREF: start+2DDEj
@@ -4672,7 +4669,7 @@ loc_12DE3:				; CODE XREF: start+2DDEj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_12E0B
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_12E0B:				; CODE XREF: start+2E06j
@@ -4902,7 +4899,7 @@ loc_1301C:				; CODE XREF: start+3021j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_13043
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_13043:				; CODE XREF: start+303Ej
@@ -4916,7 +4913,7 @@ loc_13043:				; CODE XREF: start+303Ej
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1306B
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1306B:				; CODE XREF: start+3066j
@@ -5305,7 +5302,7 @@ loc_133F7:				; CODE XREF: start+33FCj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1341E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1341E:				; CODE XREF: start+3419j
@@ -5380,7 +5377,7 @@ loc_134D5:				; CODE XREF: start+34DAj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_134FC
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_134FC:				; CODE XREF: start+34F7j
@@ -5394,7 +5391,7 @@ loc_134FC:				; CODE XREF: start+34F7j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_13524
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_13524:				; CODE XREF: start+351Fj
@@ -5408,7 +5405,7 @@ loc_13524:				; CODE XREF: start+351Fj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1354C
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1354C:				; CODE XREF: start+3547j
@@ -5467,7 +5464,7 @@ loc_135C6:				; CODE XREF: start+33E9j start+35CBj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_135ED
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_135ED:				; CODE XREF: start+35E8j
@@ -5481,7 +5478,7 @@ loc_135ED:				; CODE XREF: start+35E8j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_13615
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_13615:				; CODE XREF: start+3610j
@@ -5882,7 +5879,7 @@ loc_13985:				; CODE XREF: start+3973j start+3980j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_139C1
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_139C1:				; CODE XREF: start+39BCj
@@ -6091,7 +6088,7 @@ loc_13B6D:				; CODE XREF: start+3B5Bj start+3B68j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_13BA9
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_13BA9:				; CODE XREF: start+3BA4j
@@ -6105,7 +6102,7 @@ loc_13BA9:				; CODE XREF: start+3BA4j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_13BD1
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_13BD1:				; CODE XREF: start+3BCCj
@@ -6618,7 +6615,7 @@ loc_1403D:				; CODE XREF: start+402Bj start+4038j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14079
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14079:				; CODE XREF: start+4074j
@@ -6632,7 +6629,7 @@ loc_14079:				; CODE XREF: start+4074j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_140A1
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_140A1:				; CODE XREF: start+409Cj
@@ -6646,7 +6643,7 @@ loc_140A1:				; CODE XREF: start+409Cj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_140C9
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_140C9:				; CODE XREF: start+40C4j
@@ -6971,7 +6968,7 @@ loc_143AA:				; CODE XREF: start+43AFj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_143D1
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_143D1:				; CODE XREF: start+43CCj
@@ -6985,7 +6982,7 @@ loc_143D1:				; CODE XREF: start+43CCj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_143F9
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_143F9:				; CODE XREF: start+43F4j
@@ -6999,7 +6996,7 @@ loc_143F9:				; CODE XREF: start+43F4j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14421
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14421:				; CODE XREF: start+441Cj
@@ -7414,7 +7411,7 @@ loc_147E2:				; CODE XREF: start+47E7j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14809
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14809:				; CODE XREF: start+4804j
@@ -7460,7 +7457,7 @@ loc_14859:				; CODE XREF: start+485Ej
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14880
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14880:				; CODE XREF: start+487Bj
@@ -7818,7 +7815,7 @@ loc_14BC3:				; CODE XREF: start+4BC8j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14BEA
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14BEA:				; CODE XREF: start+4BE5j
@@ -7893,7 +7890,7 @@ loc_14CA1:				; CODE XREF: start+4CA6j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14CC8
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14CC8:				; CODE XREF: start+4CC3j
@@ -7907,7 +7904,7 @@ loc_14CC8:				; CODE XREF: start+4CC3j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14CF0
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14CF0:				; CODE XREF: start+4CEBj
@@ -7966,7 +7963,7 @@ loc_14D6A:				; CODE XREF: start+4BB5j start+4D6Fj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14D91
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14D91:				; CODE XREF: start+4D8Cj
@@ -8213,7 +8210,7 @@ loc_14FBA:				; CODE XREF: start+4FA8j start+4FB5j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_14FDA
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_14FDA:				; CODE XREF: start+4FD5j
@@ -8842,7 +8839,7 @@ loc_15588:				; CODE XREF: start+558Dj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_155AF
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_155AF:				; CODE XREF: start+55AAj
@@ -8856,7 +8853,7 @@ loc_155AF:				; CODE XREF: start+55AAj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_155D7
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_155D7:				; CODE XREF: start+55D2j
@@ -8870,7 +8867,7 @@ loc_155D7:				; CODE XREF: start+55D2j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_155FF
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_155FF:				; CODE XREF: start+55FAj
@@ -9179,7 +9176,7 @@ loc_158BF:				; CODE XREF: start+58C4j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_158E6
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_158E6:				; CODE XREF: start+58E1j
@@ -9193,7 +9190,7 @@ loc_158E6:				; CODE XREF: start+58E1j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_1590E
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_1590E:				; CODE XREF: start+5909j
@@ -9518,7 +9515,7 @@ loc_15BFA:				; CODE XREF: start+5BFFj
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_15C25
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_15C25:				; CODE XREF: start+5C20j
@@ -9548,7 +9545,7 @@ loc_15C25:				; CODE XREF: start+5C20j
 		mov	word_1793C, 0
 		call	LoadGTA
 		jnb	short loc_15C7D
-		jmp	ErrExitA
+		jmp	ErrExit_fopen
 ; ---------------------------------------------------------------------------
 
 loc_15C7D:				; CODE XREF: start+5C78j
@@ -10181,7 +10178,7 @@ parse_text_loop:			; CODE XREF: seg000:61D6j
 		cmp	ah, 2Fh	; '/'
 		jz	short loc_161D8	; character xx2F (usually //) -> line end
 		or	ah, ah
-		jz	short loc_161F6
+		jz	short loc_161F6	; character xx00 (here 0000) ->	text end
 		xchg	ah, al		; do Shift-JIS -> ROM access code conversion
 		add	ah, ah
 		sub	al, 1Fh
@@ -10922,7 +10919,7 @@ PlayBGM		endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-FadeMusic	proc near		; CODE XREF: start+5FA6p start+6C74p ...
+FadeMusic	proc near		; CODE XREF: start+5FA6p seg000:6C74p	...
 		push	ax
 		push	ds
 		mov	ax, seg	seg001
@@ -11016,7 +11013,7 @@ SetupInts	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-RestoreInts	proc near		; CODE XREF: start+5FACp start+6C77p ...
+RestoreInts	proc near		; CODE XREF: start+5FACp seg000:6C77p	...
 		cli
 		pushf
 		pusha
@@ -11504,7 +11501,7 @@ sub_16B10	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_16B58	proc near		; CODE XREF: start+5FC4p start+6C8Fp ...
+sub_16B58	proc near		; CODE XREF: start+5FC4p seg000:6C8Fp	...
 		push	ax
 		mov	al, byte_17921
 		mov	ah, 0Ah
@@ -11730,9 +11727,8 @@ fclose1		proc near		; CODE XREF: start:loc_10057p
 fclose1		endp
 
 ; ---------------------------------------------------------------------------
-; START	OF FUNCTION CHUNK FOR start
 
-ErrExitA:				; CODE XREF: start+46j	start+54j ...
+ErrExit_fopen:				; CODE XREF: start+46j	start+54j ...
 		mov	ax, seg	seg001
 		mov	ds, ax
 		assume ds:seg001
@@ -11752,7 +11748,7 @@ ErrExitA:				; CODE XREF: start+46j	start+54j ...
 		mov	ah, 9
 		int	21h		; DOS -	PRINT STRING
 					; DS:DX	-> string terminated by	"$"
-		mov	dx, offset aGtg@gcglvkmivV ; "ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ.\r\n$"
+		mov	dx, offset aFileNotFound ; "ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ.\r\n$"
 		mov	ah, 9
 		int	21h		; DOS -	PRINT STRING
 					; DS:DX	-> string terminated by	"$"
@@ -11766,7 +11762,7 @@ ErrExitA:				; CODE XREF: start+46j	start+54j ...
 					; AL = exit code
 ; ---------------------------------------------------------------------------
 
-ErrExitB:				; CODE XREF: start+B7j	start+C8j ...
+ErrExit_malloc:				; CODE XREF: start+B7j	start+C8j ...
 		mov	ax, seg	seg001
 		mov	ds, ax
 		call	FadeMusic
@@ -11785,7 +11781,7 @@ ErrExitB:				; CODE XREF: start+B7j	start+C8j ...
 		mov	ah, 9
 		int	21h		; DOS -	PRINT STRING
 					; DS:DX	-> string terminated by	"$"
-		mov	dx, offset aGbgvgkvkkmxPoc ; "ƒƒ‚ƒŠ‚ªŠm•Ûo—ˆ‚Ü‚¹‚ñ.\r\n$"
+		mov	dx, offset aMallocError	; "ƒƒ‚ƒŠ‚ªŠm•Ûo—ˆ‚Ü‚¹‚ñ.\r\n$"
 		mov	ah, 9
 		int	21h		; DOS -	PRINT STRING
 					; DS:DX	-> string terminated by	"$"
@@ -11796,7 +11792,7 @@ ErrExitB:				; CODE XREF: start+B7j	start+C8j ...
 		int	21h		; DOS -	DIRECT STDIN INPUT, NO ECHO
 		mov	ax, 4C01h
 		int	21h		; DOS -	2+ - QUIT WITH EXIT CODE (EXIT)
-; END OF FUNCTION CHUNK	FOR start	; AL = exit code
+					; AL = exit code
 ; ---------------------------------------------------------------------------
 		align 2
 byte_16CEE	db 0			; DATA XREF: start+1w start:loc_1002Bw ...
@@ -13061,11 +13057,13 @@ seg001		segment	byte public 'UNK' use16
 		;org 0Ah
 		assume es:nothing, ss:nothing, ds:nothing, fs:nothing, gs:nothing
 aStudioTwinKleB	db 'Studio Twin',27h,'kle u•‘–²v Opening Program  ver.0.3',0Dh,0Ah
-					; DATA XREF: start+6C92o start+6CD1o
+					; DATA XREF: seg000:6C92o seg000:6CD1o
 		db 'Programmed by TAKAHIRO NOGI.(NOGICHAN) 1995/07/24',0Dh,0Ah
 		db 0Dh,0Ah,'$'
-aGtg@gcglvkmivV	db 'ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ.',0Dh,0Ah,'$' ; DATA XREF: start+6C99o
-aGbgvgkvkkmxPoc	db 'ƒƒ‚ƒŠ‚ªŠm•Ûo—ˆ‚Ü‚¹‚ñ.',0Dh,0Ah,'$' ; DATA XREF: start+6CD8o
+aFileNotFound	db 'ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ.',0Dh,0Ah,'$' ; DATA XREF: seg000:6C99o
+					; File not found.
+aMallocError	db 'ƒƒ‚ƒŠ‚ªŠm•Ûo—ˆ‚Ü‚¹‚ñ.',0Dh,0Ah,'$' ; DATA XREF: seg000:6CD8o
+					; Unable to allocate memory.
 		db  90h	; 
 word_1757A	dw 0			; DATA XREF: start+99w	start+9Dr
 word_1757C	dw 0			; DATA XREF: start:loc_100F3w
@@ -13229,16 +13227,11 @@ word_17B5E	dw 0			; DATA XREF: sub_16308+Cw
 word_17B60	dw 0			; DATA XREF: sub_16308+17w
 					; sub_16308+35r ...
 word_17B62	dw 0			; DATA XREF: sub_16308+22w
-OpeningText	db '/'                  ; DATA XREF: start+5B8o
-		db '/'
-		db '@@@@@@@@@@@@@@•—‚Æ‰_‚ª‘å’n‚ÉŠñ‚è“Y‚¢/'
-		db '/'
-		db '/'
-		db '/'
-		db '@@@@@@@@@@@…–Ê‚Æ—z‚ÌŒõ‚ª‚»‚Ìp‚ğÊ‚µo‚·dd/'
-		db '/'
-		db '/'
-		db '/'
+OpeningText	db '//'                 ; DATA XREF: start+5B8o
+		db '@@@@@@@@@@@@@@•—‚Æ‰_‚ª‘å’n‚ÉŠñ‚è“Y‚¢//'
+		db '//'
+		db '@@@@@@@@@@@…–Ê‚Æ—z‚ÌŒõ‚ª‚»‚Ìp‚ğÊ‚µo‚·dd//'
+		db '//'
 		db 81h,	40h, 81h, 40h, 81h, 40h, 81h, 40h, 81h,	40h, 81h
 		db 40h,	81h, 40h, 82h, 0BBh, 82h, 0EAh,	82h, 0E7h, 91h
 		db 53h,	82h, 0C4h, 82h,	0F0h, 8Eh, 69h,	82h, 0E9h, 95h
