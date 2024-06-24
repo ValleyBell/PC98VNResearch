@@ -121,7 +121,7 @@ def process_data(tsv_data: list) -> list:
 				f.write(str({**trdat, "text": text}) + "\n")
 	
 	# Translate the unique text strings.
-	translated_texts = translate_items(unique_texts)
+	translated_texts = translate_items_grouped(unique_texts)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "05_translated_texts.log", "wt") as f:
 			for trdat in trans_data:
@@ -272,9 +272,25 @@ def transdata2txt(tdata: dict) -> str:
 		tnew = tnew.replace(key, val)
 	return tdata["start"] + tnew + tdata["end"]
 
-def translate_items(texts: list) -> list:
+def translate_items_single(texts: list) -> list:
+	# translate each line separately
+	trans_texts = []
+	for (tid, txt) in enumerate(texts):
+		print(f"Translating line {1+tid} / {len(texts)} ({len(txt)} characters) ...", end="", flush=True)
+		t_start = time.time()
+		trans_text = translate_text(txt)
+		t_end = time.time()
+		print(f"   {t_end - t_start:.2f} s", flush=True)
+		
+		if trans_text is None:
+			print("Failed to call web service")
+			return None
+		trans_texts.append(trans_text)
+	return trans_texts
+
+def translate_items_grouped(texts: list) -> list:
+	# translate text in groups
 	TEXT_SEP = '\n'
-	RETRY_ATTEMPS = 2
 	
 	text_groups = [[]]
 	tgrp_size = -len(TEXT_SEP)	# un-count separator for last line
@@ -288,54 +304,60 @@ def translate_items(texts: list) -> list:
 	
 	line_base = 0
 	for (gid, grp) in enumerate(text_groups):
-		if True:
-			for retry in range(RETRY_ATTEMPS):
-				# translate the whole text group as one block
-				try_sep = TEXT_SEP * (retry+1)
-				grptxt_count = len(grp)
-				grptext = try_sep.join(grp)
-				
-				print(f"Translating lines {1+line_base}..{line_base+grptxt_count} / {len(texts)} "
-					f"({len(grptext)} characters) ...", end="", flush=True)
-				t_start = time.time()
-				grp_translated = translate_text(grptext)
-				t_end = time.time()
-				print(f"   {t_end - t_start:.2f} s", flush=True)
-				
-				if grp_translated is None:
-					print("Failed to call web service")
-					break
-				
-				grptrans = grp_translated.split(try_sep) if grp_translated is not None else []
-				if len(grptrans) == grptxt_count:
-					text_groups[gid] = grptrans
-					break
-				else:
-					print(f"Warning: Translation returned {len(grptrans)} lines when {grptxt_count} were expected - ", end='')
-					if retry == (RETRY_ATTEMPS - 1):
-						print("ignoring results.")
-					else:
-						print("trying again.")
-			line_base += grptxt_count
-		else:
-			# translate each line separately
-			for (tid, txt) in enumerate(grp):
-				print(f"Translating line {1+line_base} / {len(texts)} ({len(txt)} characters) ...", end="", flush=True)
-				t_start = time.time()
-				trans_text = translate_text(txt)
-				t_end = time.time()
-				print(f"   {t_end - t_start:.2f} s", flush=True)
-				
-				if trans_text is None:
-					print("Failed to call web service")
-				else:
-					grp[tid] = trans_text
-				line_base += 1
+		grptrans = translate_item_group(grp, TEXT_SEP, line_base, len(texts))
+		if type(grptrans) is list:
+			text_groups[gid] = grptrans
+			line_base += len(grp)
+			continue
+		print("ignoring results.")
+		line_base += len(grp)
 	
 	return [txt for grp in text_groups for txt in grp]
 
+def translate_item_group(text_group: list, line_sep: str, line_base: int, lines_total: int) -> typing.Optional[list]:
+	RETRY_ATTEMPS = 2
+	
+	grptxt_count = len(text_group)
+	for retry in range(RETRY_ATTEMPS):
+		# translate the whole text group as one block
+		try_sep = line_sep * (retry+1)
+		grptext = try_sep.join(text_group)
+		
+		print(f"Translating lines {1+line_base}..{line_base+grptxt_count} / {lines_total} "
+			f"({len(grptext)} characters) ...", end="", flush=True)
+		t_start = time.time()
+		grp_translated = translate_text(grptext)
+		t_end = time.time()
+		print(f"   {t_end - t_start:.2f} s", flush=True)
+		
+		if grp_translated is None:
+			print("Failed to call web service")
+			return None
+		
+		grptrans = grp_translated.split(try_sep)
+		if len(grptrans) == grptxt_count:
+			return grptrans
+		
+		print(f"Warning: Translation returned {len(grptrans)} lines when {grptxt_count} were expected - ", end='')
+		if retry < (RETRY_ATTEMPS - 1):
+			print("trying again.")
+	
+	if len(text_group) < 8:
+		print("translating lines separately.")
+		return translate_items_single(text_group)
+	else:
+		print("splitting into smaller groups.")
+		split_idx = len(text_group) // 2
+		tg1 = translate_item_group(text_group[:split_idx], line_sep, line_base + 0, lines_total)
+		if tg1 is None:
+			tg1 = text_group[:split_idx]
+		tg2 = translate_item_group(text_group[split_idx:], line_sep, line_base + split_idx, lines_total)
+		if tg2 is None:
+			tg2 = text_group[split_idx:]
+		return tg1 + tg2
+
 translate_req_id = 0
-def translate_text(text: str) -> str:
+def translate_text(text: str) -> typing.Optional[str]:
 	global config
 	global translate_req_id
 

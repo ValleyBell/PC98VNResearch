@@ -264,6 +264,8 @@ def sort_text_list(relevant_data: list, ref_labels: dict, cmd_list, label_list) 
 	return [rd[1] for rd in rd_sortlist]
 
 def apply_textbox_settings(tb_state: list, tb_settings: list) -> None:
+	if tb_settings is None:
+		return
 	for tb in tb_settings:
 		tb_id = tb["box_id"]
 		if ("width" in tb) and ("width" in tb):

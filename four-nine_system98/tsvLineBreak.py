@@ -104,12 +104,12 @@ def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, 
 	
 	(tb_width, tb_height) = tb_size_int
 	if config.textsize_check == 1:
-		(xpos, ypos) = text_size
+		(xsize, ysize) = text_size
 		if len(lines) > 0 and xpos <= 0:
-			ypos -= 1	# ignore last line when empty
-		if xpos <= tb_width and ypos <= tb_height:
+			ysize -= 1	# ignore last line when empty
+		if xsize <= tb_width and ysize <= tb_height:
 			return
-		print(f"TSV line {1+txitm['line_st']}: New text ({xpos}x{ypos}) " \
+		print(f"TSV line {1+txitm['line_st']}: New text ({xsize}x{ysize}) " \
 				f"exceeds text box! (text box: {tb_size_str})")
 	#elif config.textsize_check == 2:
 	#	if len(lines) == line_count:
@@ -423,6 +423,9 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 			elif last_non_spc in ["\\e", "\\w"]:
 				pass	# keep when the last character is a "wait" command
 			else:
+				# strip leading spaces, removing indentation
+				while (next_pos < len(text)) and text[next_pos].isspace():
+					next_pos += 1
 				# fuse lines
 				text = text[:pos] + text[next_pos:]
 				chrlen = 0
