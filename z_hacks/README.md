@@ -33,6 +33,11 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         This will jump to the credits screen directly.
       - variant 2: while viewing the first dialogue line (file `BL_001.SO3`), search for `b:\bl_002.so3` and overwrite it with `b:\bl_015.so3`
         After many dialogue lines, it will jump to one of the endings (NSFW!).
+- Gaogao 1/2
+  - jump to an arbitrary chapter:
+    - while on the main menu, search for `18 00 61 01 01 00 18 00 62 01 00 00`
+    - repalce the number after `61 01` with the chapter ID (01..09) and the number after `62 01` with the scene ID
+    - The last chapter has ID 09.
 - Gaogao 3: Wild Force
   - jump to an arbitrary chapter:
     - while on the main menu, search for `25 0B 04 00 09 00 18 00 2D 01 00` and repalce the last `00` with any number from 00 to 09

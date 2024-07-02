@@ -1,28 +1,28 @@
 ﻿# Images with text
 
 This folder contains various images that contain text.
-They are stored as uncompressed BMP files for easier processing and to keep the original palette intact.
+The PNGs keep the original palette indices.
 
 ## Chapter Titles
 
-- [Prologue](CHAPRO.BMP)
-- [Chapter 1](CHAP1.BMP) - プリティ-ガル
-- [Chapter 2](CHAP2.BMP) - そして、　トラブルの香り
-- [Chapter 3](CHAP3.BMP) - 失われた記憶
-- [Chapter 4](CHAP4.BMP) - 過徼なる二重螺旋
-- [Chapter 5](CHAP5.BMP) - 追跡のエチュ-ド
-- [Chapter 6](CHAP6.BMP) - ナイトワインド
-- [Chapter 7](CHAP7.BMP) - プロトタイプ　アルファ
-- [Chapter 8](CHAP8.BMP) - ホワイトクリスマスチェイス
-- [Epilogue](CHAEPI.BMP)
+- [Prologue](CHAPRO.PNG)
+- [Chapter 1](CHAP1.PNG) - プリティ-ガル
+- [Chapter 2](CHAP2.PNG) - そして、　トラブルの香り
+- [Chapter 3](CHAP3.PNG) - 失われた記憶
+- [Chapter 4](CHAP4.PNG) - 過徼なる二重螺旋
+- [Chapter 5](CHAP5.PNG) - 追跡のエチュ-ド
+- [Chapter 6](CHAP6.PNG) - ナイトワインド
+- [Chapter 7](CHAP7.PNG) - プロトタイプ　アルファ
+- [Chapter 8](CHAP8.PNG) - ホワイトクリスマスチェイス
+- [Epilogue](CHAEPI.PNG)
 
 **Note:** I modified the palette in all chapter title images to make everything visible.  
 The actually loads it as a simple image and uses palette effects to fade some of the graphics in.
-For reference, you can view [Chapter 1 with original palette](CHAP1_ORG-PAL.BMP).
+For reference, you can view [Chapter 1 with original palette](CHAP1_ORG-PAL.PNG).
 
 ## Staff
 
-[Image](STAFF.BMP)
+[Image](STAFF.PNG)
 
 ```
 GAOGAO!1st『ラジカルシークエンス』
@@ -45,4 +45,4 @@ Thanks to BabaJeanmel for the transcription.
 
 ## Miscellaneous
 
-- [Character portrait 200](F200.BMP) - みんな狩どやよ
+- [Character portrait 200](F200.PNG) - みんな狩どやよ
