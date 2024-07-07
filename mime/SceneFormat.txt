@@ -127,9 +127,16 @@ Commands
 	Instead, it is usually followed by command 03, which ends script execution.
 	After that, the game will load the script from the file set by this command and execute it.
 1D - show menu
-	2 bytes - ??
-	2 bytes - number of text strings
-	? bytes - series of Shift-JIS strings, each is terminated with two backslashes (5C5Ch)
+	2 bytes - draw position?
+	2 bytes - number of text strings (N)
+	? bytes - series of N Shift-JIS strings, each is terminated with two backslashes (5C5Ch)
+	Input:
+	- register 33h - ?? (checked for 0, 1 and 2)
+	- register 36h - enable selection sound effect
+	Output:
+	- register 8 - selected entry (1 = first entry)
+	- register 35h - set to 0
+	The number of the selected entry is stored in register 8. The first entry has number 1.
 1E - end script and quit
 	This will terminate the script and quit the game then.
 1F - ??
@@ -237,8 +244,11 @@ Commands
 	The register's contents are read and the resulting number drawn on the screen, right-aligned, padded with spaces to 5 characters.
 	It uses half-width characters to show the number.
 3D - ??
-	no parameters
-	It copies 0A2h bytes around.
+	2 bytes - ??
+	8*0Ah bytes - ?? (8 groups of 5x 2-byte integers)
+	8*0Ah bytes - ??
+	-> 0A2h bytes
+	It copies 0A2h bytes from the script to some global location.
 3E - ??
 	2 bytes - value (high byte is ignored)
 	This calls INT 68h, routine AH=0Fh with parameter AL = value
