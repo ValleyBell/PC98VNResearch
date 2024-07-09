@@ -16,7 +16,11 @@
 - Valkyrie `GSIC.EXE` disassembly: [ASM file](valkyrie_GSIC.asm) / [IDB database](valkyrie_GSIC.idb)
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
-- Python tool to convert the NEC PC-9801 `FONT.ROM` to an image: [fontrom2img.py](fontrom2img.py) (supports BMP/PNG/... through Pillow library)
+- Python tools dealing with the NEC PC-9801 font:
+  - convert the NEC PC-9801 `FONT.ROM` to an image: [fontrom2img.py](fontrom2img.py)
+  - use the PC-98 font to convert image to text: [font-transcribe.py](font-transcribe.py) (requires font image dumped with *fontrom2img*)
+  - use the PC-98 font to convert text to image: [font-write.py](font-write.py) (requires font image dumped with *fontrom2img*)
+  - All the tools use the [Pillow](https://python-pillow.org/) library and thus support various image formats like BMP/PNG/...
 
 [^1]: format documentation is at the top of the source file
 
