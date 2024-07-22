@@ -33,185 +33,142 @@ class LabelItem:
 SCPT_MASK = 0xF0
 SCPTM_VAL = 0x00	# immediate value
 SCPTM_PTR = 0x10	# pointer
+SCPTM_DATA = 0x20	# misc data
+SCPTM_FIXED = 0x30	# fixed-length data
 SCPTM_REG = 0x80	# register
 
 SCPT_BYTE = 0x01	# "byte" (2-byte parameter, high byte ignored)
 SCPT_INT = 0x02		# 2-byte integer
 SCPT_LONG = 0x03	# 4-byte integer
-SCPT_ILVAR = 0x04	# 2-byte/4-byte integer, based on previous register ID
 SCPT_HEX = 0x08		# integer, output as hexadecimal
 SCPT_INTH = SCPT_INT | SCPT_HEX
 
-SCPT_DATA1 = 0x10	# data pointer (1-byte groups)
-SCPT_DATA2 = 0x11	# data pointer (2-byte groups)
-SCPT_STR = 0x12		# string pointer
-SCPT_FNAME = 0x13	# file path pointer
-SCPT_JUMP = 0x14	# jump destination pointer
-SCPT_TXTSEL = 0x15	# text/menu selection list
-SCPT_FONTDAT = 0x16	# font data
+SCPT_JUMP = 0x10	# jump destination pointer
+SCPT_DATA1 = 0x20	# data pointer (1-byte groups)
+SCPT_DATA2 = 0x21	# data pointer (2-byte groups)
+SCPT_FNAME = 0x22	# string, 1 byte per charater, terminated with 00h
+SCPT_STR1 = 0x23	# string, 1 byte per charater, terminated with 5Ch
+SCPT_STR2 = 0x24	# string, 2 bytes per charater, terminated with 5C5Ch
+SCPT_TXTSEL = 0x25	# text/menu selection
 
-SCPT_REG_INT = 0x80	# register: integer
-SCPT_REG_LNG = 0x81	# register: long
-SCPT_REG_IL = 0x82	# register: integer/long
-SCPT_REG_STR = 0x83	# register: string
+SCPT_REG = 0x80	# register: integer
 
 SC_EXEC_END = 0x01	# terminate script execution here
 SC_EXEC_SPC = 0xFF	# special handling
 
 LBLFLG_UNUSED = 0x01
-LBLFLG_MENU = 0x10
+LBLFLG_JP = 0x02
+LBLFLG_CALL = 0x04
 
 SCENE_CMD_LIST = {
-	0x00: ("DOSEXIT", [], SC_EXEC_END),
-	0x01: (None     , []),
-	0x02: ("IMGLOAD", [SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_FNAME, SCPT_BYTE]),
-	0x03: ("TBOPEN" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x04: ("TBCLOSE", [SCPT_INT]),
-	0x05: ("TBCLEAR", [SCPT_INT]),
-	0x06: ("PALAPL" , []),
-	0x07: ("PALBW"  , [SCPT_INT, SCPT_INT]),
-	0x08: ("PALFADE", [SCPT_INT, SCPT_INT]),
-	0x09: ("PALLCKT", [SCPT_BYTE]),
-	0x0A: ("JP"     , [SCPT_JUMP], SC_EXEC_END),
-	0x0B: ("CMPR"   , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x0C: ("CMPI"   , [SCPT_REG_INT, SCPT_INT]),
-	0x0D: ("JEQ"    , [SCPT_JUMP]),
-	0x0E: ("JLT"    , [SCPT_JUMP]),
-	0x0F: ("JGT"    , [SCPT_JUMP]),
-	0x10: ("JGE"    , [SCPT_JUMP]),
-	0x11: ("JLE"    , [SCPT_JUMP]),
-	0x12: ("JNE"    , [SCPT_JUMP]),
-	0x13: ("JTBL"   , [SCPT_REG_INT], SC_EXEC_SPC),
-	0x14: ("PALCSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x15: ("PRINT"  , [SCPT_BYTE, SCPT_STR]),
-	0x16: ("PRINTXY", [SCPT_INT, SCPT_INT, SCPT_STR]),
-	0x17: (None     , []),
-	0x18: ("MOVI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x19: ("MOVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x1A: ("BGMPLAY", [SCPT_FNAME]),
-	0x1B: ("BGMFADE", []),
-	0x1C: ("BGMSTOP", []),
-	0x1D: ("BGMMODE", [SCPT_REG_INT]),
-	0x1E: ("WAITKEY", [SCPT_REG_INT]),
-	0x1F: ("LDSCENE", [SCPT_FNAME], SC_EXEC_END),
-	0x20: ("GV02"   , []),
-	0x21: ("WAIT"   , [SCPT_REG_INT]),
-	0x22: ("CHRDLY" , [SCPT_REG_INT]),
-	0x23: (None     , []),
-	0x24: ("ADDI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x25: ("SUBI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x26: ("TXCLR1" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
-	0x27: ("ADDR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x28: ("SUBR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x29: ("XYREAD" , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x2A: ("XYWRT"  , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x2B: (None     , []),
-	0x2C: (None     , []),
-	0x2D: ("REGCLR" , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x2E: (None     , []),
-	0x2F: ("CMD2F"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x30: (None     , []),
-	0x31: (None     , []),
-	0x32: ("PRINTR" , [SCPT_BYTE, SCPT_REG_INT]),
-	0x33: ("PA4GET" , [SCPT_REG_INT]),
-	0x34: ("PA4SET" , [SCPT_REG_INT]),
-	0x35: ("TXFILL" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INTH]),
-	0x36: ("GFX36"  , []),
-	0x37: ("XYFLOAD", [SCPT_FNAME]),
-	0x38: ("ANDR"   , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x39: ("ORR"    , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x3A: ("GFX3A"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x3B: ("GFX3B"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x3C: ("TXCLR2" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
-	0x3D: ("MULR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x3E: ("DIVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x3F: ("CMD3F"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_TXTSEL, SCPT_JUMP], SC_EXEC_SPC),
-	0x41: ("CMD41"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
-	0x42: ("CMD42"  , [SCPT_BYTE]),
-	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x44: (None     , []),
-	0x45: ("CMD45"  , [SCPT_INT]),
-	0x46: (None     , []),
-	0x47: (None     , []),
-	0x48: (None     , []),
-	0x49: (None     , []),
-	0x4A: ("REGFSAV", [SCPT_BYTE, SCPT_FNAME]),
-	0x4B: ("REGFLD" , [SCPT_BYTE, SCPT_FNAME]),
-	0x4C: ("CMD4C"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x4D: ("BGMMEAS", [SCPT_REG_INT]),
-	0x4E: ("SFXSSG" , [SCPT_BYTE]),
-	0x4F: ("SFXFM"  , [SCPT_BYTE]),
-	0x50: ("BGMSTAT", [SCPT_REG_INT]),
-	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INTH]),
-	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INTH]),
-	0x53: ("STRCAT" , [SCPT_REG_STR, SCPT_REG_STR]),
-	0x54: ("CALL"   , [SCPT_JUMP]),
-	0x55: ("RET"    , [], SC_EXEC_END),
-	0x56: ("STRCMPR", [SCPT_REG_STR, SCPT_REG_STR]),
-	0x57: ("STRNCPY", [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
-	0x58: ("STRCPYC", [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
-	0x59: ("STRCPYI", [SCPT_REG_STR, SCPT_STR]),
-	0x5A: ("STRCLR" , [SCPT_REG_STR]),
-	0x5B: ("STRCPY" , [SCPT_REG_STR, SCPT_REG_STR]),
-	0x5C: (None     , []),
-	0x5D: (None     , []),
-	0x5E: ("CMD5E"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x5F: ("STRTIME", [SCPT_REG_STR]),
-	0x60: ("FILETM" , [SCPT_REG_INT, SCPT_REG_STR, SCPT_FNAME]),
-	0x61: ("XYFSAVE", [SCPT_FNAME]),
-	0x62: ("CMD62"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x63: ("GFX63"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x64: ("GFX64"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x65: (None     , []),
-	0x66: (None     , []),
-	0x67: ("GFX67"  , [SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
-	0x68: ("GFX68"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x69: ("GFX69"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x6A: ("CMD6A"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x6B: ("CMD6B"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x6C: (None     , []),
-	0x6D: (None     , []),
-	0x6E: ("STRLEN" , [SCPT_REG_INT, SCPT_REG_STR]),
-	0x6F: (None     , []),
-	0x70: (None     , []),
-	0x71: (None     , []),
-	0x72: ("LOOPSTI", [SCPT_INT]),
-	0x73: ("LOOPGTR", [SCPT_REG_INT]),
-	0x74: ("LOOPJPI", [SCPT_INT, SCPT_JUMP]),
-	0x75: ("FONTCHR", [SCPT_INTH, SCPT_FONTDAT]),
-	0x76: ("IDLECHR", [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
-	0x77: ("IDLEDLY", [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x78: ("IDLEXY" , [SCPT_INT, SCPT_INT]),
-	0x79: ("CMD79"  , [SCPT_DATA2]),
-	0x7A: ("LOOPSTR", [SCPT_REG_INT]),
-	0x7B: ("LOOPJPR", [SCPT_REG_INT, SCPT_JUMP]),
-	0x7C: (None     , []),
-	0x7D: (None     , []),
-	0x7E: (None     , []),
-	0x7F: ("DOSRETR", [SCPT_REG_INT], SC_EXEC_END),
-	0x80: ("STRFLD" , [SCPT_REG_STR, SCPT_FNAME]),
-	0x81: ("STRFSAV", [SCPT_REG_STR, SCPT_FNAME]),
-	0x82: ("GFX82"  , []),
-	0x83: ("GFX83"  , [SCPT_REG_INT]),
-	0x84: ("GFX84"  , []),
-	0x85: ("GFX85"  , []),
-	0x86: ("GFX86"  , [SCPT_DATA1]),
-	0x87: ("GFX87"  , [SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
-	0x88: ("GFX88"  , [SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x89: ("GFX89"  , [SCPT_DATA1]),
-	0x8A: ("GFX8A"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x8B: ("GFX8B"  , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x8C: ("GFX8C"  , []),
-	0x8D: ("GFX8D"  , []),
-	0x8E: ("GFX8E"  , []),
+	0x00: ("TALKDGN", [SCPT_STR2]),
+	0x01: ("BGMLOAD", [SCPT_FNAME]),
+	0x02: ("TALKFS" , [SCPT_STR2]),
+	0x03: ("SCNLOAD", [], SC_EXEC_END),
+	0x04: ("CMD04"  , [SCPT_INT, SCPT_INT]),
+	0x05: ("PORTA6" , [SCPT_BYTE]),
+	0x06: ("WAIT"   , [SCPT_INT]),
+	0x07: ("MOVI"   , [SCPT_REG, SCPT_INT]),
+	0x08: ("MOVR"   , [SCPT_REG, SCPT_REG]),
+	0x09: ("ADDI"   , [SCPT_REG, SCPT_INT]),
+	0x0A: ("ADDR"   , [SCPT_REG, SCPT_REG]),
+	0x0B: ("SUBI"   , [SCPT_REG, SCPT_INT]),
+	0x0C: ("SUBR"   , [SCPT_REG, SCPT_REG]),
+	0x0D: ("CMD0D"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
+	0x0E: ("CMD0E"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH]),
+	0x0F: ("CMD0F"  , [SCPT_INT]),
+	0x10: ("BCLR"   , [SCPT_REG, SCPT_BYTE]),
+	0x11: ("BSET"   , [SCPT_REG, SCPT_BYTE]),
+	0x12: ("MOVM"   , [SCPT_REG, SCPT_REG, SCPT_INT]),
+	0x13: ("CALL"   , [SCPT_JUMP]),
+	0x14: ("RET"    , [], SC_EXEC_END),
+	0x15: ("JP"     , [SCPT_JUMP], SC_EXEC_END),
+	0x16: ("JEQ"    , [SCPT_REG, SCPT_INT, SCPT_JUMP]),
+	0x17: ("JGT"    , [SCPT_REG, SCPT_INT, SCPT_JUMP]),
+	0x18: ("JLT"    , [SCPT_REG, SCPT_INT, SCPT_JUMP]),
+	0x19: ("IMGLD2" , [SCPT_INTH, SCPT_INTH, SCPTM_FIXED | 0x05]),
+	0x1A: ("IMGLD"  , [SCPT_INTH, SCPT_INTH, SCPTM_FIXED | 0x05]),
+	0x1B: ("CMD1B"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
+	0x1C: ("SCNSET" , [SCPT_FNAME]),
+	0x1D: ("MENUSEL", [SCPT_INTH, SCPT_INT, SCPT_TXTSEL], SC_EXEC_SPC),
+	0x1E: ("QUIT"   , [], SC_EXEC_END),
+	0x1F: ("CMD1F"  , [SCPT_INT]),
+	0x20: ("CMD20"  , [SCPT_INT]),
+	0x21: ("SAVREAD", [SCPT_FNAME]),
+	0x22: ("CMD22"  , []),
+	0x23: ("PORTA4" , [SCPT_BYTE]),
+	0x24: ("IDXRD"  , [SCPT_REG, SCPT_INT]),
+	0x25: ("BTST"   , [SCPT_REG, SCPT_INT], SC_EXEC_SPC),
+	0x26: ("CMD26"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
+	0x27: ("CMD27"  , []),
+	0x28: ("CMD28"  , []),
+	0x29: ("CMD29"  , []),
+	0x2A: ("CMD2A"  , []),
+	0x2B: ("BGMPLAY", []),
+	0x2C: ("BGMFADE", [SCPT_BYTE]),
+	0x2D: ("CMD2D"  , [SCPT_REG, SCPT_REG]),
+	0x2E: ("IDXWRT" , [SCPT_REG, SCPT_INT]),
+	0x2F: ("CMD2F"  , []),
+	0x30: ("PRINT2" , [SCPT_INTH, SCPT_STR2]),
+	0x31: ("CMD31"  , []),
+	0x32: ("CMD32"  , []),
+	0x33: ("CMD33"  , []),
+	0x34: ("CMD34"  , []),
+	0x35: ("CMD35"  , [SCPT_INT]),
+	0x36: ("CMD36"  , []),
+	0x37: ("CMD37"  , []),
+	0x38: ("SAVWRT" , [SCPT_FNAME]),
+	0x39: ("RNDI"   , [SCPT_REG, SCPT_INT]),
+	0x3A: ("PRINT1I", [SCPT_INTH, SCPT_STR1]),
+	0x3B: ("DSPSI"  , [SCPT_INTH, SCPT_REG]),
+	0x3C: ("DSPI1"  , [SCPT_INTH, SCPT_REG]),
+	0x3D: ("CMD3D"  , [SCPT_INT, SCPT_DATA2, SCPT_DATA2]),
+	0x3E: ("CMD3E"  , [SCPT_BYTE]),
+	0x3F: ("SFXFM"  , [SCPT_BYTE]),
+	0x40: ("DSKWAIT", [SCPTM_FIXED | 0x0A, SCPT_BYTE]),
+	0x41: ("CMD41"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
+	0x42: ("DSPI2"  , [SCPT_INTH, SCPT_REG]),
+	0x43: ("MULCI"  , [SCPT_REG, SCPT_INT]),
+	0x44: ("CMD44"  , []),
+	0x45: ("DIGDSP" , [SCPT_INTH, SCPT_REG]),
+	0x46: ("DIGADDI", [SCPT_INTH, SCPT_INT]),
+	0x47: ("DIGSUBI", [SCPT_INTH, SCPT_INT]),
+	0x48: ("DSKMODE", []),
+	0x49: ("DIGADDR", [SCPT_INTH, SCPT_INT]),
+	0x4A: ("DIGSUBR", [SCPT_INTH, SCPT_INT]),
+	0x4B: ("BGMWAIT", [SCPT_INT, SCPT_INT]),
+	0x4C: ("CMD4C"  , []),
+	0x4D: ("CMD4D"  , []),
+	0x4E: ("CMPR"   , [SCPT_REG, SCPT_REG]),
+	0x4F: ("MULI"   , [SCPT_REG, SCPT_INT]),
+	0x50: ("MULR"   , [SCPT_REG, SCPT_REG]),
+	0x51: ("DIVI"   , [SCPT_REG, SCPT_INT]),
+	0x52: ("DIVR"   , [SCPT_REG, SCPT_REG]),
+	0x53: ("CMD53"  , [SCPT_REG]),
+	0x54: ("CMD54"  , [SCPT_REG]),
+	0x55: ("CMD55"  , [SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG]),
+	0x56: ("CMD56"  , [SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG]),
+	0x57: ("CMD57"  , [SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG]),
+	0x58: ("CMD58"  , [SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG]),
+	0x59: ("IMGLDR" , [SCPT_REG, SCPT_REG, SCPT_REG]),
+	0x5A: ("RNDR"   , [SCPT_REG, SCPT_REG]),
+	0x5B: ("DSKGET" , [SCPTM_FIXED | 0x0A]),
+	0x5C: ("CMD5C"  , [SCPT_REG]),
+	0x5D: ("PRINT2R", [SCPT_REG, SCPT_STR2]),
+	0x5E: ("DSPSR"  , [SCPT_REG, SCPT_REG]),
+	0x5F: ("CMD5F"  , [SCPT_REG, SCPT_REG, SCPT_REG, SCPT_REG]),
+	0x60: ("CMD60"  , []),
+	0x61: ("DSPI1R" , [SCPT_REG, SCPT_REG]),
+	0x62: ("DSPI2R" , [SCPT_REG, SCPT_REG]),
+	0x63: ("DSKPSET", []),
 }
 
-TKTP_INT = 0x01	# integer number (byte/word/dword)
-TKTP_STR = 0x02	# string
+TKTP_INT = 0x01		# integer number (byte/word/dword)
+TKTP_STR = 0x02		# string
 TKTP_NAME = 0x80	# register or label name
-TKTP_REG = 0x81	# register
-TKTP_LBL = 0x82	# label name
+TKTP_REG = 0x81		# register
+TKTP_LBL = 0x82		# label name
+TKTP_CTRL = 0xF0	# control character
 
 UNESCAPE_TBL = {
 	'\\': '\\',	# backslash (5C)
@@ -231,11 +188,8 @@ TOKEN_ALPHABET = [chr(x) for x in \
 	[x for x in range(0x61, 0x7B)]] + ["_"]
 KEYWORDS = {
 	"INCLUDE",	# include other ASM file
-	"DESC",	# module description: UTF-8 string to be encoded as Shift-JIS
 	"DB",	# data: bytes or ASCII strings
 	"DW",	# data: words
-	"DS",	# data: bytes or UTF-8 strings to be encoded as Shift-JIS
-	"DSJ",	# data: JIS code words, to be encoded as Shift-JIS
 }
 for cdata in SCENE_CMD_LIST.values():
 	if cdata[0] is not None:
@@ -244,7 +198,6 @@ for cdata in SCENE_CMD_LIST.values():
 MODULE_PATH = os.path.dirname(__file__)
 necjis = nec_jis_conv.JISConverter()
 config = {}
-MOD_DESC_LEN = 0x100	# first 0x100 bytes are reserved for the module description
 
 
 def load_additional_font_table(filepath: str) -> int:
@@ -337,6 +290,10 @@ def get_token_str(line: str, startpos: int) -> typing.Tuple[int, str, int]:
 
 def get_token_int(line: str, startpos: int) -> typing.Tuple[int, int, int]:
 	pos = startpos
+	if line[pos] in ['+', '-']:
+		pos += 1
+	if line[pos : pos+2].lower() == "0x":	# prefix for hexadecimal numbers
+		pos += 2
 	while pos < len(line):
 		if not line[pos].isalnum():
 			break
@@ -362,12 +319,13 @@ def get_token(line: str, startpos: int, space_split: bool = False) -> typing.Tup
 	if startpos >= len(line):
 		return None
 	
-	pos = startpos
-	if line[pos] == '"':
+	if line[startpos] in ['[', ']']:
+		return (TKTP_CTRL, line[startpos : startpos+1], startpos+1)
+	if line[startpos] == '"':
 		return get_token_str(line, startpos)
-	elif line[pos].isdecimal():
+	if line[startpos].isdecimal() or (line[startpos] in ['+', '-']):
 		return get_token_int(line, startpos)
-	elif line[pos].isalpha():
+	if line[startpos].isalpha():
 		return get_token_name(line, startpos, space_split)
 	else:
 		return None
@@ -376,7 +334,7 @@ def get_nametoken_type(token: str, label_list: list) -> int:
 	if len(token) < 1:
 		return None
 	first_chr = token[0].casefold()
-	if first_chr in ['i', 'l', 's']:
+	if first_chr == 'r':
 		if (len(token) >= 2) and token[1].isdecimal():
 			return TKTP_REG
 	if token.casefold() in label_list:
@@ -388,7 +346,7 @@ def read_token_reg(token: str) -> typing.Tuple[str, int]:	# returns tuple(reg ty
 	if len(token) < 1:
 		return None
 	first_chr = token[0].casefold()
-	if first_chr in ['i', 'l', 's']:
+	if first_chr == 'r':
 		try:
 			return (first_chr, int(token[1:], 10))
 		except:
@@ -430,6 +388,7 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 			return None
 		pos = find_next_token(line, pos)
 		
+		arrays_open = 0
 		citem = CommandItem(asmFile=asm_filename, lineID=lid, cmdName=keyword.upper(), params=[])
 		while pos < len(line):
 			res = get_token(line, pos)
@@ -437,16 +396,34 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 				print(f"Parse error in {asm_filename}:{1+lid}, column {1+pos}: Parsing error!")	# TODO: print details
 				return None
 			(ttype, tdata, endpos) = res
+			if ttype == TKTP_CTRL:
+				if tdata == "[":
+					arrays_open += 1
+				elif tdata == "]":
+					arrays_open -= 1
+					if arrays_open < 0:
+						print(f"Parse error in {asm_filename}:{1+lid}: Invalid array end at position {1+pos}")
+						return None
 			citem.params += [ParamToken(ttype, tdata, pos)]
 			pos = find_next_token(line, endpos)	# skip spaces
 			if pos >= len(line):
 				break
 			if line[pos] == ';':	# comment
+				citem.commentPos = pos
 				break
-			if line[pos] != ',':
+			if ttype == TKTP_CTRL:
+				if tdata == "[":
+					continue	# we don't want a comma after this control character
+			if line[pos] == ',':
+				pos = find_next_token(line, pos+1)	# skip spaces
+			elif line[pos] == ']':
+				pass	# "array end" is a valid control character that can follow any token
+			else:
 				print(f"Parse error in {asm_filename}:{1+lid}: Expected comma at position {1+pos}")
 				return None
-			pos = find_next_token(line, pos+1)	# skip spaces
+		if arrays_open > 0:
+			print(f"Parse error in {asm_filename}:{1+lid}: Not all arrays were closed!")
+			return None
 		#print((lid, keyword, citem.params))
 		
 		cmd_list.append(citem)
@@ -470,34 +447,13 @@ def generate_binary(cmd_list, label_list) -> bytes:
 			KEYWORD2CMD[cmd_name] = key
 	
 	# generate byte stream with placeholders for labels
-	mod_desc = bytearray()
 	data = bytearray()
-	start_ofs = config.base_ofs + MOD_DESC_LEN
+	start_ofs = 0x0000
 	cmd_ofs_list = []
 	lbl_write_list = []	# list[ tuple(file_pos, label_name, line_id, asm_filename) ]
 	for citem in cmd_list:
 		cmd_ofs_list += [len(data)]
-		if citem.cmdName == "DESC":
-			for pitem in citem.params:
-				if pitem.type == TKTP_INT:
-					try:
-						if pitem.data < 0:
-							mod_desc += struct.pack("<b", pitem.data)
-						else:
-							mod_desc += struct.pack("<B", pitem.data)
-					except:
-						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
-						return None
-				elif pitem.type == TKTP_STR:
-					value = necjis.sjis_encode_str(pitem.data, config.ascii)
-					if type(value) is not bytes:
-						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
-						return None
-					mod_desc += value
-				else:
-					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
-					return None
-		elif citem.cmdName == "DB":
+		if citem.cmdName == "DB":
 			for pitem in citem.params:
 				if pitem.type == TKTP_INT:
 					try:
@@ -512,26 +468,6 @@ def generate_binary(cmd_list, label_list) -> bytes:
 					value = ascii_encode_str(pitem.data)
 					if type(value) is not bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Only printable ASCII characters are allowed!")
-						return None
-					data += value
-				else:
-					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or string!")
-					return None
-		elif citem.cmdName == "DS":
-			for pitem in citem.params:
-				if pitem.type == TKTP_INT:
-					try:
-						if pitem.data < 0:
-							data += struct.pack("<b", pitem.data)
-						else:
-							data += struct.pack("<B", pitem.data)
-					except:
-						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
-						return None
-				elif pitem.type == TKTP_STR:
-					value = necjis.sjis_encode_str(pitem.data, config.ascii)
-					if type(value) is not bytes:
-						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
 						return None
 					data += value
 				else:
@@ -556,37 +492,52 @@ def generate_binary(cmd_list, label_list) -> bytes:
 				else:
 					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or label!")
 					return None
-		elif citem.cmdName == "DSJ":
-			for pitem in citem.params:
-				if pitem.type != TKTP_INT:
-					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer!")
-					return None
-				try:
-					value = necjis.jis2sjis(pitem.data)
-					data += struct.pack(">H", value)	# value must be written in Big Endian order
-				except:
-					print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Unable to JIS code to Shift-JIS!")
-					return None
-		elif citem.cmdName in KEYWORD2CMD:
+		
+		if citem.cmdName in KEYWORD2CMD:
 			cmd_id = KEYWORD2CMD[citem.cmdName]
 			cmd_item = SCENE_CMD_LIST[cmd_id]
 			cmd_params = cmd_item[1]
-			if len(citem.params) != len(cmd_params):
-				print(f"Error in {citem.asmFile}:{1+citem.lineID}: parameters: {len(citem.params)}, requires {len(cmd_params)}")
-				return None
 			
-			data += struct.pack("<H", cmd_id)
-			cur_reg_type = SCPT_INT	# default to 16-bit integer
+			data += struct.pack("<B", cmd_id)
+			rec_level = 0
+			par_id_rec = [0]
+			expected_par_items = 0
 			for (par_id, pitem) in enumerate(citem.params):
-				cptype = cmd_params[par_id]
+				cptype = cmd_params[par_id_rec[0]] if par_id_rec[0] < len(cmd_params) else None
+				if pitem.type == TKTP_CTRL:
+					if pitem.data == "[":
+						expected_par_items = 0
+						if cptype is not None:
+							# injecting these checks here is really hackish, but I don't have a better idea
+							if cptype == SCPT_TXTSEL and rec_level == 0:
+								expected_par_items = citem.params[par_id - 1].data	# use menu string count
+							elif cptype == SCPT_DATA2:
+								if cmd_id == 0x3D:
+									expected_par_items = 40
+						rec_level += 1
+						par_id_rec += [0]
+					elif pitem.data == "]":
+						if par_id_rec[rec_level] != expected_par_items:
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}: Parameter {1+par_id_rec[0]} " + \
+								f"expects {expected_par_items} items, but has {par_id_rec[rec_level]}")
+							return None
+						par_id_rec = par_id_rec[:-1]
+						rec_level -= 1
+						if rec_level < 0:
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}: Invalid array end at position {1+pitem.pos}")
+							return None
+						par_id_rec[rec_level] += 1	# finish this parameter
+					continue
+				par_id_rec[rec_level] += 1
+				if cptype is None:
+					continue
+				
 				cptmask = cptype & SCPT_MASK
 				if cptmask == SCPTM_VAL:
 					cptype &= ~SCPT_HEX
 					if pitem.type != TKTP_INT:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer!")
 						return None
-					if cptype == SCPT_ILVAR:
-						cptype = cur_reg_type	# expected type base on previously accessed register
 					if cptype == SCPT_BYTE:
 						val_fmt = "B"
 					elif cptype == SCPT_INT:
@@ -625,48 +576,64 @@ def generate_binary(cmd_list, label_list) -> bytes:
 						return None
 					
 					(reg_type, reg_id) = reg_info
-					if cptype == SCPT_REG_INT:
-						if reg_type != 'i':
-							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require integer register!")
-							return None
-						cur_reg_type = SCPT_INT
-						if reg_id >= 0x400+20:
-							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
-					elif cptype == SCPT_REG_LNG:
-						if reg_type != 'l':
-							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require long-int register!")
-							return None
-						cur_reg_type = SCPT_LNG
-						if reg_id >= 10:
-							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
-					elif cptype == SCPT_REG_IL:
-						if reg_type == 'i':
-							cur_reg_type = SCPT_INT
-						elif reg_type == 'l':
-							cur_reg_type = SCPT_REG_LNG
-							reg_id += 0x400
-						else:
-							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require int/long register!")
-							return None
-						if reg_id >= 0x400+20:
-							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
-					elif cptype == SCPT_REG_STR:
-						if reg_type != 's':
-							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: Require string register!")
-							return None
-						if reg_id >= 50:
-							print(f"Warning in {citem.asmFile}:{1+citem.lineID}: using out-of-range register {pitem.data}")
 					data += struct.pack("<H", reg_id)
+				elif cptype in [SCPT_FNAME, SCPT_STR1, SCPT_STR2, SCPT_TXTSEL]:
+					value = necjis.sjis_encode_str(pitem.data, True)
+					if type(value) is not bytes:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
+						return None
+					if cptype == SCPT_FNAME:
+						value += b'\x00'
+					elif cptype == SCPT_STR1:
+						value += b'\x5C'
+					elif cptype in [SCPT_STR2, SCPT_TXTSEL]:
+						value += b'\x5C\x5C'
+					data += value
+				elif cptmask == SCPTM_FIXED:
+					value = necjis.sjis_encode_str(pitem.data, True)
+					if type(value) is not bytes:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
+						return None
+					strlen = cptype & 0x0F
+					value = value[0:strlen].ljust(strlen, b'\x00')
+					data += value
+				elif cptype == SCPT_DATA1:
+					try:
+						if pitem.data < 0:
+							data += struct.pack("<b", pitem.data)
+						else:
+							data += struct.pack("<B", pitem.data)
+					except:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 8 bits!")
+						return None
+				elif cptype == SCPT_DATA2:
+					if pitem.type == TKTP_NAME:
+						pitem.type = get_nametoken_type(pitem.data, label_list)
+					if pitem.type == TKTP_INT:
+						try:
+							if pitem.data < 0:
+								data += struct.pack("<h", pitem.data)
+							else:
+								data += struct.pack("<H", pitem.data)
+						except:
+							print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: value doesn't fit into 16 bits!")
+							return None
+					elif pitem.type == TKTP_LBL:
+						lbl_write_list += [(len(data), pitem.data, citem.lineID, citem.asmFile)]
+						data += struct.pack("<H", 0xAAAA)
+					else:
+						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos}: expected integer or label!")
+						return None
 				else:
 					print(f"Internal error in {citem.asmFile}:{1+citem.lineID}: Unknown parameter type 0x{cptype:02X}!")
 					return None
+			if par_id_rec[0] != len(cmd_params):
+				print(f"Error in {citem.asmFile}:{1+citem.lineID}: parameters: {par_id_rec}, requires {len(cmd_params)}")
+				return None
 		else:
 			print(f"Compile error in {citem.asmFile}:{1+citem.lineID}: Unknown keyword '{citem.cmdName}'")
 			return None
 	cmd_ofs_list += [len(data)]	# for referencing EOF
-	
-	# pad module description with 00s
-	mod_desc = mod_desc[:MOD_DESC_LEN].ljust(MOD_DESC_LEN, b'\x00')
 	
 	# Now write all pointers that reference labels. (Their exact offsets were previously unknown.)
 	for (srcofs, lblname, lid, asm_filename) in lbl_write_list:
@@ -679,7 +646,7 @@ def generate_binary(cmd_list, label_list) -> bytes:
 		#print(f"Cmd {cmd_id} Name {lblname} -> ptr at 0x{srcofs:04X} = 0x{dstofs:04X}")
 		struct.pack_into("<H", data, srcofs, dstofs)
 	
-	return mod_desc + data
+	return data
 
 def load_asm(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
@@ -687,12 +654,7 @@ def load_asm(fn_in: str) -> typing.List[str]:
 
 def write_scene_binary(fn_out: str, data: bytes) -> None:
 	with open(fn_out, "wb") as f:
-		f.write(data[:MOD_DESC_LEN])	# the module description is unencrypted
-		if config.unscrambled:
-			f.write(data[MOD_DESC_LEN:])
-		else:
-			# The rest is encrypted using XOR 0x01
-			f.write(bytes([x ^ 0x01 for x in data[MOD_DESC_LEN:]]))
+		f.write(data)
 	return
 
 def load_parse_asm(fn_in: str) -> tuple:
@@ -836,15 +798,11 @@ def main(argv):
 	global config
 	global necjis
 	
-	print("four-nine/Izuho Saruta System-98 Scenario Compiler")
+	print("MIME Scenario Compiler")
 	aparse = argparse.ArgumentParser()
-	aparse.add_argument("-b", "--base-ofs", type=auto_int, help="set base/load offset of the scenario file", default=0x0000)
 	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
-	aparse.add_argument("-u", "--unscrambled", action="store_true", help="output the file unscrambled")
-	#aparse.add_argument("-a", "--ascii", action="store_true", help="use single-byte codes for ASCII and half-width Katakana")
-	aparse.add_argument("-a", "--ascii", action="store_true", help="use single-byte codes for half-width Katakana")
 	aparse.add_argument("in_file", help="input assembly file (.ASM)")
-	aparse.add_argument("out_file", help="output scenario file (.S)")
+	aparse.add_argument("out_file", help="output scenario file (.BIN)")
 	
 	config = aparse.parse_args(argv[1:])
 	

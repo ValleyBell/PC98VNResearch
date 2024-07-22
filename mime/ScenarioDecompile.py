@@ -53,7 +53,7 @@ SCENE_CMD_LIST = {
 	0x0B: ("SUBI"   , [SCPT_REG, SCPT_INT]),
 	0x0C: ("SUBR"   , [SCPT_REG, SCPT_REG]),
 	0x0D: ("CMD0D"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
-	0x0E: ("CMD0E"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x0E: ("CMD0E"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH]),
 	0x0F: ("CMD0F"  , [SCPT_INT]),
 	0x10: ("BCLR"   , [SCPT_REG, SCPT_BYTE]),
 	0x11: ("BSET"   , [SCPT_REG, SCPT_BYTE]),
@@ -64,9 +64,9 @@ SCENE_CMD_LIST = {
 	0x16: ("JEQ"    , [SCPT_REG, SCPT_INT, SCPT_JUMP]),
 	0x17: ("JGT"    , [SCPT_REG, SCPT_INT, SCPT_JUMP]),
 	0x18: ("JLT"    , [SCPT_REG, SCPT_INT, SCPT_JUMP]),
-	0x19: ("IMGLD1" , [SCPT_INTH, SCPT_INTH, SCPTM_FIXED | 0x05]),
-	0x1A: ("IMGLD2" , [SCPT_INTH, SCPT_INTH, SCPTM_FIXED | 0x05]),
-	0x1B: ("CMD1B"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x19: ("IMGLD2" , [SCPT_INTH, SCPT_INTH, SCPTM_FIXED | 0x05]),
+	0x1A: ("IMGLD"  , [SCPT_INTH, SCPT_INTH, SCPTM_FIXED | 0x05]),
+	0x1B: ("CMD1B"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
 	0x1C: ("SCNSET" , [SCPT_FNAME]),
 	0x1D: ("MENUSEL", [SCPT_INTH, SCPT_INT, SCPT_TXTSEL], SC_EXEC_SPC),
 	0x1E: ("QUIT"   , [], SC_EXEC_END),
@@ -104,7 +104,7 @@ SCENE_CMD_LIST = {
 	0x3E: ("CMD3E"  , [SCPT_BYTE]),
 	0x3F: ("SFXFM"  , [SCPT_BYTE]),
 	0x40: ("DSKWAIT", [SCPTM_FIXED | 0x0A, SCPT_BYTE]),
-	0x41: ("CMD26"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x41: ("CMD41"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
 	0x42: ("DSPI2"  , [SCPT_INTH, SCPT_REG]),
 	0x43: ("MULCI"  , [SCPT_REG, SCPT_INT]),
 	0x44: ("CMD44"  , []),
@@ -455,7 +455,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				curpos += strlen
 			elif par_type in [SCPT_DATA1, SCPT_DATA2]:
 				if cmd_id == 0x3D:
-					dlen = 0x50
+					dlen = 40*2
 					darray = scene_read_array(scenedata, file_usage, curpos, dlen)
 					iterat = struct.iter_unpack("<h", darray)
 					par_val = [v[0] for v in iterat]

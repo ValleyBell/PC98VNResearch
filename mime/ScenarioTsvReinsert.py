@@ -11,7 +11,8 @@ import argparse
 class ParamToken:
 	type: int	# token type
 	data: typing.Union[int, str]	# token data
-	pos: int	# start position on current line
+	posS: int	# start position on current line
+	posE: int	# end position on current line
 
 @dataclasses.dataclass
 class CommandItem:
@@ -54,10 +55,70 @@ TOKEN_ALPHABET = [chr(x) for x in \
 	[x for x in range(0x61, 0x7B)]] + ["_"]
 
 config = {}
-textbox_info = {
-	"TALKDGN": (16*2, 5),	# dungeon talk
-	"TALKFS": (37*2, 3),	# full-screen talk
-}
+
+
+def parse_tsv(lines: list) -> list:
+	if len(lines) > 0:
+		if lines[0].startswith("file\t"):
+			lines[0] = "#" + lines[0]	# enforce header to be a comment
+	
+	result = []
+	for (lid, line) in enumerate(lines):
+		ltrim = line.lstrip()
+		if len(ltrim) == 0 or ltrim.startswith('#') or ltrim.startswith(';'):
+			result += [line]
+			continue
+		ltrim = line.rstrip('\n')
+		cols = ltrim.split('\t', 5)
+		if len(cols) < 6:
+			print(f"Line {lid} invalid: {ltrim}")
+			return None
+		(filename, lineref, lblref, mode, tbox, text) = cols
+		lineref = lineref.split(' ', 1)[0]
+		if "," in lineref:
+			lineref = lineref.split(',')
+			lineid = int(lineref[0])
+			lineitm = int(lineref[1])
+		else:
+			lineid = int(lineref)
+			lineitm = 0
+		if "+" in lblref:
+			lblref = lblref.split('+')
+			lblname = lblref[0]
+			lblline = int(lblref[1])
+		else:
+			lblname = lblref
+			lblline = None
+		if "@" in tbox:
+			(tbox, tloc) = tbox.split('@')
+			tloc = tuple([int(val) for val in tloc.split(',')])	# convert ["1,2"] to (1, 2)
+		else:
+			tloc = None
+		result.append({
+			"tsv-lid": lid,
+			"file": filename,
+			"line-id": lineid,
+			"line-item": lineitm,
+			"label": lblname,
+			"label-line": lblline,
+			"mode": mode,
+			"tbox": tbox,
+			"tloc": tloc,
+			"text": text,
+		})
+	return result
+
+def generate_file_list(tsv_data: list) -> list:
+	filelist = []
+	fileset = set()
+	for ldata in tsv_data:
+		if type(ldata) is str:
+			continue
+		fname = ldata["file"]
+		if fname not in fileset:
+			fileset.add(fname)
+			filelist.append({"file": fname})
+	return filelist
 
 
 def find_next_token(line: str, startpos: int) -> int:
@@ -206,7 +267,7 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 					if arrays_open < 0:
 						print(f"Parse error in {asm_filename}:{1+lid}: Invalid array end at position {1+pos}")
 						return None
-			citem.params += [ParamToken(ttype, tdata, pos)]
+			citem.params += [ParamToken(ttype, tdata, pos, endpos)]
 			pos = find_next_token(line, endpos)	# skip spaces
 			if pos >= len(line):
 				break
@@ -232,105 +293,177 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 	
 	return (cmd_list, label_list)
 
-def screen_addr2pos(address: int) -> typing.Union[typing.Tuple[int, int], None]:
-	if address >= 0x7D00:	# only screen positions for 640x400 are valid
-		return None
-	column = address % 80	# 0..79
-	line = address // 80	# 0..399
-	return (column * 8, line)	# return (X,Y)
+def screen_pos2addr(x: int, y: int) -> int:
+	if y < 0 or y >= 640:
+		return 0xFFFF
+	return (y * 80) + (x // 8)
 
-def generate_message_table(cmd_list: list, label_list: list) -> list:
-	cmd_lbl_list = {}
-	#label_list[lbl_nm_cf] = LabelItem(cmdID=len(cmd_list), asmFile=asm_filename, lineID=lid, lblName=label_name)
-	for lname in label_list:
-		lbl = label_list[lname]
-		cmd_lbl_list[lbl.cmdID] = lname
-	
-	lastLbl = None
-	lblText = None
-	msg_table = []
-	for (cid, citem) in enumerate(cmd_list):
-		if cid in cmd_lbl_list:
-			lbl_key = cmd_lbl_list[cid]
-			lastLbl = label_list[lbl_key]
+def tsvdata2asmstr(text: str) -> str:
+	pos = 0
+	result = ""
+	while pos < len(text):	# Note: must be "<=" to process string terminator upon line end
+		chrlen = 1
+		token_data = None
+		if text[pos] == '\\':
+			chrlen += 1
+			token_data = text[pos : pos+chrlen]
+		elif text[pos] == '"':
+			token_data = '\\' + text[pos]	# quotation marks need to be escaped
+		elif ord(text[pos]) >= 0x20:
+			token_data = text[pos]
+		else:
+			chrid = ord(text[pos])
+			token_data = f"\\x{chrid:02X}"
+		pos += chrlen
 		
-		if lastLbl is not None:
-			lineDiff = citem.lineID - lastLbl.lineID
-			lblText = f"{lastLbl.lblName}+{lineDiff}"
+		result += token_data
+	
+	return f'"{result}"'
+
+def patch_asms(tsvdata: list, asmlist: list) -> int:
+	asmlut = {}
+	for (asmid, asmfile) in enumerate(asmlist):
+		asmlut[asmfile["file"]] = asmid
+		
+		asmfile["cmd-lut"] = [None] * len(asmfile["lines"])
+		for (cid, citem) in enumerate(asmfile["data"][0]):
+			asmfile["cmd-lut"][citem.lineID] = cid
+		asmfile["lbl-lut"] = [None] * len(asmfile["lines"])
+		for (lname, lbl) in asmfile["data"][1].items():
+			asmfile["lbl-lut"][lbl.lineID] = lname
+	
+	for tsvline in tsvdata:
+		if type(tsvline) is str:
+			continue
+		
+		af = asmlist[asmlut[tsvline["file"]]]
+		alines = af["lines"]
+		(acmds, albls) = af["data"]
+		
+		# turn TSV text into ASM command sets
+		asmtxt = tsvdata2asmstr(tsvline["text"])
+		
+		lineid = tsvline["line-id"]
+		lineitm = tsvline["line-item"]
+		cid = af["cmd-lut"][lineid]
+		if cid is None:
+			print(f"Error: Unable to reinsert text on line {lineid} - command missing!")
+			continue
+		citem = acmds[cid]
 		
 		cmdName = citem.cmdName.upper()
+		field_rep = []
 		if cmdName.startswith("PRINT"):
 			# format: PRINT screenPos, "text"
-			tloc = screen_addr2pos(citem.params[0].data)
-			msg_table += [(citem.lineID, lblText, -1, "prt", None, tloc, citem.params[1].data)]
+			if tsvline["tloc"] is not None:
+				tloc = tsvline["tloc"]
+				loctext = "0x{:04X}".format(screen_pos2addr(tloc[0], tloc[1]))
+				field_rep.append((0, loctext))
+			if lineitm == 0:
+				par_idx = 1
+			else:
+				par_idx = -1
 		elif cmdName.startswith("TALK"):
 			# TALKDGN "text"
-			tbinfo = textbox_info[cmdName] if (cmdName in textbox_info) else None
-			#            [(line_id, lblText, index, msgtype, tbinfo, text)]
-			msg_table += [(citem.lineID, lblText, -1, "txt", tbinfo, None, citem.params[0].data)]
+			if lineitm == 0:
+				par_idx = 0
+			else:
+				par_idx = -1
 		elif cmdName == "MENUSEL":
 			# MENUSEL screenPos, numberEntries, ["text1", "text2", ...]
+			if tsvline["tloc"] is not None:
+				tloc = tsvline["tloc"]
+				loctext = "0x{:04X}".format(screen_pos2addr(tloc[0], tloc[1]))
+				field_rep.append((0, loctext))
 			idx_entry = None
-			tloc = screen_addr2pos(citem.params[0].data)
-			for pitem in citem.params:
+			par_idx = -1
+			for (pid, pitem) in enumerate(citem.params):
 				if pitem.type == TKTP_CTRL:
 					if pitem.data == "[":
 						idx_entry = 0
 					elif pitem.data == "]":
 						idx_entry = None
 				else:
-					if pitem.type == TKTP_STR:
-						msg_table += [(citem.lineID, lblText, idx_entry, "sel", None, tloc, pitem.data)]
-						tloc = None	# write text location only for first entry
 					if idx_entry is not None:
+						if idx_entry == lineitm:
+							par_idx = pid
 						idx_entry += 1
-	return msg_table
+		else:
+			par_idx = None
+		if par_idx is None:
+			print(f"Error: Unable to reinsert text on line {lineid} - bad command {citem.cmdName}!")
+			continue
+		elif par_idx < 0:
+			print(f"Error: Unable to reinsert text on line {lineid} - out-of-range string index {lineitm}!")
+			continue
+		field_rep.append((par_idx, asmtxt))
+		
+		# replace parameters in ASM line
+		for (pid, newtext) in field_rep:
+			param = citem.params[pid]
+			
+			oldlen = param.posE - param.posS
+			lendiff = len(newtext) - oldlen
+			alines[lineid] = alines[lineid][:param.posS] + newtext + alines[lineid][param.posE:]
+			# fix all the internal offsets
+			param.posE += lendiff
+			for pid in range(par_idx + 1, len(citem.params)):
+				pitem = citem.params[pid]
+				pitem.posS += lendiff
+				pitem.posE += lendiff
+			if citem.commentPos >= 0:
+				citem.commentPos += lendiff
+	
+	return 0
 
-def load_asm(fn_in: str) -> typing.List[str]:
+def load_text_file(fn_in: str) -> typing.List[str]:
 	with open(fn_in, "rt", encoding="utf-8") as f:
 		return f.readlines()
 
-def load_parse_asm(fn_in: str) -> tuple:
-	try:
-		asm_lines = load_asm(fn_in)
-	except IOError:
-		print(f"Error loading {fn_in}")
-		return 1
-	ret = parse_asm(asm_lines, fn_in)
-	if ret is None:
-		return 2
-	return ret
+def write_text_file(fn_out: str, lines: list) -> None:
+	with open(fn_out, "wt", encoding="utf-8") as f:
+		f.writelines(lines)
+	return
 
-def asm2tsv(in_fns: str, fn_out: str) -> int:
+def tsv_asm_patch(tsv_file: str, inpath: str, outpath: str) -> int:
 	result = 0
 	try:
-		with open(fn_out, "wt") as f:
-			f.write("#file\tline,idx\tlabel\ttype\ttextbox\tstring\n")
+		# read + parse TSV
+		print("Reading TSV ...", flush=True)
+		tsv_lines = load_text_file(tsv_file)
+		tsv_data = parse_tsv(tsv_lines)
+		asmlist = generate_file_list(tsv_data)
 
-			for fn_in in in_fns:
-				print(f"{fn_in} ...")
-				ret = load_parse_asm(fn_in)
-				if type(ret) is not tuple:
-					result = max([ret, result])
-					continue
-				(cmd_list, label_list) = ret
-				msg_list = generate_message_table(cmd_list, label_list)
+		# read all related ASM files
+		print("Reading ASM files ...", flush=True)
+		for asmfile in asmlist:
+			try:
+				fullpath = os.path.join(inpath, asmfile["file"])
+				asm_lines = load_text_file(fullpath)
+			except IOError:
+				print(f"Error loading {asmfile['file']}")
+				return 1
+			ret = parse_asm(asm_lines, asmfile["file"])
+			if ret is None:
+				return 2
+			asmfile["lines"] = asm_lines
+			asmfile["data"] = ret
 
-				#fname = os.path.basename(fn_in)
-				fname = fn_in
-				for msg in msg_list:
-					line_str = f"{msg[0]}"
-					if msg[2] >= 0:
-						line_str += f",{msg[2]}"
-					tbox = msg[4]
-					if tbox is None:
-						tbstr = "-"
-					else:
-						tbstr = f"{tbox[0]}x{tbox[1]}"
-					tloc = msg[5]
-					if tloc is not None:
-						tbstr += f"@{tloc[0]},{tloc[1]}"
-					f.write(f"{fname}\t{line_str}\t{msg[1]}\t{msg[3]}\t{tbstr}\t{msg[6]}\n")
+		print("Patching ASM files ...", flush=True)
+		ret = patch_asms(tsv_data, asmlist)
+		if ret != 0:
+			return ret
+
+		# write all ASM files
+		print("Writing ASM files ...", flush=True)
+		for asmfile in asmlist:
+			try:
+				fullpath = os.path.join(outpath, asmfile["file"])
+				os.makedirs(os.path.dirname(fullpath), exist_ok=True)
+				write_text_file(fullpath, asmfile["lines"])
+			except IOError:
+				print(f"Error writing {asmfile['file']}")
+				return 1
 	except IOError:
 		print(f"Error writing {fn_out}")
 		return 1
@@ -340,16 +473,16 @@ def asm2tsv(in_fns: str, fn_out: str) -> int:
 
 def main(argv):
 	global config
-	global textbox_data
 	
-	print("MIME Scenario TSV Dumper")
+	print("System-98 Scenario TSV text reinserter")
 	aparse = argparse.ArgumentParser()
-	aparse.add_argument("-o", "--out-file", required=True, help="output tab-separated text table (.TSV)")
-	aparse.add_argument("in_files", nargs="+", help="input assembly files (.ASM)")
+	aparse.add_argument("-t", "--tsv_file", required=True, help="tab-separated text table (.TSV)")
+	aparse.add_argument("-i", "--in_path", required=True, help="base path where source ASM files are located")
+	aparse.add_argument("-o", "--out_path", required=True, help="base path where patched ASM files are to be written")
 	
 	config = aparse.parse_args(argv[1:])
 	
-	return asm2tsv(config.in_files, config.out_file)
+	return tsv_asm_patch(config.tsv_file, config.in_path, config.out_path)
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))

@@ -12,7 +12,6 @@ class ParamToken:
 	type: int	# token type
 	data: typing.Union[int, str]	# token data
 	pos: int	# start position on current line
-	cmdOfs: typing.Optional[int] = None	# relative command offset (for label references)
 
 @dataclasses.dataclass
 class CommandItem:
@@ -358,13 +357,13 @@ def tsvdata2asmcommands(text: str) -> list:
 				params[-1].data += token_data
 			else:
 				# else just add a new parameter
-				params.append(ParamToken(type=tktp, data=token_data, pos=0, cmdOfs=None))
+				params.append(ParamToken(type=tktp, data=token_data, pos=0))
 		else:	# different command
 			if cmd_type == CMDTYPE_DSJ:
 				cmd = "DSJ"
 			else:
 				cmd = "DS"
-			asm_cmds.append({"cmd": cmd, "params": [ParamToken(type=tktp, data=token_data, pos=0, cmdOfs=None)]})
+			asm_cmds.append({"cmd": cmd, "params": [ParamToken(type=tktp, data=token_data, pos=0)]})
 		last_cmd_type = cmd_type
 		last_data_type = type(token_data)
 	return asm_cmds

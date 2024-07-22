@@ -55,20 +55,22 @@ Commands
 0C - subtract source from destination register
 	2 bytes - destination register ID
 	2 bytes - source register ID
-0D - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
+0D - graphics copy 1 (opqaue)
+	2 bytes - screen source address
+	2 bytes - width in pixels
+	2 bytes - height in pixels
+	2 bytes - screen destination address
+	2 bytes - mode
+		Bit 0 (01h): ??
+		Bit 1 (02h): ??
 	-> 0Ah bytes
-0E - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
+0E - graphics copy 2 (opqaue)
+	2 bytes - screen source address
+	2 bytes - width in pixels
+	2 bytes - height in pixels
+	2 bytes - screen destination address
 	-> 08h bytes
-	Same as command 0D, except that the last value is fixed to 2 and it waits 1 frame before executing it.
+	Same as command 0D, except that the "mode" is fixed to 02 and it waits 1 frame before executing it.
 0F - ??
 	2 bytes - ??
 10 - clear bit from register
@@ -107,27 +109,33 @@ Commands
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
 	Jumps when: [register] >= value
-19 - load GTA graphics file
+19 - same as 1A
+	-> 9 bytes
+	Note: The scripts all use command 1A.
+1A - load GTA graphics file
 	2 bytes - ??
-	2 bytes - ??
+		Bits 0-1   (0003h): ?? (ignored when bit 4 is clear)
+		Bit   4    (0010h): ??
+		Bit   8    (0100h): ??
+		Bit 10-15 (0F400h): ??
+	2 bytes - screen destination address
 	5 bytes - file title of the .GTA file (no terminator byte)
 	-> 9 bytes
-1A - same as 19
-	-> 9 bytes
-1B - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
+1B - graphics effect
+	2 bytes - screen source address
+	2 bytes - width in pixels
+	2 bytes - height in pixels
+	2 bytes - screen destination address
+	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
+	TODO: What is the actual effect? It does a partial copy once every 3 frames for multiple iterations.
 1C - set next script
 	? bytes - null-terminated file name of a script file
 	The script will NOT be loaded by the command.
 	Instead, it is usually followed by command 03, which ends script execution.
 	After that, the game will load the script from the file set by this command and execute it.
 1D - show menu
-	2 bytes - draw position?
+	2 bytes - draw address
 	2 bytes - number of text strings (N)
 	? bytes - series of N Shift-JIS strings, each is terminated with two backslashes (5C5Ch)
 	Input:
@@ -162,13 +170,14 @@ Commands
 	If the result is 0, it skips 3 additional bytes.
 	If the result is non-zero, just continues.
 	NOTE: This must be followed by a command that takes 2 parameter bytes, i.e. a "jump" command.
-26 - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
+26 - graphics copy 3 (transparent)
+	2 bytes - screen source address
+	2 bytes - width in pixels
+	2 bytes - height in pixels
+	2 bytes - screen destination address
+	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
+	This seems to allow for transparent copies. (colour 0 is transparent)
 27 - ??
 	no parameters
 28 - ??
@@ -200,7 +209,7 @@ Commands
 2F - ??
 	no parameters
 30 - print text (full-width characters)
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	? bytes - Shift-JIS string, terminated with two backslashes (5C5Ch)
 31 - ??
 	no parameters
@@ -229,17 +238,17 @@ Commands
 	The result is divided by (range) and the remainder is saved to the register.
 	Thus, the result is effectively 0..(range-1).
 3A - print text (half-width characters)
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	? bytes - Shift-JIS string, terminated with a single backslashe (5Ch)
 	Note: Bytes 00h..7Fh will draw ASCII (font ROM, page 09h), bytes 80h..0FFh will draw half-width Katakana (font ROM, page 0Ah)
 3B - print register text
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	The game will read text, starting with the memory location of the register data, until it reaches a register of either 0000h or 5C5Ch.
 	All characters are assumed to be 2-byte Shift-JIS.
 	This is used to print the protagonist's name in various places.
 3C - print register value (half-width, 5 digits)
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	The register's contents are read and the resulting number drawn on the screen, right-aligned, padded with spaces to 5 characters.
 	It uses half-width characters to show the number.
@@ -259,15 +268,15 @@ Commands
 	0Ah bytes - file name of "DISK_ID" file
 	2 bytes - requested disk ID (0 = disk "A", 1 = disk "B", etc.)
 	-> 0Ch bytes
-41 - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - ??
+41 - graphics copy 4 (?)
+	2 bytes - screen source address
+	2 bytes - width in pixels
+	2 bytes - height in pixels
+	2 bytes - screen destination address
+	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
 42 - print register value (full-width, 5 digits)
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	This command is the full-width version of command 3C.
 	The register's contents are read and the resulting number drawn on the screen, right-aligned, padded with spaces to 5 characters.
@@ -280,7 +289,7 @@ Commands
 44 - ??
 	no parameters
 45 - print register digits
-	2 bytes - draw position
+	2 bytes - draw address
 		Note: Unlike other print functions, there is NO "reuse old position" option here. The value must be valid in any case.
 	2 bytes - register ID
 	This command draws the digits stored in registers [reg_ID + 0], [reg_ID + 1], ..., [reg_ID + 5].
@@ -353,34 +362,34 @@ Commands
 	2 bytes - register ID
 	This copies 48h bytes around. (The data seems to be outside of the register memory.)
 55 - ??
-	2 bytes - register ID 1
-	2 bytes - register ID 2
-	2 bytes - register ID 3
-	2 bytes - register ID 4
-	2 bytes - register ID 5
+	2 bytes - register ID for screen source address
+	2 bytes - register ID for width in pixels
+	2 bytes - register ID for height in pixels
+	2 bytes - register ID for screen destination address
+	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 0D, except that all values are read from registers.
 56 - ??
-	2 bytes - register ID 1
-	2 bytes - register ID 2
-	2 bytes - register ID 3
-	2 bytes - register ID 4
+	2 bytes - register ID for screen source address
+	2 bytes - register ID for width in pixels
+	2 bytes - register ID for height in pixels
+	2 bytes - register ID for screen destination address
 	-> 8 bytes
 	Same as command 0E, except that all values are read from registers.
-57 - ??
-	2 bytes - register ID 1
-	2 bytes - register ID 2
-	2 bytes - register ID 3
-	2 bytes - register ID 4
-	2 bytes - register ID 5
+57 - graphics effect
+	2 bytes - register ID for screen source address
+	2 bytes - register ID for width in pixels
+	2 bytes - register ID for height in pixels
+	2 bytes - register ID for screen destination address
+	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 1B, except that all values are read from registers.
-58 - ??
-	2 bytes - register ID 1
-	2 bytes - register ID 2
-	2 bytes - register ID 3
-	2 bytes - register ID 4
-	2 bytes - register ID 5
+58 - graphics copy 3 (transparent)
+	2 bytes - register ID for screen source address
+	2 bytes - register ID for width in pixels
+	2 bytes - register ID for height in pixels
+	2 bytes - register ID for screen destination address
+	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 26, except that all values are read from registers.
 59 - load GTA graphics file
@@ -401,13 +410,13 @@ Commands
 5C - ??
 	2 bytes - register ID
 5D - print text (full-width characters)
-	2 bytes - register ID for draw position (register data 0FFFFh - continue at current position)
+	2 bytes - register ID for draw address (register data 0FFFFh - continue at current position)
 	? bytes - Shift-JIS string, terminated with two backslashes (5C5Ch)
-	Same as command 30, except that the draw position is read from a register.
+	Same as command 30, except that the draw address is read from a register.
 5E - print register text
-	2 bytes - register ID for draw position (register data 0FFFFh - continue at current position)
+	2 bytes - register ID for draw address (register data 0FFFFh - continue at current position)
 	2 bytes - register ID
-	Same as command 3B, except that the draw position is read from a register.
+	Same as command 3B, except that the draw address is read from a register.
 5F - ??
 	2 bytes - ?? (-> 8086 register BX)
 	2 bytes - ?? (-> 8086 register DX)
@@ -418,12 +427,12 @@ Commands
 60 - ??
 	no parameters
 61 - print register value (half-width, up to 5 digits)
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	The register's contents are read and the resulting number drawn on the screen. There is no alignment or padding.
 	It uses half-width characters to show the number.
 62 - print register value (full-width, up to 5 digits)
-	2 bytes - draw position (0FFFFh - continue at current position)
+	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	This command is the full-width version of command 3C.
 	The register's contents are read and the resulting number drawn on the screen. There is no alignment or padding.
@@ -434,6 +443,17 @@ Commands
 	In order to do that, the command starts a search for a colon (:) at the position after the command.
 	When a colon is found, it sets the byte preceeding it to the "default disk letter" (from DOS call via INT 21h).
 	The search ends early when a 00h byte is found.
+
+Screen draw address
+-------------------
+Various graphics commands (including most text commands) have an "address" parameter (2 bytes) that specifies an address in screen space.
+It can be converted to an X,Y position using the following formulae:
+	X = (address % 80) * 8
+	Y = (address / 80)
+	address = (Y * 80) + (X / 8)
+This makes all values from 0x0000 to 0x7CFF valid.
+
+In case of text commands the "draw address" specifies coordinate of the upper left edge of the text to be drawn.
 
 Text strings
 ------------

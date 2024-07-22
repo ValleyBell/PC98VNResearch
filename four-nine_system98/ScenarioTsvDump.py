@@ -13,7 +13,6 @@ class ParamToken:
 	type: int	# token type
 	data: typing.Union[int, str]	# token data
 	pos: int	# start position on current line
-	cmdOfs: typing.Optional[int] = None	# relative command offset (for label references)
 
 @dataclasses.dataclass
 class CommandItem:

@@ -172,7 +172,7 @@ class JISConverter:
 			cdata = self.sjis_encode_chr(data[idx:], short_katakana)
 			if cdata is None:
 				return (idx, bytes(result))
-			if cdata[0] < 0x80:
+			if cdata[0] < 0x100:
 				result.append(cdata[0])
 			else:
 				sjis1 = (cdata[0] >> 8) & 0xFF
