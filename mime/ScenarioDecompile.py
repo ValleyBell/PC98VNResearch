@@ -34,9 +34,11 @@ SCPT_REG = 0x80	# register: integer
 SC_EXEC_END = 0x01	# terminate script execution here
 SC_EXEC_SPC = 0xFF	# special handling
 
-LBLFLG_UNUSED = 0x01
+LBLFLG_UNREF = 0x01
 LBLFLG_JP = 0x02
 LBLFLG_CALL = 0x04
+LBLFLG_MAINREF = 0x10
+LBLFLG_UNUSEDREF = 0x20
 
 SCENE_CMD_LIST = {
 	0x00: ("TALKDGN", [SCPT_STR2]),
@@ -275,36 +277,6 @@ def guess_data_type(scenedata: bytes, startpos: int, endpos: int) -> int:
 			return SCPT_STR
 	return -1
 
-def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
-	# --- parse unknown data as code and do basic syntax checking ---
-	# The function is used to detect code in unreferenced data sections.
-	curpos = startpos
-	while curpos < len(scenedata):
-		cmd_id = scenedata[curpos]
-		curpos += 0x01
-		if cmd_id not in SCENE_CMD_LIST:
-			return False
-		cmd_info = SCENE_CMD_LIST[cmd_id]
-		if cmd_info[0] is None:
-			return False
-		
-		# parse/skip all parameters
-		for par_type in cmd_info[1]:
-			if par_type == SCPT_LONG:
-				par_val = struct.unpack_from("<I", scenedata, curpos)[0]
-				curpos += 0x04
-			else:
-				par_val = struct.unpack_from("<H", scenedata, curpos)[0]
-				curpos += 0x02
-		
-		if len(cmd_info) >= 3:
-			# stop parsing at certain commands - result will be success
-			if cmd_info[2] == SC_EXEC_END:
-				break
-			elif cmd_info[2] == SC_EXEC_SPC:
-				pass
-	return True
-
 def get_string_size(scenedata: bytes, startpos: int, endpos: int, dtype: int) -> int:
 	pos = startpos
 	if dtype == SCPT_FNAME:
@@ -324,44 +296,14 @@ def get_string_size(scenedata: bytes, startpos: int, endpos: int, dtype: int) ->
 def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, start_ofs: int) -> int:
 	# --- scan all unreferenced data sections and return the position of a potential (unused) code section ---
 	curpos = start_ofs
-	while True:
-		# search for next unparsed section
-		while (curpos < len(scenedata)) and (file_usage[curpos] != 0x00):
-			# TODO: potential speed-up by not scanning the same section multiple times
-			# (I need to figure out what side effects this could cause.)
-			#file_usage[curpos] |= 0x80	# mark as "already scanned"
-			curpos += 1
-		if curpos >= len(scenedata):
-			break
-		
-		if curpos in label_list:
-			dtype = label_list[curpos][0]
-		else:
-			dtype = guess_data_type(scenedata, curpos, len(scenedata))
-		
-		if dtype >= 0:
-			# known (or detected) data section - just skip
-			endpos = find_next_label(label_list, curpos + 1)
-			if endpos < 0:
-				endpos = len(scenedata)
-			if dtype in [SCPT_FNAME]:
-				strsize = get_string_size(scenedata, curpos, endpos, dtype)
-				if strsize > 0:
-					endpos = curpos + strsize
-			#for pos in range(curpos, endpos):
-			#	file_usage[pos] |= 0x80
-			curpos = endpos
-		else:
-			is_code = test_for_code(scenedata, file_usage, curpos)
-			if is_code:
-				#print(f"Found possible code at 0x{curpos:04X}")
-				return curpos
-			else:
-				# skip entire unused block
-				while (curpos < len(scenedata)) and (file_usage[curpos] == 0x00):
-					#file_usage[curpos] |= 0x80
-					curpos += 1
-	return -1
+	
+	# search for next unparsed section
+	while (curpos < len(scenedata)) and (file_usage[curpos] != 0x00):
+		curpos += 1
+	if curpos >= len(scenedata):
+		return -1
+	
+	return curpos	 # We don't have "data" sections in this decompiling tool, so treat everything as code.
 
 def parse_scene_binary(scenedata: bytes) -> tuple:
 	start_ofs = 0x0000
@@ -371,7 +313,8 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 	label_list = {}	# dict{ file offset: (label type, flags, label name) }
 	
 	# --- parse code sections ---
-	label_list[start_ofs] = (SCPT_JUMP, 0x00, f"start_{start_ofs:04X}")
+	label_list[start_ofs] = (SCPT_JUMP, LBLFLG_MAINREF, f"start_{start_ofs:04X}")
+	ref_flags = None	# keeps track of markings for used/unused code
 	remaining_code_locs = [start_ofs]
 	curpos = None
 	cont_after_jp = 0
@@ -387,9 +330,10 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				# This part is for finding unreferenced code sections.
 				curpos = find_possible_code(scenedata, file_usage, label_list, start_ofs)
 				if curpos >= 0:
-					label_list[curpos] = (SCPT_JUMP, LBLFLG_UNUSED, None)
+					label_list[curpos] = (SCPT_JUMP, LBLFLG_UNREF | LBLFLG_UNUSEDREF, None)
 				else:
 					curpos = None
+			ref_flags = 0x00
 		if curpos is None:
 			break	# exit loop when no more code sections are found
 		if curpos >= len(scenedata):
@@ -399,6 +343,10 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			curpos = None
 			continue
 		
+		if curpos in label_list:
+			ref_flags |= (label_list[curpos][1] & 0xF0)
+			if label_list[curpos][1] & LBLFLG_UNREF:
+				ref_flags |= LBLFLG_UNUSEDREF
 		cmd_pos = curpos
 		cmd_id = scene_read_byte(scenedata, file_usage, cmd_pos, 0x11)
 		curpos += 0x01
@@ -475,7 +423,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						flags = LBLFLG_CALL
 					elif par_type == SCPT_JUMP:
 						flags = LBLFLG_JP
-					label_list[par_val] = (par_type, flags, None)
+					label_list[par_val] = (par_type, flags | ref_flags, None)
 			if par_type == SCPT_JUMP:
 				# add jump destination to list of locations to be processed
 				if par_val >= start_ofs:
@@ -515,6 +463,8 @@ def generate_label_names(label_list: dict) -> None:
 		else:
 			lbl_prefix = "unk"
 		lbl_name = f"{lbl_prefix}_{lbl_pos:04X}"
+		if lbl_flags & LBLFLG_UNUSEDREF:
+			lbl_name = "u" + lbl_name	# add "u" prefix (usub/uloc) for unused code
 		label_list[lbl_pos] = (par_type, lbl_flags, lbl_name)
 	return
 
@@ -587,8 +537,10 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 				# insert labels before commands when references exist
 				lbl_name = label_list[cmd_pos][2]
 				f.write(f"{lbl_name}:")
-				if label_list[cmd_pos][1] & LBLFLG_UNUSED:
+				if label_list[cmd_pos][1] & LBLFLG_UNREF:
 					f.write("\t; unused")
+				#elif label_list[cmd_pos][1] & LBLFLG_UNUSEDREF:
+				#	f.write("\t; used by unreferenced code")
 				f.write("\n")
 			
 			# output commands

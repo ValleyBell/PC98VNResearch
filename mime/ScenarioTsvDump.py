@@ -239,6 +239,20 @@ def screen_addr2pos(address: int) -> typing.Union[typing.Tuple[int, int], None]:
 	line = address // 80	# 0..399
 	return (column * 8, line)	# return (X,Y)
 
+def get_cjk_char_width(c: str) -> int:
+	ccode = ord(c)
+	if (ccode < 0x80) or (ccode == 0x00A5):	# ASCII or Yen sign
+		return 1
+	elif ccode == 0xF87F:
+		return 0	# meta-code for special character combinations
+	elif (ccode >= 0xFF61) and (ccode <= 0xFF9F):	# halfwidth Katakana
+		return 1
+	else:
+		return 2	# everything else should be considered 2 characters wide
+
+def get_cjk_string_width(text: str) -> int:
+	return sum([get_cjk_char_width(c) for c in text])
+
 def generate_message_table(cmd_list: list, label_list: list) -> list:
 	cmd_lbl_list = {}
 	#label_list[lbl_nm_cf] = LabelItem(cmdID=len(cmd_list), asmFile=asm_filename, lineID=lid, lblName=label_name)
@@ -261,7 +275,10 @@ def generate_message_table(cmd_list: list, label_list: list) -> list:
 		cmdName = citem.cmdName.upper()
 		if cmdName.startswith("PRINT"):
 			# format: PRINT screenPos, "text"
-			tloc = screen_addr2pos(citem.params[0].data)
+			if citem.params[0].type == TKTP_INT:
+				tloc = screen_addr2pos(citem.params[0].data)
+			else:
+				tloc = None
 			msg_table += [(citem.lineID, lblText, -1, "prt", None, tloc, citem.params[1].data)]
 		elif cmdName.startswith("TALK"):
 			# TALKDGN "text"
@@ -271,7 +288,7 @@ def generate_message_table(cmd_list: list, label_list: list) -> list:
 		elif cmdName == "MENUSEL":
 			# MENUSEL screenPos, numberEntries, ["text1", "text2", ...]
 			idx_entry = None
-			tloc = screen_addr2pos(citem.params[0].data)
+			sel_texts = []
 			for pitem in citem.params:
 				if pitem.type == TKTP_CTRL:
 					if pitem.data == "[":
@@ -280,10 +297,17 @@ def generate_message_table(cmd_list: list, label_list: list) -> list:
 						idx_entry = None
 				else:
 					if pitem.type == TKTP_STR:
-						msg_table += [(citem.lineID, lblText, idx_entry, "sel", None, tloc, pitem.data)]
-						tloc = None	# write text location only for first entry
+						sel_texts += [(idx_entry, pitem.data)]
 					if idx_entry is not None:
 						idx_entry += 1
+			
+			if len(sel_texts) > 0:
+				maxwidth = max([get_cjk_string_width(st[1]) for st in sel_texts])
+				tbinfo = (maxwidth, sel_texts[-1][0] + 1)
+				tloc = screen_addr2pos(citem.params[0].data)
+				for (idx_entry, data) in sel_texts:
+					msg_table += [(citem.lineID, lblText, idx_entry, "sel", tbinfo, tloc, data)]
+					tloc = None	# write text location only for first entry
 	return msg_table
 
 def load_asm(fn_in: str) -> typing.List[str]:

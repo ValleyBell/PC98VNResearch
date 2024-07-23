@@ -58,6 +58,8 @@ config = {}
 
 
 def parse_tsv(lines: list) -> list:
+	global config
+	
 	if len(lines) > 0:
 		if lines[0].startswith("file\t"):
 			lines[0] = "#" + lines[0]	# enforce header to be a comment
@@ -69,11 +71,18 @@ def parse_tsv(lines: list) -> list:
 			result += [line]
 			continue
 		ltrim = line.rstrip('\n')
-		cols = ltrim.split('\t', 5)
+		cols = ltrim.split('\t')
 		if len(cols) < 6:
 			print(f"Line {lid} invalid: {ltrim}")
 			return None
-		(filename, lineref, lblref, mode, tbox, text) = cols
+		if config.text_column >= len(cols):
+			result += [line]
+			continue	# ignore lines that don't have the respective column
+		text = cols[config.text_column]
+		if len(text) == 0:
+			result += [line]
+			continue	# ignore empty texts as well
+		(filename, lineref, lblref, mode, tbox) = cols[0:5]
 		lineref = lineref.split(' ', 1)[0]
 		if "," in lineref:
 			lineref = lineref.split(',')
@@ -437,6 +446,7 @@ def tsv_asm_patch(tsv_file: str, inpath: str, outpath: str) -> int:
 		# read all related ASM files
 		print("Reading ASM files ...", flush=True)
 		for asmfile in asmlist:
+			print(f"    {asmfile['file']} ...", flush=True)
 			try:
 				fullpath = os.path.join(inpath, asmfile["file"])
 				asm_lines = load_text_file(fullpath)
@@ -474,13 +484,15 @@ def tsv_asm_patch(tsv_file: str, inpath: str, outpath: str) -> int:
 def main(argv):
 	global config
 	
-	print("System-98 Scenario TSV text reinserter")
+	print("MIME Scenario TSV text reinserter")
 	aparse = argparse.ArgumentParser()
-	aparse.add_argument("-t", "--tsv_file", required=True, help="tab-separated text table (.TSV)")
-	aparse.add_argument("-i", "--in_path", required=True, help="base path where source ASM files are located")
-	aparse.add_argument("-o", "--out_path", required=True, help="base path where patched ASM files are to be written")
+	aparse.add_argument("-c", "--text-column", type=int, help="column to use for text to insert (1 = first column)", default=6)
+	aparse.add_argument("-t", "--tsv-file", required=True, help="tab-separated text table (.TSV)")
+	aparse.add_argument("-i", "--in-path", required=True, help="base path where source ASM files are located")
+	aparse.add_argument("-o", "--out-path", required=True, help="base path where patched ASM files are to be written")
 	
 	config = aparse.parse_args(argv[1:])
+	config.text_column -= 1	# 1st colum has ID 0.
 	
 	return tsv_asm_patch(config.tsv_file, config.in_path, config.out_path)
 
