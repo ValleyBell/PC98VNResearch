@@ -8,6 +8,15 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 - `MIME_OP.EXE` disassembly: [ASM file](MIME_OP.asm) / [IDB database](MIME_OP.idb)
   - [MIME\_OP-SKIP.EXE](MIME_OP-SKIP.EXE) - a patch to the opening executable that makes it automatically skip the opening (for easier game testing)
 - [scenario format description](SceneFormat.txt)
+- [scenario decompiler](ScenarioDecompile.py)
+- [scenario compiler](ScenarioCompile.py)
+- [scenario text dumping tool](ScenarioTsvDump.py) - takes multiple decompiled scenarios (`ASM` file), extracts all text and dumps it into a tab-separated (TSV) text table file  
+  Scenario "talk" commands and selection menues have their text box size noted.
+  "Print" commands have their screen target position noted where set.
+- [scenario text reinsertion tool](ScenarioTsvReinsert.py) - takes a TSV text table file and reinserts the text into existing ASM files  
+  For print and selection commands, the tool also writes the target position back.
+- [text table merging tool](tsvMerge.py) - takes TSV files and transfers additional columns into the "base" TSV  
+  (I needed this tool to transfer translated strings from older TSV dumps to newer ones based on modified ASM files.)
 - [item/monster list format description](MiscFormats.txt)
 - [item/monster list name extraction/reinsertion tool](list-tsv.py)
   - The resulting file can be used with the [text table translation tool](../four-nine_system98/tsvTranslate.py) from the four-nine folder.
