@@ -308,6 +308,9 @@ def screen_pos2addr(x: int, y: int) -> int:
 	return (y * 80) + (x // 8)
 
 def tsvdata2asmstr(text: str) -> str:
+	text = text.replace('\u201C', '"').replace('\u201D', '"')
+	text = text.replace("\u2018", "'").replace("\u2019", "'")
+	text = text.replace("\u2026", "...")
 	pos = 0
 	result = ""
 	while pos < len(text):	# Note: must be "<=" to process string terminator upon line end
@@ -436,47 +439,43 @@ def write_text_file(fn_out: str, lines: list) -> None:
 
 def tsv_asm_patch(tsv_file: str, inpath: str, outpath: str) -> int:
 	result = 0
-	try:
-		# read + parse TSV
-		print("Reading TSV ...", flush=True)
-		tsv_lines = load_text_file(tsv_file)
-		tsv_data = parse_tsv(tsv_lines)
-		asmlist = generate_file_list(tsv_data)
+	# read + parse TSV
+	print("Reading TSV ...", flush=True)
+	tsv_lines = load_text_file(tsv_file)
+	tsv_data = parse_tsv(tsv_lines)
+	asmlist = generate_file_list(tsv_data)
 
-		# read all related ASM files
-		print("Reading ASM files ...", flush=True)
-		for asmfile in asmlist:
-			print(f"    {asmfile['file']} ...", flush=True)
-			try:
-				fullpath = os.path.join(inpath, asmfile["file"])
-				asm_lines = load_text_file(fullpath)
-			except IOError:
-				print(f"Error loading {asmfile['file']}")
-				return 1
-			ret = parse_asm(asm_lines, asmfile["file"])
-			if ret is None:
-				return 2
-			asmfile["lines"] = asm_lines
-			asmfile["data"] = ret
+	# read all related ASM files
+	print("Reading ASM files ...", flush=True)
+	for asmfile in asmlist:
+		print(f"    {asmfile['file']} ...", flush=True)
+		try:
+			fullpath = os.path.join(inpath, asmfile["file"])
+			asm_lines = load_text_file(fullpath)
+		except IOError:
+			print(f"Error loading {asmfile['file']}")
+			return 1
+		ret = parse_asm(asm_lines, asmfile["file"])
+		if ret is None:
+			return 2
+		asmfile["lines"] = asm_lines
+		asmfile["data"] = ret
 
-		print("Patching ASM files ...", flush=True)
-		ret = patch_asms(tsv_data, asmlist)
-		if ret != 0:
-			return ret
+	print("Patching ASM files ...", flush=True)
+	ret = patch_asms(tsv_data, asmlist)
+	if ret != 0:
+		return ret
 
-		# write all ASM files
-		print("Writing ASM files ...", flush=True)
-		for asmfile in asmlist:
-			try:
-				fullpath = os.path.join(outpath, asmfile["file"])
-				os.makedirs(os.path.dirname(fullpath), exist_ok=True)
-				write_text_file(fullpath, asmfile["lines"])
-			except IOError:
-				print(f"Error writing {asmfile['file']}")
-				return 1
-	except IOError:
-		print(f"Error writing {fn_out}")
-		return 1
+	# write all ASM files
+	print("Writing ASM files ...", flush=True)
+	for asmfile in asmlist:
+		try:
+			fullpath = os.path.join(outpath, asmfile["file"])
+			os.makedirs(os.path.dirname(fullpath), exist_ok=True)
+			write_text_file(fullpath, asmfile["lines"])
+		except IOError:
+			print(f"Error writing {asmfile['file']}")
+			return 1
 
 	print("Done.")
 	return result

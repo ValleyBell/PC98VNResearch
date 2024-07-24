@@ -30,9 +30,9 @@ Commands
 03 - load next scenario
 	This command is usually placed after command 1C and will terminate the script execution.
 	The game returns to the main loop, which will load a new script file from the file name set by command 1C and execute it.
-04 - ??
-	2 bytes - ?? (bitfield used during text drawing)
-	2 bytes - ?? (bitfield used during text drawing)
+04 - set text colour
+	2 bytes - main colour (palette index 00h..0Fh)
+	2 bytes - shadow colour (palette index 00h..0Fh)
 05 - write to port 0A6h
 	2 bytes - value to write to I/O register 0A6h (high byte is ignored)
 06 - delay script execution by N frames
@@ -64,7 +64,7 @@ Commands
 		Bit 0 (01h): ??
 		Bit 1 (02h): ??
 	-> 0Ah bytes
-0E - graphics copy 2 (opqaue)
+0E - graphics copy 2 (background to screen)
 	2 bytes - screen source address
 	2 bytes - width in pixels
 	2 bytes - height in pixels
@@ -139,12 +139,14 @@ Commands
 	2 bytes - number of text strings (N)
 	? bytes - series of N Shift-JIS strings, each is terminated with two backslashes (5C5Ch)
 	Input:
-	- register 33h - ?? (checked for 0, 1 and 2)
+	- register 33h - mode? (checked for 0, 1, 2 and 3)
+		mode 1/3 will show the list of saved games
 	- register 36h - enable selection sound effect
 	Output:
 	- register 8 - selected entry (1 = first entry)
 	- register 35h - set to 0
 	The number of the selected entry is stored in register 8. The first entry has number 1.
+	The text is drawn using the colours stored in register 9 (main colour) and 10 (shadow colour).
 1E - end script and quit
 	This will terminate the script and quit the game then.
 1F - ??
@@ -239,7 +241,7 @@ Commands
 	Thus, the result is effectively 0..(range-1).
 3A - print text (half-width characters)
 	2 bytes - draw address (0FFFFh - continue at current position)
-	? bytes - Shift-JIS string, terminated with a single backslashe (5Ch)
+	? bytes - Shift-JIS string, terminated with a single backslash (5Ch)
 	Note: Bytes 00h..7Fh will draw ASCII (font ROM, page 09h), bytes 80h..0FFh will draw half-width Katakana (font ROM, page 0Ah)
 3B - print register text
 	2 bytes - draw address (0FFFFh - continue at current position)
@@ -355,13 +357,13 @@ Commands
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	The destination register receives the quotient. Register 37h receives the remainder.
-53 - ??
-	2 bytes - register ID
-	This copies 12h registers from [register (11D8h + reg_ID * 12h)] to [register 11C6h]
-54 - ??
-	2 bytes - register ID
-	This copies 48h bytes around. (The data seems to be outside of the register memory.)
-55 - ??
+53 - get item data
+	2 bytes - register ID for item ID
+	This copies the data for the specified item (24h bytes/12h registers) to register 8E3h.
+54 - get monster data
+	2 bytes - register ID for monster ID
+	This copies the data for the specified monster (48h bytes/24h registers) to register 2777h.
+55 - graphics copy 1 (opqaue)
 	2 bytes - register ID for screen source address
 	2 bytes - register ID for width in pixels
 	2 bytes - register ID for height in pixels
@@ -369,7 +371,7 @@ Commands
 	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 0D, except that all values are read from registers.
-56 - ??
+56 - graphics copy 2 (background to screen)
 	2 bytes - register ID for screen source address
 	2 bytes - register ID for width in pixels
 	2 bytes - register ID for height in pixels

@@ -423,7 +423,11 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						flags = LBLFLG_CALL
 					elif par_type == SCPT_JUMP:
 						flags = LBLFLG_JP
-					label_list[par_val] = (par_type, flags | ref_flags, None)
+					if par_val not in label_list:
+						label_list[par_val] = (par_type, flags | ref_flags, None)
+					else:
+						lbl = label_list[par_val]
+						label_list[par_val] = (lbl[0], lbl[1] | flags | ref_flags, lbl[2])
 			if par_type == SCPT_JUMP:
 				# add jump destination to list of locations to be processed
 				if par_val >= start_ofs:
@@ -463,7 +467,7 @@ def generate_label_names(label_list: dict) -> None:
 		else:
 			lbl_prefix = "unk"
 		lbl_name = f"{lbl_prefix}_{lbl_pos:04X}"
-		if lbl_flags & LBLFLG_UNUSEDREF:
+		if (lbl_flags & (LBLFLG_MAINREF|LBLFLG_UNUSEDREF)) == LBLFLG_UNUSEDREF:
 			lbl_name = "u" + lbl_name	# add "u" prefix (usub/uloc) for unused code
 		label_list[lbl_pos] = (par_type, lbl_flags, lbl_name)
 	return
