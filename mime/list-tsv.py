@@ -37,7 +37,7 @@ def parse_tsv(lines: list) -> list:
 			result += [line]
 			continue
 		ltrim = line.rstrip('\n')
-		cols = ltrim.split('\t', 5)
+		cols = ltrim.split('\t')
 		if len(cols) < 6:
 			print(f"Line {lid} invalid: {ltrim}")
 			return None
@@ -133,16 +133,20 @@ def patch_file(fn_in: str, fn_out: str) -> int:
 	for (lid, line) in enumerate(tsv_data):
 		if type(line) is str:
 			continue
+		if config.text_column >= len(line):
+			continue	# continue lines that don't have a patch
 		
 		pos = int(line[1], 0)
 		bufSize = int(line[4].split('x')[0], 0)
-		text = line[5]
+		text = line[config.text_column]
+		if len(text) == 0:
+			continue	# continue lines that don't have a patch
 		
 		txt_sjis = text.encode("cp932")
 		if len(txt_sjis) > (bufSize - 2):
 			print(f"Line {1+lid}: Text is too long (length {len(txt_sjis)} > {bufSize - 2})")
 			txt_sjis = txt_sjis[:bufSize-2]
-		txt_sjis += b'\x5C' * (bufSize - len(txt_sjis))
+		txt_sjis = txt_sjis.ljust(bufSize, b'\x5C')
 		data[pos : pos+bufSize] = txt_sjis
 	
 	try:
@@ -159,9 +163,10 @@ def main(argv):
 	
 	print("MIME Item/Monster Name dumper/reinserter")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-c", "--text-column", type=int, help="column to use for text to insert (1 = first column)", default=6)
 	apgrpm = aparse.add_mutually_exclusive_group(required=True)
-	apgrpm.add_argument("-d", "--dump", action="store_true", help="mode: dump")
-	apgrpm.add_argument("-i", "--insert", action="store_true", help="mode: reinsert")
+	apgrpm.add_argument("-d", "--dump", action="store_true", help="mode: dump (in: BIN, out: TSV)")
+	apgrpm.add_argument("-i", "--insert", action="store_true", help="mode: reinsert (in: TSV: out: BIN to be patched")
 	apgrpt = aparse.add_mutually_exclusive_group(required=True)
 	apgrpt.add_argument("-I", "--item", action="store_true", help="type: item list (Z1010)")
 	apgrpt.add_argument("-M", "--monster", action="store_true", help="type: monster list (Z1020)")
@@ -170,6 +175,7 @@ def main(argv):
 	aparse.add_argument("out_file", help="output file")
 	
 	config = aparse.parse_args(argv[1:])
+	config.text_column -= 1	# 1st colum has ID 0.
 	
 	if config.dump:
 		if config.item:
