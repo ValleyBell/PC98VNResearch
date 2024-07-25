@@ -1,5 +1,5 @@
 ; Assembling using NASM:
-;	nasm -f bin -o MIME_ASC.EXE -l MIME_ASC.LST "MIME-ASC.asm"
+;	nasm -f bin -o MIME-ASC.EXE -l MIME-ASC.LST "MIME-ASC.asm"
 ;	This requires a decompressed MIME.EXE (106.576 bytes) to be in the same folder.
 ;
 ;	A detailed description of how EXE files work can be found at: https://wiki.osdev.org/MZ
@@ -11,13 +11,22 @@ SEG_BASE_OFS EQU 5160h	; We assume "seg007", whose code begins at offset 5160h i
 
 RelocDummy EQU 0DCDEh	; unused offset (segment 4C7h, offset 906Eh)
 
+; code segment PrintSeg (seg003)
 PrintSeg EQU 0327h
 ShiftJIS2JIS EQU 06AFh
 PrintFontChar EQU 06D8h
 
+; code segment (seg007)
+MainCodeSeg EQU 4C7h
+tempVars EQU 016Eh
+ScriptMemory EQU 020Bh
 ScriptMainLoop EQU 70C0h
 scr_fin_2b EQU 72C9h
 WaitFrames EQU 8E59h
+
+; data segment (dseg)
+DataSeg EQU 0DCEh
+textDrawPtr EQU 41C4h
 
 
 ; include EXE header
@@ -35,9 +44,10 @@ WaitFrames EQU 8E59h
 
 	incbin "MIME.EXE", $, 01CAh-($-$$)
 	; patch Print_NoData calls
-	dw	reloc_01+3, 4C7h
-	dw	reloc_02+3, 4C7h
-	dw	reloc_03+3, 4C7h
+	dw	reloc_01+3, MainCodeSeg
+	dw	reloc_02+3, MainCodeSeg
+	dw	reloc_03+3, MainCodeSeg
+	dw	reloc_04+1, MainCodeSeg
 %rep (22Ah-($-$$))/4
 	dw	RelocDummy, 000h
 %endrep
@@ -55,7 +65,7 @@ WaitFrames EQU 8E59h
 	incbin "MIME.EXE", $, 02FEh-($-$$)
 	dw	RelocDummy, 000h
 	dw	RelocDummy, 000h
-	dw	reloc_pme+3, 4C7h
+	dw	reloc_pme+3, MainCodeSeg
 
 	; patch code that executes scripts
 	incbin "MIME.EXE", $, 03C2h-($-$$)
@@ -99,7 +109,7 @@ loc_1BD66:
 	jz	short loc_1BD88
 	
 	push	di
-	mov	di, 020Bh	; 020Bh = ScriptMemory
+	mov	di, ScriptMemory
 	add	di, [cs:0170h]
 	mov	ax, [cs:di]
 	pop	di
@@ -153,7 +163,7 @@ scr02_ret:	; shared code
 	jmp	ScriptMainLoop
 
 scr00_print_chr:
-	push	word [cs:020Bh+0Ch]
+	push	word [cs:ScriptMemory+0Ch]
 	call	WaitFrames
 	add	sp, byte 2
 	jmp	PrintChar
@@ -180,7 +190,7 @@ loc_1BE79:
 	jz	short loc_1BE9B
 
 	push	di
-	mov	di, 020Bh	; 020Bh = ScriptMemory
+	mov	di, ScriptMemory
 	add	di, [cs:0170h]
 	mov	ax, [cs:di]
 	pop	di
@@ -256,7 +266,9 @@ Print_NoData:
 
 txtNoData:
 	db	"       No data available.", 0, 0
-	times 7600h-($-$$-SEG_BASE_OFS) db 00h
+	times 8 db 00h
+	db	"ASCII patch by Valley Bell.", 0
+	times 75C0h-($-$$-SEG_BASE_OFS) db 00h
 
 ; *** custom text drawing routines ***
 ; I'm inserting them here, because size-optimizing the function freed lots of space.
@@ -288,14 +300,27 @@ reloc_03:
 ; for scr30_PrintSJIS and scr5D_PrintSJIS
 ; prints text stored at offset <ds:si> until two backslashes (5C5C) occour
 PrintStr_SI:
+reloc_04:
+	mov	ax, DataSeg
+	mov	es, ax
+	mov	di, [es:textDrawPtr]
+	
 	push	cx
 pstr_si_loop:
 	mov	ax, [si]
 	cmp	ax, 5C5Ch	; return on '\\'
 	jz	short pstr_si_ret
+	cmp	al, 0Ah
+	jz	short pstr_si_newline
 	
 	call	PrintChar
 	add	si, cx
+	jmp	short pstr_si_loop
+
+pstr_si_newline:
+	add	di, 20*80	; 20 lines * 80 bytes per line (Note: This is the line spacing during battles.)
+	mov	[es:textDrawPtr], di
+	add	si, byte 1
 	jmp	short pstr_si_loop
 
 pstr_si_ret:
@@ -309,8 +334,8 @@ PrintStr_DI:	; can be terminated by 00s instead of backslash
 	push	cx
 pstr_di_loop:
 	mov	ax, [cs:di]
-	or	ax, ax
-	jz	short pstr_di_ret	; return on 0000h
+	or	al, al
+	jz	short pstr_di_ret	; return on 00h (originally returns on 0000h, but this should be enough)
 	cmp	ax, 5C5Ch
 	jz	short pstr_di_ret	; return on '\\'
 	
@@ -330,7 +355,7 @@ PrintSaveGameName:
 	mov	ax, [cs:6DF6h]	; get save game "floor ID"
 	cmp	ax, (txtLabNamesEnd-txtLabNames)/2
 	jb	short psgn_show_lab
-	mov	ax, (txtLabNamesEnd-txtLabNames)/2
+	mov	ax, (txtLabNamesEnd-txtLabNames)/2-1
 psgn_show_lab:
 	add	ax, ax
 	mov	di, txtLabNames
@@ -416,9 +441,9 @@ PrintMenuEntry:
 	mov	[es:di], bx	; restore textDrawPtr from BX, so that we advance the text draw pointer only once below
 	push	word [es:di+2]
 	push	word [es:di+4]
-	push	word [cs:020Bh+12h]
+	push	word [cs:ScriptMemory+12h]
 	pop	word [es:di+2]
-	push	word [cs:020Bh+14h]
+	push	word [cs:ScriptMemory+14h]
 	pop	word [es:di+4]
 	push	ax
 reloc_pme:

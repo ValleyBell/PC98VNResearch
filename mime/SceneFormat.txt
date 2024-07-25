@@ -38,23 +38,23 @@ Commands
 06 - delay script execution by N frames
 	2 bytes - number of frames to wait
 07 - set register = value
-	2 bytes - register ID (0000h..1243h)
+	2 bytes - destination register ID (0000h..1243h)
 	2 bytes - value
 08 - set register = other register
-	2 bytes - destination register ID
 	2 bytes - source register ID
+	2 bytes - destination register ID
 09 - add value to register
-	2 bytes - register ID
+	2 bytes - source/destination register ID
 	2 bytes - value to be added
 0A - add source to destination register
-	2 bytes - destination register ID
-	2 bytes - source register ID
+	2 bytes - register ID of value to be added
+	2 bytes - source/destination register ID
 0B - subtract value from register
-	2 bytes - register ID
+	2 bytes - source/destination register ID
 	2 bytes - value to be subtracted
 0C - subtract source from destination register
-	2 bytes - destination register ID
-	2 bytes - source register ID
+	2 bytes - register ID of value to be subtracted
+	2 bytes - source/destination register ID
 0D - graphics copy 1 (opqaue)
 	2 bytes - screen source address
 	2 bytes - width in pixels
@@ -99,16 +99,16 @@ Commands
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
 	Jumps when: [register] == value
-17 - conditional jump: less or equal
+17 - conditional jump: greater than
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
-	Jumps when: [register] <= value
-18 - conditional jump: greater or equal
+	Jumps when: [register] > value
+18 - conditional jump: less than
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
-	Jumps when: [register] >= value
+	Jumps when: [register] < value
 19 - same as 1A
 	-> 9 bytes
 	Note: The scripts all use command 1A.
@@ -180,8 +180,19 @@ Commands
 	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
 	This seems to allow for transparent copies. (colour 0 is transparent)
-27 - ??
+27 - activate mouse movement + get click position
 	no parameters
+	This calls INT 68h, routine AH=5.
+	Input:
+	- register 26h - mode? (checked for 0, 1)
+		mode 1/3 will show the list of saved games
+	- register 19h - ?? (mode 0 only)
+	- register 1Ah - ?? (mode 0 only)
+	Output:
+	- register 16h - result keycode
+	- register 17h - mouse click X position
+	- register 18h - mouse click Y position
+	- register 1Ah - ?? (mode 0 only)
 28 - ??
 	no parameters
 	This calls INT 68h, routine AH=3.
@@ -342,20 +353,20 @@ Commands
 	reg2 < reg1 -> result = -1
 	The result is saved in register 37h.
 4F - multiply register with value
-	2 bytes - register ID
+	2 bytes - source/destination register ID
 	2 bytes - value to multiply
 	The register receives the low 16 bits of the result. Register 37h receives the high 16 bits.
 50 - multiply register with register
-	2 bytes - destination register ID
-	2 bytes - source register ID
+	2 bytes - register ID of value to multiply
+	2 bytes - source/destination register ID
 	The destination register receives the low 16 bits of the result. Register 37h receives the high 16 bits.
 51 - divide register by value
-	2 bytes - register ID
+	2 bytes - source/destination register ID
 	2 bytes - value to divide with
 	The register receives the quotient. Register 37h receives the remainder.
 52 - divide register by register
-	2 bytes - destination register ID
-	2 bytes - source register ID
+	2 bytes - register ID of value to multiply
+	2 bytes - source/destination register ID
 	The destination register receives the quotient. Register 37h receives the remainder.
 53 - get item data
 	2 bytes - register ID for item ID
@@ -401,8 +412,8 @@ Commands
 	-> 6 bytes
 	Same as command 19, except that all values are read from registers.
 5A - get random number with range from register
-	2 bytes - register ID
-	2 bytes - range register ID
+	2 bytes - register ID of range value
+	2 bytes - destination register ID
 	Same as command 39, except that the range is read from a register.
 5B - get disk ID
 	0Ah bytes - file name of "DISK_ID" file
@@ -482,3 +493,10 @@ Text strings
 	8787 - sweat drops
 	8788 - "RI" (first part of the "RING" currency)
 	8789 - "NG" (second part of the "RING" currency)
+
+General notes
+-------------
+- The operator order for register operations differs depending on the operand type.
+  - For operations with "register and value", the order is: [destination register] [value]
+  - For operations with "register and register", the order is: [operand register] [destination register]
+- The conditional jump command 25 requires a 3-byte command following it.

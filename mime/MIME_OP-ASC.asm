@@ -13,8 +13,11 @@ seg001_Ofs EQU 74D0h
 
 
 ; include EXE header
-	incbin "MIME_OP.EXE", 0, 000Eh
-	dw	(end + 0Fh - $$ - SEG_BASE_OFS) / 10h	; write number of data paragraphs
+	incbin "MIME_OP.EXE", 0, 0002h
+	dw	(end-$$) & 1FFh		; number of bytes in last page
+	dw	((end-$$) + 1FFh) / 200h	; total number of pages (full + partial)
+	incbin "MIME_OP.EXE", $, 000Eh - ($-$$)
+	dw	(end + 0Fh - $$ - SEG_BASE_OFS) / 10h	; place stack segment right after the data
 
 	incbin "MIME_OP.EXE", $, 61B2h - ($-$$-SEG_BASE_OFS)
 parse_text_loop:
