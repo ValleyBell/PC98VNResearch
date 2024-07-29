@@ -23,7 +23,7 @@ seg000		segment	byte public 'CODE' use16
 		public start
 start		proc near
 		mov	dx, seg	dseg
-		mov	cs:word_10266, dx
+		mov	cs:seg_10266, dx
 		mov	ah, 30h
 		int	21h		; DOS -	GET DOS	VERSION
 					; Return: AL = major version number (00h for DOS 1.x)
@@ -35,7 +35,7 @@ start		proc near
 		mov	word_1DD3E, es
 		mov	word_1DD3A, bx
 		mov	word_1DD50, bp
-		call	sub_10171
+		call	SetupIntVects
 		mov	ax, word_1DD3A
 		mov	es, ax
 		xor	ax, ax
@@ -90,7 +90,7 @@ loc_10083:				; CODE XREF: start+7Cj
 		sub	bx, ax
 		mov	es, ax
 		assume es:nothing
-		mov	ah, 4Ah	; 'J'
+		mov	ah, 4Ah
 		push	di
 		int	21h		; DOS -	2+ - ADJUST MEMORY BLOCK SIZE (SETBLOCK)
 					; ES = segment address of block	to change
@@ -107,7 +107,7 @@ loc_10083:				; CODE XREF: start+7Cj
 		assume es:dseg
 		mov	es:word_29A46, di
 		xor	ax, ax
-		mov	es, cs:word_10266
+		mov	es, cs:seg_10266
 		assume es:nothing
 		mov	di, offset word_29B5A
 		mov	cx, offset byte_29BE8
@@ -160,7 +160,7 @@ loc_1010B:				; CODE XREF: start+DFj	start+E9j ...
 
 loc_10110:				; CODE XREF: start+C5j	start+CCj ...
 		xor	bp, bp
-		mov	es, cs:word_10266
+		mov	es, cs:seg_10266
 		assume es:nothing
 		mov	si, 0BE62h
 		mov	di, 0BE7Ah
@@ -182,7 +182,7 @@ start		endp ; sp-analysis failed
 
 
 sub_1013F	proc far		; CODE XREF: sub_10A88+26p
-		mov	es, cs:word_10266
+		mov	es, cs:seg_10266
 		push	si
 		push	di
 		mov	si, 0BE7Ah
@@ -193,7 +193,14 @@ sub_1013F	proc far		; CODE XREF: sub_10A88+26p
 		retf
 sub_1013F	endp
 
-; [00000001 BYTES: COLLAPSED FUNCTION nullsub_1. PRESS KEYPAD "+" TO EXPAND]
+
+; =============== S U B	R O U T	I N E =======================================
+
+
+nullsub_1	proc far		; CODE XREF: sub_10A88+34p
+		retf
+nullsub_1	endp
+
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -204,13 +211,15 @@ sub_10153	proc near		; CODE XREF: sub_10A88+4Ep
 arg_2		= byte ptr  4
 
 		mov	bp, sp
-		mov	ah, 4Ch	; 'L'
+		mov	ah, 4Ch
 		mov	al, [bp+arg_2]
 		int	21h		; DOS -	2+ - QUIT WITH EXIT CODE (EXIT)
 sub_10153	endp			; AL = exit code
 
 ; ---------------------------------------------------------------------------
-		mov	dx, 2Fh	; '/'
+
+Int00:					; DATA XREF: SetupIntVects+3Co
+		mov	dx, 2Fh
 		push	ds
 		push	dx
 		nop
@@ -227,80 +236,80 @@ sub_10153	endp			; AL = exit code
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_10171	proc near		; CODE XREF: start+25p
+SetupIntVects	proc near		; CODE XREF: start+25p
 		push	ds
 		mov	ax, 3500h
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	word ptr dword_1DD1E, bx
-		mov	word ptr dword_1DD1E+2,	es
+		mov	word ptr OldIntVec00, bx
+		mov	word ptr OldIntVec00+2,	es
 		mov	ax, 3504h
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	word ptr dword_1DD22, bx
-		mov	word ptr dword_1DD22+2,	es
+		mov	word ptr OldIntVec04, bx
+		mov	word ptr OldIntVec04+2,	es
 		mov	ax, 3505h
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	word ptr dword_1DD26, bx
-		mov	word ptr dword_1DD26+2,	es
+		mov	word ptr OldIntVec05a, bx
+		mov	word ptr OldIntVec05a+2, es
 		mov	ax, 3506h
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	word ptr dword_1DD2A, bx
-		mov	word ptr dword_1DD2A+2,	es
+		mov	word ptr OldIntVec06a, bx
+		mov	word ptr OldIntVec06a+2, es
 		mov	ax, 2500h
 		mov	dx, cs
 		mov	ds, dx
 		assume ds:seg000
-		mov	dx, 15Ch
+		mov	dx, offset Int00
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
 		pop	ds
 		assume ds:dseg
 		retn
-sub_10171	endp
+SetupIntVects	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_101B4	proc far		; CODE XREF: sub_10A88+2Fp
+RestoreIntVects	proc far		; CODE XREF: sub_10A88+2Fp
 		push	ds
 		mov	ax, 2500h
-		lds	dx, dword_1DD1E
+		lds	dx, OldIntVec00
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
 		pop	ds
 		push	ds
 		mov	ax, 2504h
-		lds	dx, dword_1DD22
+		lds	dx, OldIntVec04
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
 		pop	ds
 		push	ds
 		mov	ax, 2505h
-		lds	dx, dword_1DD26
+		lds	dx, OldIntVec05a
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
 		pop	ds
 		push	ds
 		mov	ax, 2506h
-		lds	dx, dword_1DD2A
+		lds	dx, OldIntVec06a
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
 		pop	ds
 		retf
-sub_101B4	endp
+RestoreIntVects	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -402,11 +411,24 @@ locret_10265:				; CODE XREF: sub_10225+23j
 sub_10225	endp
 
 ; ---------------------------------------------------------------------------
-word_10266	dw 0			; DATA XREF: start+3w start+B0r ...
-		db 4, 0C0h, 5 dup(0), 2	dup(7),	2 dup(0), 7, 0,	7, 0, 7
-		db 2 dup(0), 4 dup(7), 0, 3 dup(7), 5 dup(0), 2	dup(0Fh)
-		db 2 dup(0), 0Fh, 0, 0Fh, 0, 0Fh, 2 dup(0), 4 dup(0Fh)
-		db 0, 3	dup(0Fh)
+seg_10266	dw 0			; DATA XREF: start+3w start+B0r ...
+		dw 0C004h
+		db    0,   0,	0
+		db    0,   0,	7
+		db    7,   0,	0
+		db    7,   0,	7
+		db    0,   7,	0
+		db    0,   7,	7
+		db    7,   7,	0
+		db    7,   7,	7
+		db    0,   0,	0
+		db    0,   0, 0Fh
+		db  0Fh,   0,	0
+		db  0Fh,   0, 0Fh
+		db    0, 0Fh,	0
+		db    0, 0Fh, 0Fh
+		db  0Fh, 0Fh,	0
+		db  0Fh, 0Fh, 0Fh
 word_1029A	dw 0			; DATA XREF: seg000:02D6w
 					; sub_1074B+1Dr ...
 word_1029C	dw 0			; DATA XREF: seg000:02DBw seg000:0361r
@@ -1789,7 +1811,7 @@ loc_10AA5:				; CODE XREF: sub_10A88+Bj
 loc_10AB5:				; CODE XREF: sub_10A88+9j
 		nop
 		push	cs
-		call	near ptr sub_101B4
+		call	near ptr RestoreIntVects
 		nop
 		push	cs
 		call	near ptr nullsub_1
@@ -7893,7 +7915,7 @@ loc_1305A:				; CODE XREF: sub_12FB3+73j
 
 loc_13063:				; CODE XREF: sub_12FB3+4Cj
 					; sub_12FB3+5Aj
-		call	sub_1318C
+		call	SetupIntVec24
 		push	ds
 		push	offset word_29B5A
 		call	sub_10F09
@@ -7925,13 +7947,13 @@ loc_13063:				; CODE XREF: sub_12FB3+4Cj
 		push	0
 		call	sub_14920
 		add	sp, 2
-		call	sub_14A85
+		call	SetupIntVec09
 
 loc_130C7:				; CODE XREF: sub_12FB3+11Bj
 		call	far ptr	LoadScript
 		or	ax, ax
 		jz	short loc_130C7
-		call	sub_14A6D
+		call	RestoreIntVec09
 		push	ds
 		push	offset a1l5l	; "\x1B[>1l\x1B[>5l"
 		call	sub_12452
@@ -7948,7 +7970,7 @@ loc_130C7:				; CODE XREF: sub_12FB3+11Bj
 		push	offset aUseMemoryDkb ; "   use memory :	%dKB\n"
 		call	sub_1206F
 		add	sp, 6
-		call	sub_131F2
+		call	RestoreIntVec24
 		pop	di
 		pop	si
 		leave
@@ -7965,18 +7987,12 @@ seg002		segment	byte public 'CODE' use16
 		;org 0Ch
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 aStssp_env	db 'STSSP.ENV',0
-word_13116	dw 0			; DATA XREF: sub_1318C+2Cw
-					; sub_131F2+9r
-word_13118	dw 0			; DATA XREF: sub_1318C+27w
-					; sub_131F2+4r
-word_1311A	dw 0			; DATA XREF: sub_1318C+49w
-					; sub_131F2+19r
-word_1311C	dw 0			; DATA XREF: sub_1318C+44w
-					; sub_131F2+14r
-word_1311E	dw 0			; DATA XREF: sub_1318C+Fw
-					; sub_131F2+29r
-word_13120	dw 0			; DATA XREF: sub_1318C+Aw
-					; sub_131F2+24r
+OldIntVec05b	dd 0			; DATA XREF: SetupIntVec24+2Cw
+					; RestoreIntVec24+9r ...
+OldIntVec06b	dd 0			; DATA XREF: SetupIntVec24+49w
+					; RestoreIntVec24+19r ...
+OldIntVec24	dd 0			; DATA XREF: SetupIntVec24+Fw
+					; RestoreIntVec24+29r ...
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -8061,23 +8077,23 @@ sub_13130	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1318C	proc far		; CODE XREF: sub_12FB3:loc_13063P
+SetupIntVec24	proc far		; CODE XREF: sub_12FB3:loc_13063P
 		pusha
 		push	ds
 		push	es
 		cli
-		mov	al, 24h	; '$'
+		mov	al, 24h
 		mov	ah, 35h
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	cs:word_13120, es
-		mov	cs:word_1311E, bx
+		mov	word ptr cs:OldIntVec24+2, es
+		mov	word ptr cs:OldIntVec24, bx
 		mov	ax, cs
 		mov	ds, ax
 		assume ds:seg002
-		mov	dx, 0ECh ; 'ì'
-		mov	al, 24h	; '$'
+		mov	dx, offset Int24
+		mov	al, 24h
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
@@ -8087,11 +8103,11 @@ sub_1318C	proc far		; CODE XREF: sub_12FB3:loc_13063P
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	cs:word_13118, es
-		mov	cs:word_13116, bx
+		mov	word ptr cs:OldIntVec05b+2, es
+		mov	word ptr cs:OldIntVec05b, bx
 		mov	ax, cs
 		mov	ds, ax
-		mov	dx, 0F1h ; 'ñ'
+		mov	dx, offset IntDummy
 		mov	al, 5
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
@@ -8102,11 +8118,11 @@ sub_1318C	proc far		; CODE XREF: sub_12FB3:loc_13063P
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	cs:word_1311C, es
-		mov	cs:word_1311A, bx
+		mov	word ptr cs:OldIntVec06b+2, es
+		mov	word ptr cs:OldIntVec06b, bx
 		mov	ax, cs
 		mov	ds, ax
-		mov	dx, 0F1h ; 'ñ'
+		mov	dx, offset IntDummy
 		mov	al, 6
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
@@ -8118,49 +8134,54 @@ sub_1318C	proc far		; CODE XREF: sub_12FB3:loc_13063P
 		assume ds:dseg
 		popa
 		retf
-sub_1318C	endp
+SetupIntVec24	endp
 
 ; ---------------------------------------------------------------------------
+
+Int24:					; DATA XREF: SetupIntVec24+18o
 		pushf
 		xor	al, al
 		popf
 		iret
 ; ---------------------------------------------------------------------------
+
+IntDummy:				; DATA XREF: SetupIntVec24+35o
+					; SetupIntVec24+52o
 		iret
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_131F2	proc far		; CODE XREF: sub_12FB3+150P
+RestoreIntVec24	proc far		; CODE XREF: sub_12FB3+150P
 		push	ax
 		push	cx
 		push	ds
 		cli
-		mov	ds, cs:word_13118
-		mov	dx, cs:word_13116
+		mov	ds, word ptr cs:OldIntVec05b+2
+		mov	dx, word ptr cs:OldIntVec05b
 		mov	al, 5
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
-		mov	ds, cs:word_1311C
-		mov	dx, cs:word_1311A
+		mov	ds, word ptr cs:OldIntVec06b+2
+		mov	dx, word ptr cs:OldIntVec06b
 		mov	al, 6
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
-		mov	ds, cs:word_13120
-		mov	dx, cs:word_1311E
-		mov	al, 24h	; '$'
+		mov	ds, word ptr cs:OldIntVec24+2
+		mov	dx, word ptr cs:OldIntVec24
+		mov	al, 24h
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
 					; AL = interrupt number
 					; DS:DX	= new vector to	be used	for specified interrupt
 		sti
-		mov	cx, 80h	; '€'
+		mov	cx, 80h
 
-loc_1322A:				; CODE XREF: sub_131F2+3Cj
+loc_1322A:				; CODE XREF: RestoreIntVec24+3Cj
 		mov	ah, 5
 		int	18h		; TRANSFER TO ROM BASIC
 					; causes transfer to ROM-based BASIC (IBM-PC)
@@ -8184,13 +8205,13 @@ loc_1322A:				; CODE XREF: sub_131F2+3Cj
 		pop	cx
 		pop	ax
 		retf
-sub_131F2	endp
+RestoreIntVec24	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_13252	proc far		; CODE XREF: sub_131F2+59p
+sub_13252	proc far		; CODE XREF: RestoreIntVec24+59p
 		push	ax
 		mov	ah, 0Ch
 		int	18h		; TRANSFER TO ROM BASIC
@@ -8457,7 +8478,7 @@ loc_13A06:				; CODE XREF: PrintFontChar+5Dj
 		mov	ax, seg	dseg
 		mov	ds, ax
 		assume ds:dseg
-		mov	ah, byte ptr word_21EA8
+		mov	ah, byte ptr txtColorShdw
 		shr	ah, 1
 		sbb	al, al
 		out	7Eh, al
@@ -8482,7 +8503,7 @@ loc_13A06:				; CODE XREF: PrintFontChar+5Dj
 loc_13A38:				; CODE XREF: PrintFontChar+109j
 		mov	ax, cs:[si]
 		mov	bx, ax
-		shr	bx, 1
+		shr	bx, 1		; make bold by duplicating all pixels 1	to the right
 		or	ax, bx
 		xchg	al, ah
 		mov	es:[di], ax
@@ -8493,7 +8514,7 @@ loc_13A38:				; CODE XREF: PrintFontChar+109j
 		jb	short loc_13A38
 		mov	ax, seg	dseg
 		mov	ds, ax
-		mov	ah, byte ptr word_21EA6
+		mov	ah, byte ptr txtColorMain
 		shr	ah, 1
 		sbb	al, al
 		out	7Eh, al
@@ -8958,14 +8979,14 @@ seg005		segment	byte public 'CODE' use16
 		;org 5
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 		align 2
-word_13D56	dw 0			; DATA XREF: sub_14489+14w
-					; sub_14489+124r ...
-word_13D58	dw 0			; DATA XREF: sub_14489+18w
-					; sub_14489+12Dr ...
-word_13D5A	dw 0			; DATA XREF: sub_145D6+130w
-					; sub_145D6+16Cr ...
-word_13D5C	dw 0			; DATA XREF: sub_145D6+142w
-					; sub_145D6+179r ...
+word_13D56	dw 0			; DATA XREF: ImageCopy2+14w
+					; ImageCopy2+124r ...
+word_13D58	dw 0			; DATA XREF: ImageCopy2+18w
+					; ImageCopy2+12Dr ...
+word_13D5A	dw 0			; DATA XREF: ImageCopy3+130w
+					; ImageCopy3+16Cr ...
+word_13D5C	dw 0			; DATA XREF: ImageCopy3+142w
+					; ImageCopy3+179r ...
 		db 48h dup(0)
 word_13DA6	dw 0A800h		; DATA XREF: sub_13EF4+36r
 					; sub_13EF4+8Cr ...
@@ -8975,7 +8996,7 @@ word_13DAA	dw 0B800h		; DATA XREF: sub_13EF4+5Ar
 					; sub_13EF4+B0r
 word_13DAC	dw 0E000h		; DATA XREF: sub_13EF4+6Cr
 					; sub_13EF4+C2r
-word_13DAE	dw  1200,  561		; DATA XREF: sub_14489+Eo
+word_13DAE	dw  1200,  561		; DATA XREF: ImageCopy2+Eo
 		dw  1120,  481
 		dw  1040,  401
 		dw   960,  321
@@ -9039,14 +9060,14 @@ word_13DAE	dw  1200,  561		; DATA XREF: sub_14489+Eo
 		db 00h,	00h, 00h
 		db 0Fh,	00h, 0Fh
 		db 00h,	0Fh, 00h
-word_13E9E	dw 0			; DATA XREF: sub_143B8+25r
-					; sub_143B8+7Br ...
-word_13EA0	dw 0			; DATA XREF: sub_143B8+37r
-					; sub_143B8+8Dr ...
-word_13EA2	dw 0			; DATA XREF: sub_143B8+49r
-					; sub_143B8+9Fr ...
-word_13EA4	dw 0			; DATA XREF: sub_143B8+5Br
-					; sub_143B8+B1r ...
+word_13E9E	dw 0			; DATA XREF: ImageCopy1+25r
+					; ImageCopy1+7Br ...
+word_13EA0	dw 0			; DATA XREF: ImageCopy1+37r
+					; ImageCopy1+8Dr ...
+word_13EA2	dw 0			; DATA XREF: ImageCopy1+49r
+					; ImageCopy1+9Fr ...
+word_13EA4	dw 0			; DATA XREF: ImageCopy1+5Br
+					; ImageCopy1+B1r ...
 word_13EA6	dw 0			; DATA XREF: sub_1416A+28r
 					; sub_1416A+72r ...
 word_13EA8	dw 0			; DATA XREF: sub_1416A+37r
@@ -9516,7 +9537,7 @@ arg_8		= word ptr  0Eh
 		pusha
 		push	es
 		push	[bp+arg_8]
-		call	sub_148D5
+		call	ImageCopySetup
 		add	sp, 2
 		mov	si, [bp+arg_0]
 		mov	cx, [bp+arg_4]
@@ -9709,7 +9730,7 @@ sub_1421E	endp
 
 ; Attributes: bp-based frame
 
-sub_142DC	proc far		; CODE XREF: sub_14489+133p
+sub_142DC	proc far		; CODE XREF: ImageCopy2+133p
 					; seg007:869AP
 
 arg_0		= word ptr  6
@@ -9750,7 +9771,7 @@ sub_142DC	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1430F	proc far		; CODE XREF: sub_131F2+4FP
+sub_1430F	proc far		; CODE XREF: RestoreIntVec24+4FP
 		push	ax
 		mov	ah, 41h
 		int	18h		; TRANSFER TO ROM BASIC
@@ -9886,7 +9907,7 @@ sub_14375	endp
 
 ; Attributes: bp-based frame
 
-sub_143B8	proc far		; CODE XREF: seg007:7317P seg007:7337P ...
+ImageCopy1	proc far		; CODE XREF: seg007:7317P seg007:7337P ...
 
 arg_0		= word ptr  6
 arg_2		= word ptr  8
@@ -9901,7 +9922,7 @@ arg_8		= word ptr  0Eh
 		push	es
 		mov	ax, [bp+arg_8]
 		push	ax
-		call	sub_148D5
+		call	ImageCopySetup
 		add	sp, 2
 		mov	bx, [bp+arg_0]
 		mov	dx, [bp+arg_6]
@@ -9911,7 +9932,7 @@ arg_8		= word ptr  0Eh
 		test	ax, 1
 		jz	short loc_14430
 
-loc_143DC:				; CODE XREF: sub_143B8+74j
+loc_143DC:				; CODE XREF: ImageCopy1+74j
 		push	cx
 		mov	ds, cs:word_13E9E
 		assume ds:nothing
@@ -9946,10 +9967,10 @@ loc_143DC:				; CODE XREF: sub_143B8+74j
 		jmp	short loc_14484
 ; ---------------------------------------------------------------------------
 
-loc_14430:				; CODE XREF: sub_143B8+22j
+loc_14430:				; CODE XREF: ImageCopy1+22j
 		shr	ax, 1
 
-loc_14432:				; CODE XREF: sub_143B8+CAj
+loc_14432:				; CODE XREF: ImageCopy1+CAj
 		push	cx
 		mov	ds, cs:word_13E9E
 		mov	si, bx
@@ -9980,7 +10001,7 @@ loc_14432:				; CODE XREF: sub_143B8+CAj
 		pop	cx
 		loop	loc_14432
 
-loc_14484:				; CODE XREF: sub_143B8+76j
+loc_14484:				; CODE XREF: ImageCopy1+76j
 		pop	es
 		assume es:nothing
 		pop	ds
@@ -9988,14 +10009,14 @@ loc_14484:				; CODE XREF: sub_143B8+76j
 		popa
 		pop	bp
 		retf
-sub_143B8	endp
+ImageCopy1	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Attributes: bp-based frame
 
-sub_14489	proc far		; CODE XREF: seg007:7425P seg007:8AC4P
+ImageCopy2	proc far		; CODE XREF: seg007:7425P seg007:8AC4P
 
 arg_0		= word ptr  6
 arg_2		= word ptr  8
@@ -10018,46 +10039,46 @@ arg_8		= word ptr  0Eh
 		shl	ax, 6
 		add	bx, ax
 		push	2
-		call	sub_148D5
+		call	ImageCopySetup
 		add	sp, 2
 
-loc_144B8:				; CODE XREF: sub_14489+145j
+loc_144B8:				; CODE XREF: ImageCopy2+145j
 		mov	dx, cs:[bx]
 		mov	si, [bp+arg_0]
 		mov	di, [bp+arg_6]
 		mov	cx, [bp+arg_4]
 
-loc_144C4:				; CODE XREF: sub_14489+3Fj
+loc_144C4:				; CODE XREF: ImageCopy2+3Fj
 		in	al, 0A0h	; PIC 2	 same as 0020 for PIC 1
 		test	al, 20h
 		jnz	short loc_144C4
 
-loc_144CA:				; CODE XREF: sub_14489+45j
+loc_144CA:				; CODE XREF: ImageCopy2+45j
 		in	al, 0A0h	; PIC 2	 same as 0020 for PIC 1
 		test	al, 20h
 		jz	short loc_144CA
 
-loc_144D0:				; CODE XREF: sub_14489+4Bj
+loc_144D0:				; CODE XREF: ImageCopy2+4Bj
 		in	al, 0A0h	; PIC 2	 same as 0020 for PIC 1
 		test	al, 20h
 		jnz	short loc_144D0
 
-loc_144D6:				; CODE XREF: sub_14489+51j
+loc_144D6:				; CODE XREF: ImageCopy2+51j
 		in	al, 0A0h	; PIC 2	 same as 0020 for PIC 1
 		test	al, 20h
 		jz	short loc_144D6
 
-loc_144DC:				; CODE XREF: sub_14489+57j
+loc_144DC:				; CODE XREF: ImageCopy2+57j
 		in	al, 0A0h	; PIC 2	 same as 0020 for PIC 1
 		test	al, 20h
 		jnz	short loc_144DC
 
-loc_144E2:				; CODE XREF: sub_14489+5Dj
+loc_144E2:				; CODE XREF: ImageCopy2+5Dj
 		in	al, 0A0h	; PIC 2	 same as 0020 for PIC 1
 		test	al, 20h
 		jz	short loc_144E2
 
-loc_144E8:				; CODE XREF: sub_14489+B8j
+loc_144E8:				; CODE XREF: ImageCopy2+B8j
 		push	cx
 		mov	cx, [bp+arg_2]
 		push	si
@@ -10065,7 +10086,7 @@ loc_144E8:				; CODE XREF: sub_14489+B8j
 		add	si, dx
 		add	di, dx
 
-loc_144F2:				; CODE XREF: sub_14489+ABj
+loc_144F2:				; CODE XREF: ImageCopy2+ABj
 		mov	ds, cs:word_13E9E
 		assume ds:nothing
 		mov	ax, 0A800h
@@ -10106,7 +10127,7 @@ loc_144F2:				; CODE XREF: sub_14489+ABj
 		mov	di, [bp+arg_6]
 		mov	cx, [bp+arg_4]
 
-loc_14552:				; CODE XREF: sub_14489+122j
+loc_14552:				; CODE XREF: ImageCopy2+122j
 		push	cx
 		mov	cx, [bp+arg_2]
 		push	si
@@ -10114,7 +10135,7 @@ loc_14552:				; CODE XREF: sub_14489+122j
 		add	si, dx
 		add	di, dx
 
-loc_1455C:				; CODE XREF: sub_14489+115j
+loc_1455C:				; CODE XREF: ImageCopy2+115j
 		mov	ds, cs:word_13E9E
 		mov	ax, 0A800h
 		mov	es, ax
@@ -10158,14 +10179,14 @@ loc_1455C:				; CODE XREF: sub_14489+115j
 		inc	ax
 		mov	cs:word_13D58, ax
 
-loc_145C7:				; CODE XREF: sub_14489+12Bj
+loc_145C7:				; CODE XREF: ImageCopy2+12Bj
 		or	dx, dx
 		jz	short loc_145D1
 		add	bx, 2
 		jmp	loc_144B8
 ; ---------------------------------------------------------------------------
 
-loc_145D1:				; CODE XREF: sub_14489+140j
+loc_145D1:				; CODE XREF: ImageCopy2+140j
 		pop	es
 		assume es:nothing
 		pop	ds
@@ -10173,14 +10194,14 @@ loc_145D1:				; CODE XREF: sub_14489+140j
 		popa
 		pop	bp
 		retf
-sub_14489	endp
+ImageCopy2	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Attributes: bp-based frame
 
-sub_145D6	proc far		; CODE XREF: seg007:74CDP seg007:7BCDP ...
+ImageCopy3	proc far		; CODE XREF: seg007:74CDP seg007:7BCDP ...
 
 arg_0		= word ptr  6
 arg_2		= word ptr  8
@@ -10195,7 +10216,7 @@ arg_8		= word ptr  0Eh
 		push	es
 		mov	ax, [bp+arg_8]
 		push	ax
-		call	sub_148D5
+		call	ImageCopySetup
 		add	sp, 2
 		shr	ax, 4
 		mov	es, ax
@@ -10209,14 +10230,14 @@ arg_8		= word ptr  0Eh
 		jmp	loc_146CE
 ; ---------------------------------------------------------------------------
 
-loc_14603:				; CODE XREF: sub_145D6+28j
-					; sub_145D6+F2j
+loc_14603:				; CODE XREF: ImageCopy3+28j
+					; ImageCopy3+F2j
 		push	cx
 		push	si
 		push	di
 		mov	cl, dl
 
-loc_14608:				; CODE XREF: sub_145D6+E3j
+loc_14608:				; CODE XREF: ImageCopy3+E3j
 		push	cx
 		mov	ds, cs:word_13E9E
 		assume ds:nothing
@@ -10233,50 +10254,50 @@ loc_14608:				; CODE XREF: sub_145D6+E3j
 		jz	short loc_14630
 		and	ch, ah
 
-loc_14630:				; CODE XREF: sub_145D6+56j
+loc_14630:				; CODE XREF: ImageCopy3+56j
 		test	cl, 2
 		jz	short loc_14637
 		and	ch, bl
 
-loc_14637:				; CODE XREF: sub_145D6+5Dj
+loc_14637:				; CODE XREF: ImageCopy3+5Dj
 		test	cl, 4
 		jz	short loc_1463E
 		and	ch, bh
 
-loc_1463E:				; CODE XREF: sub_145D6+64j
+loc_1463E:				; CODE XREF: ImageCopy3+64j
 		test	cl, 8
 		jz	short loc_14645
 		and	ch, dh
 
-loc_14645:				; CODE XREF: sub_145D6+6Bj
+loc_14645:				; CODE XREF: ImageCopy3+6Bj
 		test	cl, 1
 		jnz	short loc_14650
 		mov	al, ah
 		not	al
 		and	ch, al
 
-loc_14650:				; CODE XREF: sub_145D6+72j
+loc_14650:				; CODE XREF: ImageCopy3+72j
 		test	cl, 2
 		jnz	short loc_1465B
 		mov	al, bl
 		not	al
 		and	ch, al
 
-loc_1465B:				; CODE XREF: sub_145D6+7Dj
+loc_1465B:				; CODE XREF: ImageCopy3+7Dj
 		test	cl, 4
 		jnz	short loc_14666
 		mov	al, bh
 		not	al
 		and	ch, al
 
-loc_14666:				; CODE XREF: sub_145D6+88j
+loc_14666:				; CODE XREF: ImageCopy3+88j
 		test	cl, 8
 		jnz	short loc_14671
 		mov	al, dh
 		not	al
 		and	ch, al
 
-loc_14671:				; CODE XREF: sub_145D6+93j
+loc_14671:				; CODE XREF: ImageCopy3+93j
 		not	ch
 		and	ah, ch
 		and	bl, ch
@@ -10312,7 +10333,7 @@ loc_14671:				; CODE XREF: sub_145D6+93j
 		jmp	loc_14608
 ; ---------------------------------------------------------------------------
 
-loc_146BC:				; CODE XREF: sub_145D6+E1j
+loc_146BC:				; CODE XREF: ImageCopy3+E1j
 		pop	di
 		pop	si
 		pop	cx
@@ -10323,20 +10344,20 @@ loc_146BC:				; CODE XREF: sub_145D6+E1j
 		jmp	loc_14603
 ; ---------------------------------------------------------------------------
 
-loc_146CB:				; CODE XREF: sub_145D6+F0j
+loc_146CB:				; CODE XREF: ImageCopy3+F0j
 		jmp	loc_147CB
 ; ---------------------------------------------------------------------------
 
-loc_146CE:				; CODE XREF: sub_145D6+2Aj
+loc_146CE:				; CODE XREF: ImageCopy3+2Aj
 		shr	dx, 1
 
-loc_146D0:				; CODE XREF: sub_145D6+1F2j
+loc_146D0:				; CODE XREF: ImageCopy3+1F2j
 		push	cx
 		push	si
 		push	di
 		mov	cx, dx
 
-loc_146D5:				; CODE XREF: sub_145D6+1E3j
+loc_146D5:				; CODE XREF: ImageCopy3+1E3j
 		push	cx
 		mov	cx, es
 		mov	bx, 0FFFFh
@@ -10347,7 +10368,7 @@ loc_146D5:				; CODE XREF: sub_145D6+1E3j
 		jz	short loc_146ED
 		and	bx, ax
 
-loc_146ED:				; CODE XREF: sub_145D6+113j
+loc_146ED:				; CODE XREF: ImageCopy3+113j
 		mov	ds, cs:word_13EA0
 		mov	ax, [si]
 		mov	cs:word_13D58, ax
@@ -10355,7 +10376,7 @@ loc_146ED:				; CODE XREF: sub_145D6+113j
 		jz	short loc_146FF
 		and	bx, ax
 
-loc_146FF:				; CODE XREF: sub_145D6+125j
+loc_146FF:				; CODE XREF: ImageCopy3+125j
 		mov	ds, cs:word_13EA2
 		mov	ax, [si]
 		mov	cs:word_13D5A, ax
@@ -10363,7 +10384,7 @@ loc_146FF:				; CODE XREF: sub_145D6+125j
 		jz	short loc_14711
 		and	bx, ax
 
-loc_14711:				; CODE XREF: sub_145D6+137j
+loc_14711:				; CODE XREF: ImageCopy3+137j
 		mov	ds, cs:word_13EA4
 		mov	ax, [si]
 		mov	cs:word_13D5C, ax
@@ -10371,35 +10392,35 @@ loc_14711:				; CODE XREF: sub_145D6+137j
 		jz	short loc_14723
 		and	bx, ax
 
-loc_14723:				; CODE XREF: sub_145D6+149j
+loc_14723:				; CODE XREF: ImageCopy3+149j
 		test	cl, 1
 		jnz	short loc_14730
 		mov	ax, cs:word_13D56
 		not	ax
 		and	bx, ax
 
-loc_14730:				; CODE XREF: sub_145D6+150j
+loc_14730:				; CODE XREF: ImageCopy3+150j
 		test	cl, 2
 		jnz	short loc_1473D
 		mov	ax, cs:word_13D58
 		not	ax
 		and	bx, ax
 
-loc_1473D:				; CODE XREF: sub_145D6+15Dj
+loc_1473D:				; CODE XREF: ImageCopy3+15Dj
 		test	cl, 4
 		jnz	short loc_1474A
 		mov	ax, cs:word_13D5A
 		not	ax
 		and	bx, ax
 
-loc_1474A:				; CODE XREF: sub_145D6+16Aj
+loc_1474A:				; CODE XREF: ImageCopy3+16Aj
 		test	cl, 8
 		jnz	short loc_14757
 		mov	ax, cs:word_13D5C
 		not	ax
 		and	bx, ax
 
-loc_14757:				; CODE XREF: sub_145D6+177j
+loc_14757:				; CODE XREF: ImageCopy3+177j
 		not	bx
 		and	cs:word_13D56, bx
 		and	cs:word_13D58, bx
@@ -10434,7 +10455,7 @@ loc_14757:				; CODE XREF: sub_145D6+177j
 		jmp	loc_146D5
 ; ---------------------------------------------------------------------------
 
-loc_147BC:				; CODE XREF: sub_145D6+1E1j
+loc_147BC:				; CODE XREF: ImageCopy3+1E1j
 		pop	di
 		pop	si
 		pop	cx
@@ -10445,15 +10466,15 @@ loc_147BC:				; CODE XREF: sub_145D6+1E1j
 		jmp	loc_146D0
 ; ---------------------------------------------------------------------------
 
-loc_147CB:				; CODE XREF: sub_145D6:loc_146CBj
-					; sub_145D6+1F0j
+loc_147CB:				; CODE XREF: ImageCopy3:loc_146CBj
+					; ImageCopy3+1F0j
 		pop	es
 		pop	ds
 		assume ds:dseg
 		popa
 		pop	bp
 		retf
-sub_145D6	endp
+ImageCopy3	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -10592,7 +10613,8 @@ sub_148CA	endp
 
 ; Attributes: bp-based frame
 
-sub_148D5	proc near		; CODE XREF: sub_1416A+8p sub_143B8+Ap ...
+ImageCopySetup	proc near		; CODE XREF: sub_1416A+8p
+					; ImageCopy1+Ap ...
 
 arg_0		= word ptr  4
 
@@ -10614,11 +10636,11 @@ arg_0		= word ptr  4
 		jmp	short loc_148FA
 ; ---------------------------------------------------------------------------
 
-loc_148F5:				; CODE XREF: sub_148D5+14j
+loc_148F5:				; CODE XREF: ImageCopySetup+14j
 		mov	ds, ax
 		mov	si, offset word_1DD36
 
-loc_148FA:				; CODE XREF: sub_148D5+1Ej
+loc_148FA:				; CODE XREF: ImageCopySetup+1Ej
 		mov	cx, 4
 		rep movsw
 		test	bx, 1
@@ -10629,13 +10651,13 @@ loc_148FA:				; CODE XREF: sub_148D5+1Ej
 		jmp	short loc_14916
 ; ---------------------------------------------------------------------------
 
-loc_1490F:				; CODE XREF: sub_148D5+2Ej
+loc_1490F:				; CODE XREF: ImageCopySetup+2Ej
 		mov	ax, cs
 		mov	ds, ax
 		assume ds:seg005
 		mov	si, offset word_13DA6
 
-loc_14916:				; CODE XREF: sub_148D5+38j
+loc_14916:				; CODE XREF: ImageCopySetup+38j
 		mov	cx, 4
 		rep movsw
 		pop	es
@@ -10645,7 +10667,7 @@ loc_14916:				; CODE XREF: sub_148D5+38j
 		popa
 		pop	bp
 		retn
-sub_148D5	endp
+ImageCopySetup	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -10730,9 +10752,10 @@ seg006		segment	byte public 'CODE' use16
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 byte_14970	db 2 dup(0)		; DATA XREF: seg006:0154r
 					; seg006:loc_14BE0w ...
-byte_14972	db 0			; DATA XREF: sub_14A85+20w
+byte_14972	db 0			; DATA XREF: SetupIntVec09+20w
 					; seg006:0143r	...
-dword_14973	dd 0			; DATA XREF: sub_14A6D+9r sub_14A85+9w ...
+OldVecInt09	dd 0			; DATA XREF: RestoreIntVec09+9r
+					; SetupIntVec09+9w ...
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -10900,13 +10923,13 @@ sub_1499B	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_14A6D	proc far		; CODE XREF: sub_12FB3+11DP
+RestoreIntVec09	proc far		; CODE XREF: sub_12FB3+11DP
 		push	ax
 		push	ds
 		cli
-		mov	ax, word ptr cs:dword_14973+2
+		mov	ax, word ptr cs:OldVecInt09+2
 		mov	ds, ax
-		mov	dx, word ptr cs:dword_14973
+		mov	dx, word ptr cs:OldVecInt09
 		mov	al, 9
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
@@ -10916,13 +10939,13 @@ sub_14A6D	proc far		; CODE XREF: sub_12FB3+11DP
 		pop	ds
 		pop	ax
 		retf
-sub_14A6D	endp
+RestoreIntVec09	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_14A85	proc far		; CODE XREF: sub_12FB3+10FP
+SetupIntVec09	proc far		; CODE XREF: sub_12FB3+10FP
 		push	ax
 		push	ds
 		cli
@@ -10931,12 +10954,12 @@ sub_14A85	proc far		; CODE XREF: sub_12FB3+10FP
 		int	21h		; DOS -	2+ - GET INTERRUPT VECTOR
 					; AL = interrupt number
 					; Return: ES:BX	= value	of interrupt vector
-		mov	word ptr cs:dword_14973, bx
-		mov	word ptr cs:dword_14973+2, es
+		mov	word ptr cs:OldVecInt09, bx
+		mov	word ptr cs:OldVecInt09+2, es
 		mov	ax, cs
 		mov	ds, ax
 		assume ds:seg006
-		mov	dx, 13Fh
+		mov	dx, offset Int09
 		mov	al, 9
 		mov	ah, 25h
 		int	21h		; DOS -	SET INTERRUPT VECTOR
@@ -10948,9 +10971,11 @@ sub_14A85	proc far		; CODE XREF: sub_12FB3+10FP
 		assume ds:dseg
 		pop	ax
 		retf
-sub_14A85	endp
+SetupIntVec09	endp
 
 ; ---------------------------------------------------------------------------
+
+Int09:					; DATA XREF: SetupIntVec09+17o
 		pushf
 		pusha
 		push	ds
@@ -11190,7 +11215,7 @@ loc_14BF0:				; CODE XREF: seg006:014Bj
 		pop	ds
 		popa
 		popf
-		jmp	cs:dword_14973
+		jmp	cs:OldVecInt09
 ; ---------------------------------------------------------------------------
 		push	ds
 		pusha
@@ -11290,12 +11315,12 @@ seg007		segment	byte public 'CODE' use16
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 a0		db '0',0Dh,0Ah,'$'
 byte_14C74	db 0A2h	dup(0)		; DATA XREF: seg007:8F55r
-scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
+scrJumpTbl	dw offset scr00_TalkDungeon; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr01_BGMLoad	; 1
-		dw offset scr02_PrintFSTalk; 2
+		dw offset scr02_TalkFullScr; 2
 		dw offset scr03_NextScript; 3
-		dw offset scr04		; 4
-		dw offset scr05		; 5
+		dw offset scr04_TextColor; 4
+		dw offset scr05_PortA6	; 5
 		dw offset scr06_Wait	; 6
 		dw offset scr07_VarSetVal; 7
 		dw offset scr08_VarSetVar; 8
@@ -11303,8 +11328,8 @@ scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
 		dw offset scr0A_VarAddVar; 0Ah
 		dw offset scr0B_VarSubVal; 0Bh
 		dw offset scr0C_VarSubVar; 0Ch
-		dw offset scr0D		; 0Dh
-		dw offset scr0E		; 0Eh
+		dw offset scr0D_ImgCopy1Val; 0Dh
+		dw offset scr0E_ImgCopy2Val; 0Eh
 		dw offset scr0F		; 0Fh
 		dw offset scr10_VarBitClear; 10h
 		dw offset scr11_VarBitSet; 11h
@@ -11313,11 +11338,11 @@ scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
 		dw offset scr14_Return	; 14h
 		dw offset scr15_Jump	; 15h
 		dw offset scr16_JEQ	; 16h
-		dw offset scr17_JBE	; 17h
-		dw offset scr18_JAE	; 18h
-		dw offset scr19_LoadGTA	; 19h
-		dw offset scr19_LoadGTA	; 1Ah
-		dw offset scr1B		; 1Bh
+		dw offset scr17_JGT	; 17h
+		dw offset scr18_JLT	; 18h
+		dw offset scr1A_LoadGTA	; 19h
+		dw offset scr1A_LoadGTA	; 1Ah
+		dw offset scr1B_ImgFXVal; 1Bh
 		dw offset scr1C_SetNextScript; 1Ch
 		dw offset scr1D_ShowMenu; 1Dh
 		dw offset scr1E_Quit	; 1Eh
@@ -11328,8 +11353,8 @@ scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
 		dw offset scr23		; 23h
 		dw offset scr24		; 24h
 		dw offset scr25_VarBitTest; 25h
-		dw offset scr26		; 26h
-		dw offset scr27		; 27h
+		dw offset scr26_ImgCopy3Val; 26h
+		dw offset scr27_DoInput	; 27h
 		dw offset scr28		; 28h
 		dw offset scr29		; 29h
 		dw offset scr2A		; 2Ah
@@ -11355,7 +11380,7 @@ scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
 		dw offset scr3E		; 3Eh
 		dw offset scr3F_PlaySFX_FM; 3Fh
 		dw offset scr40_DiskWait; 40h
-		dw offset scr41		; 41h
+		dw offset scr41_ImgCopy4Val; 41h
 		dw offset scr42_PrintNum_F_5Dig; 42h
 		dw offset scr43_VarMulValDiv100; 43h
 		dw offset scr44		; 44h
@@ -11373,13 +11398,13 @@ scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
 		dw offset scr50_MulVarVar; 50h
 		dw offset scr51_DivVarVal; 51h
 		dw offset scr52_DivVarVar; 52h
-		dw offset scr53		; 53h
-		dw offset scr54		; 54h
-		dw offset scr55		; 55h
-		dw offset scr56		; 56h
-		dw offset scr57		; 57h
-		dw offset scr58		; 58h
-		dw offset scr59		; 59h
+		dw offset scr53_GetItemData; 53h
+		dw offset scr54_GetMonsterData;	54h
+		dw offset scr55_ImgCopy1Var; 55h
+		dw offset scr56_ImgCopy2Var; 56h
+		dw offset scr57_ImgFXVar; 57h
+		dw offset scr58_ImgCopy3Var; 58h
+		dw offset scr59_LoadGTA	; 59h
 		dw offset scr5A_VarRandomVar; 5Ah
 		dw offset scr5B_GetDiskID; 5Bh
 		dw offset scr5C		; 5Ch
@@ -11390,7 +11415,7 @@ scrJumpTbl	dw offset scr00_PrintDTalk; 0 ;	DATA XREF: LoadScript+85o
 		dw offset scr61_PrintNum_H; 61h
 		dw offset scr62_PrintNum_F; 62h
 		dw offset scr63_SetDiskLetter; 63h
-tempVar0	dw 0			; DATA XREF: seg007:scr00_PrintDTalkw
+tempVar0	dw 0			; DATA XREF: seg007:scr00_TalkDungeonw
 					; seg007:loc_1BD66r ...
 tempVar1	dw 0			; DATA XREF: seg007:7103r seg007:7110w ...
 tempVar2	dw 0			; DATA XREF: seg007:7CE0w seg007:7D56r ...
@@ -11418,15 +11443,18 @@ bitMask_Set	dw	1,     2,     4,     8 ; DATA XREF: seg007:7368o
 		dw    10h,   20h,   40h,   80h
 		dw   100h,  200h,  400h,  800h
 		dw  1000h, 2000h, 4000h, 8000h
-aAScnZ0000_dat	db 'A:SCN\Z0000.DAT',0  ; DATA XREF: LoadScript+11o
+ScriptToLoad	db 'A:SCN\Z0000.DAT',0  ; DATA XREF: LoadScript+11o
 					; LoadScript+22o ...
 		db '$'
 aProgrammedByBe	db 'programmed by bez$'
 off_14E77	dw offset loc_1DADE, offset loc_1DB46 ;	DATA XREF: seg007:8358o
-ScriptMemory	dw 1244h dup(0)		; DATA XREF: seg007:7100o seg007:7213o ...
-		db 2958h dup(0)
-byte_19C5B	db 156h	dup(0)		; DATA XREF: LoadScript+53o
-byte_19DB1	db 1B02h dup(0)		; DATA XREF: LoadScript+63o
+ScriptMemory	dw 11C6h dup(0)		; DATA XREF: seg007:7100o seg007:7213o ...
+CurItemData	dw 12h dup(0)		; DATA XREF: seg007:89E0o
+ItemData	db 2A30h dup(0)		; DATA XREF: LoadScript+2Eo
+					; seg007:89D1o
+LabyrinthData	dw 87h dup(0)		; DATA XREF: LoadScript+53o
+CurMonsterData	db 48h dup(0)		; DATA XREF: seg007:8A07o
+MonsterData	db 1B02h dup(0)		; DATA XREF: LoadScript+63o
 					; seg007:89F8o
 scrCallStack	dw 2			; DATA XREF: seg007:scr13_GoSubo
 					; seg007:739Fw	...
@@ -11565,7 +11593,7 @@ LoadScript	proc near		; CODE XREF: sub_12FB3:loc_130C7P
 		mov	ax, cs
 		mov	ds, ax
 		assume ds:seg007
-		mov	si, offset aAScnZ0000_dat ; "A:SCN\\Z0000.DAT"
+		mov	si, offset ScriptToLoad	; "A:SCN\\Z0000.DAT"
 		call	scr63_SetDiskLetter
 		mov	ax, seg	dseg
 		mov	ds, ax
@@ -11574,11 +11602,11 @@ LoadScript	proc near		; CODE XREF: sub_12FB3:loc_130C7P
 		push	ds
 		push	si
 		push	cs
-		push	offset aAScnZ0000_dat ;	"A:SCN\\Z0000.DAT"
+		push	offset ScriptToLoad ; "A:SCN\\Z0000.DAT"
 		call	ReadFile_Compr
 		add	sp, 8
 		push	cs
-		push	(offset	ScriptMemory+23B0h)
+		push	offset ItemData
 		push	cs
 		push	offset aZ1010_dat ; "Z1010.DAT"
 		call	ReadFile_Compr
@@ -11597,13 +11625,13 @@ loc_1BD00:				; CODE XREF: LoadScript+44j
 loc_1BD02:				; CODE XREF: LoadScript+4Aj
 		mov	byte ptr cs:aZ1030_dat+4, al
 		push	cs
-		push	offset byte_19C5B
+		push	offset LabyrinthData
 		push	cs
 		push	offset aZ1030_dat ; "Z1030.DAT"
 		call	ReadFile_Compr
 		add	sp, 8
 		push	cs
-		push	offset byte_19DB1
+		push	offset MonsterData
 		push	cs
 		push	offset aZ1020_dat ; "Z1020.DAT"
 		call	ReadFile_Compr
@@ -11624,8 +11652,8 @@ LoadScript	endp
 
 ; ---------------------------------------------------------------------------
 
-scr00_PrintDTalk:			; DATA XREF: seg007:scrJumpTblo
-		mov	cs:tempVar0, 0	; prints text into the text box	in the lower middle of the screen
+scr00_TalkDungeon:			; DATA XREF: seg007:scrJumpTblo
+		mov	cs:tempVar0, 0	; mode "normal text"
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
@@ -11646,7 +11674,7 @@ loc_1BD64:				; CODE XREF: seg007:70EFj
 loc_1BD66:				; CODE XREF: seg007:7134j seg007:715Fj
 		test	cs:tempVar0, 1
 		jz	short loc_1BD88
-		push	di
+		push	di		; handle mode "character name"
 		mov	di, offset ScriptMemory
 		add	di, cs:tempVar1
 		mov	ax, cs:[di]
@@ -11664,7 +11692,7 @@ loc_1BD88:				; CODE XREF: seg007:70FDj seg007:710Ej
 		jz	short ScriptMainLoop
 		cmp	ax, 2323h	; '##'
 		jnz	short loc_1BDA6
-		or	cs:tempVar0, 1
+		or	cs:tempVar0, 1	; set mode "character name"
 		mov	cs:tempVar1, 0
 		jmp	short loc_1BD66
 ; ---------------------------------------------------------------------------
@@ -11783,7 +11811,7 @@ loc_1BE4B:				; CODE XREF: seg007:71D6j
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr02_PrintFSTalk:			; DATA XREF: seg007:scrJumpTblo
+scr02_TalkFullScr:			; DATA XREF: seg007:scrJumpTblo
 		mov	cs:tempVar0, 0
 		mov	ax, seg	dseg
 		mov	es, ax
@@ -11885,21 +11913,21 @@ scr03_NextScript:			; DATA XREF: seg007:scrJumpTblo
 		retf
 ; ---------------------------------------------------------------------------
 
-scr04:					; DATA XREF: seg007:scrJumpTblo
+scr04_TextColor:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
 		mov	ax, [si]
-		mov	es:word_21EA6, ax
+		mov	es:txtColorMain, ax
 		mov	ax, [si+2]
-		mov	es:word_21EA8, ax
+		mov	es:txtColorShdw, ax
 
 scr_fin_4b:				; CODE XREF: seg007:72DFj seg007:72E7j ...
 		add	si, 4
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr05:					; DATA XREF: seg007:scrJumpTblo
+scr05_PortA6:				; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
 		call	WritePortA6
 		add	sp, 2
@@ -11952,13 +11980,13 @@ scr0C_VarSubVar:			; DATA XREF: seg007:scrJumpTblo
 		jmp	short scr_fin_4b
 ; ---------------------------------------------------------------------------
 
-scr0D:					; DATA XREF: seg007:scrJumpTblo
-		push	word ptr [si+8]
-		push	word ptr [si+6]
-		push	word ptr [si+4]
-		push	word ptr [si+2]
-		push	word ptr [si]
-		call	sub_143B8
+scr0D_ImgCopy1Val:			; DATA XREF: seg007:scrJumpTblo
+		push	word ptr [si+8]	; copy mode
+		push	word ptr [si+6]	; destination address
+		push	word ptr [si+4]	; height (pixels)
+		push	word ptr [si+2]	; width	(pixels)
+		push	word ptr [si]	; source address
+		call	ImageCopy1
 		add	sp, 0Ah
 
 scr_fin_10b:				; CODE XREF: seg007:742Dj seg007:7F51j ...
@@ -11966,14 +11994,14 @@ scr_fin_10b:				; CODE XREF: seg007:742Dj seg007:7F51j ...
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr0E:					; DATA XREF: seg007:scrJumpTblo
-		push	2
+scr0E_ImgCopy2Val:			; DATA XREF: seg007:scrJumpTblo
+		push	2		; copy from background image to	screen
 		push	word ptr [si+6]
 		push	word ptr [si+4]
 		push	word ptr [si+2]
 		push	word ptr [si]
 		call	WaitForVSync
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		add	si, 8
 		jmp	ScriptMainLoop
@@ -12026,6 +12054,8 @@ scr_fin_6b:				; CODE XREF: seg007:loc_1C04Bj
 
 scr13_GoSub:				; DATA XREF: seg007:scrJumpTblo
 		mov	di, offset scrCallStack
+
+loc_1C004:
 		add	di, cs:[di]
 		mov	ax, si
 		add	ax, 2
@@ -12057,11 +12087,11 @@ loc_1C036:				; CODE XREF: seg007:73D9j
 scr16_JEQ:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		cmp	cs:[di], ax
-		jnz	short loc_1C04B
+		jnz	short loc_1C04B	; skip when !=,	execute	jump when ==
 
 loc_1C043:				; CODE XREF: seg007:73E3j seg007:73EDj
 		mov	ax, offset ScriptData
-		add	ax, [si+4]	; jump when ==
+		add	ax, [si+4]
 		jmp	short loc_1C036
 ; ---------------------------------------------------------------------------
 
@@ -12069,21 +12099,21 @@ loc_1C04B:				; CODE XREF: seg007:73D1j
 		jmp	short scr_fin_6b
 ; ---------------------------------------------------------------------------
 
-scr17_JBE:				; DATA XREF: seg007:scrJumpTblo
+scr17_JGT:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		cmp	cs:[di], ax
-		ja	short loc_1C043	; jump when <=
+		ja	short loc_1C043	; jump when >
 		jmp	short scr_fin_6b
 ; ---------------------------------------------------------------------------
 
-scr18_JAE:				; DATA XREF: seg007:scrJumpTblo
+scr18_JLT:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		cmp	cs:[di], ax
-		jb	short loc_1C043	; jump when >=
+		jb	short loc_1C043	; jump when <
 		jmp	short scr_fin_6b
 ; ---------------------------------------------------------------------------
 
-scr19_LoadGTA:				; DATA XREF: seg007:scrJumpTblo
+scr1A_LoadGTA:				; DATA XREF: seg007:scrJumpTblo
 		pusha
 		mov	ax, ds
 		mov	es, ax
@@ -12103,13 +12133,13 @@ scr19_LoadGTA:				; DATA XREF: seg007:scrJumpTblo
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr1B:					; DATA XREF: seg007:scrJumpTblo
+scr1B_ImgFXVal:				; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si+8]
 		push	word ptr [si+6]
 		push	word ptr [si+4]
 		push	word ptr [si+2]
 		push	word ptr [si]
-		call	sub_14489
+		call	ImageCopy2
 		add	sp, 0Ah
 		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
@@ -12118,7 +12148,7 @@ scr1C_SetNextScript:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, cs		; This is usually followed by command 03 (End).
 		mov	es, ax
 		assume es:seg007
-		mov	di, offset aAScnZ0000_dat ; "A:SCN\\Z0000.DAT"
+		mov	di, offset ScriptToLoad	; "A:SCN\\Z0000.DAT"
 
 loc_1C0A7:				; CODE XREF: seg007:7442j
 		mov	al, [si]
@@ -12145,27 +12175,27 @@ scr1D_ShowMenu:				; DATA XREF: seg007:scrJumpTblo
 		add	sp, 2
 		push	1
 		push	0
-		push	0C0h ; 'À'
-		push	140h
+		push	192
+		push	320
 		push	ax
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		push	1
 		call	WritePortA6
 		add	sp, 2
 		push	2
 		push	0
-		push	0C0h ; 'À'
-		push	140h
+		push	192
+		push	320
 		push	0
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		push	2
-		push	28h ; '('
-		push	0C0h ; 'À'
-		push	140h
+		push	28h
+		push	192
+		push	320
 		push	0
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		mov	dx, cs:ScriptMemory+16h
 		shl	dx, 4
@@ -12176,15 +12206,15 @@ scr1D_ShowMenu:				; DATA XREF: seg007:scrJumpTblo
 
 loc_1C12B:				; CODE XREF: seg007:74DFj
 		mov	ax, dx
-		mov	cx, 28h	; '('
+		mov	cx, 40
 
 loc_1C130:				; CODE XREF: seg007:74D8j
 		push	cs:tempVar8
 		push	ax
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	3EABh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		add	ax, 2
 		loop	loc_1C130
@@ -12358,15 +12388,15 @@ loc_1C2D4:				; CODE XREF: seg007:loc_1C1D4j
 		call	Print_NoData
 		add	bx, 28h
 		mov	es:textDrawPtr,	bx
-		push	es:word_21EA6
-		push	es:word_21EA8
+		push	es:txtColorMain
+		push	es:txtColorShdw
 		push	cs:ScriptMemory+12h
-		pop	es:word_21EA6
+		pop	es:txtColorMain
 		push	cs:ScriptMemory+14h
-		pop	es:word_21EA8
+		pop	es:txtColorShdw
 		call	Print_NoData
-		pop	es:word_21EA8
-		pop	es:word_21EA6
+		pop	es:txtColorShdw
+		pop	es:txtColorMain
 		jmp	loc_1C61F
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -12747,15 +12777,15 @@ loc_1C5DF:				; CODE XREF: seg007:7967j
 		call	PrintSaveGameName
 		add	bx, 28h
 		mov	es:textDrawPtr,	bx
-		push	es:word_21EA6
-		push	es:word_21EA8
+		push	es:txtColorMain
+		push	es:txtColorShdw
 		push	cs:ScriptMemory+12h
-		pop	es:word_21EA6
+		pop	es:txtColorMain
 		push	cs:ScriptMemory+14h
-		pop	es:word_21EA8
+		pop	es:txtColorShdw
 		call	PrintSaveGameName
-		pop	es:word_21EA8
-		pop	es:word_21EA6
+		pop	es:txtColorShdw
+		pop	es:txtColorMain
 
 loc_1C61F:				; CODE XREF: seg007:769Aj
 		shl	cs:ScriptMemory+6Eh, 1
@@ -12855,15 +12885,15 @@ loc_1C704:				; CODE XREF: seg007:loc_1C62Ej
 		call	Print_Cancel
 		add	bx, 28h
 		mov	es:textDrawPtr,	bx
-		push	es:word_21EA6
-		push	es:word_21EA8
+		push	es:txtColorMain
+		push	es:txtColorShdw
 		push	cs:ScriptMemory+12h
-		pop	es:word_21EA6
+		pop	es:txtColorMain
 		push	cs:ScriptMemory+14h
-		pop	es:word_21EA8
+		pop	es:txtColorShdw
 		call	Print_Cancel
-		pop	es:word_21EA8
-		pop	es:word_21EA6
+		pop	es:txtColorShdw
+		pop	es:txtColorMain
 		popa
 		mov	dh, 10h
 		add	si, 0CCh
@@ -12887,17 +12917,17 @@ loc_1C74F:				; CODE XREF: seg007:7B3Aj
 		call	PrintFontChar	; draw unselected text (white)
 		add	sp, 2
 		add	es:textDrawPtr,	26h
-		push	es:word_21EA6
-		push	es:word_21EA8
+		push	es:txtColorMain
+		push	es:txtColorShdw
 		push	cs:ScriptMemory+12h
-		pop	es:word_21EA6
+		pop	es:txtColorMain
 		push	cs:ScriptMemory+14h
-		pop	es:word_21EA8
+		pop	es:txtColorShdw
 		push	ax
 		call	PrintFontChar	; draw selected	text (red)
 		add	sp, 2
-		pop	es:word_21EA8
-		pop	es:word_21EA6
+		pop	es:txtColorShdw
+		pop	es:txtColorMain
 		sub	es:textDrawPtr,	28h
 		jmp	short loc_1C74F
 ; ---------------------------------------------------------------------------
@@ -12920,7 +12950,7 @@ loc_1C7BB:				; CODE XREF: seg007:7AD6j seg007:7B47j
 		push	192
 		push	640
 		push	0
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		mov	dl, dh
 		xor	dh, dh
@@ -12946,7 +12976,7 @@ loc_1C7BB:				; CODE XREF: seg007:7AD6j seg007:7B47j
 		push	cx
 		push	dx
 		push	cs:tempVar0
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		mov	ax, cs:tempVar0
 		push	cs:tempVar8
@@ -12954,7 +12984,7 @@ loc_1C7BB:				; CODE XREF: seg007:7AD6j seg007:7B47j
 		push	8
 		push	8
 		push	3C2Ah
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		mov	bx, cs:tempVar0
 		inc	bx
@@ -12965,9 +12995,9 @@ loc_1C853:				; CODE XREF: seg007:7BFBj
 		push	cs:tempVar8
 		push	bx
 		push	8
-		push	10h
+		push	16
 		push	3C2Bh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		add	bx, 2
 		loop	loc_1C853
@@ -12976,7 +13006,7 @@ loc_1C853:				; CODE XREF: seg007:7BFBj
 		push	8
 		push	8
 		push	3C2Dh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		add	ax, 280h
 		add	bx, 280h
@@ -12986,17 +13016,17 @@ loc_1C853:				; CODE XREF: seg007:7BFBj
 loc_1C891:				; CODE XREF: seg007:7C52j
 		push	cs:tempVar8
 		push	ax
-		push	10h
+		push	16
 		push	8
 		push	3EAAh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		push	cs:tempVar8
 		push	bx
 		push	10h
 		push	8
 		push	3EADh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		add	ax, 500h
 		add	bx, 500h
@@ -13006,14 +13036,14 @@ loc_1C891:				; CODE XREF: seg007:7C52j
 		push	8
 		push	8
 		push	43AAh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		push	cs:tempVar8
 		push	bx
 		push	8
 		push	8
 		push	43ADh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		inc	ax
 		mov	cx, cs:tempVar3
@@ -13025,7 +13055,7 @@ loc_1C8F7:				; CODE XREF: seg007:7C9Fj
 		push	8
 		push	10h
 		push	43ABh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		add	ax, 2
 		loop	loc_1C8F7
@@ -13039,17 +13069,17 @@ loc_1C91C:				; CODE XREF: seg007:7CC6j
 		push	10h
 		push	cs:tempVar3
 		push	bx
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		add	bx, 500h
 		add	ax, 500h
 		loop	loc_1C91C
 		push	2
 		push	cs:tempVar5
-		push	10h
+		push	16
 		push	cs:tempVar3
-		push	28h ; '('
-		call	sub_143B8
+		push	28h
+		call	ImageCopy1
 		add	sp, 0Ah
 		mov	cs:tempVar2, 0
 		call	WaitForVSync
@@ -13234,7 +13264,7 @@ loc_1CAA4:				; CODE XREF: seg007:7E18j seg007:7E22j ...
 		push	cs:tempVar7
 		push	cs:tempVar6
 		push	3C00h
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		call	WaitForVSync
 		push	0
@@ -13351,7 +13381,7 @@ loc_1CBA0:				; CODE XREF: seg007:7F28j
 		jmp	scr_fin_4b
 ; ---------------------------------------------------------------------------
 
-scr26:					; DATA XREF: seg007:scrJumpTblo
+scr26_ImgCopy3Val:			; DATA XREF: seg007:scrJumpTblo
 		mov	ax, cs:ScriptMemory+2Ah	; get ScriptMemory[15h]
 		shl	ax, 4
 		or	ax, [si+8]
@@ -13360,12 +13390,12 @@ scr26:					; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si+4]
 		push	word ptr [si+2]
 		push	word ptr [si]
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		jmp	scr_fin_10b
 ; ---------------------------------------------------------------------------
 
-scr27:					; CODE XREF: seg007:7FDBj seg007:7FEEj
+scr27_DoInput:				; CODE XREF: seg007:7FDBj seg007:7FEEj
 					; DATA XREF: ...
 		call	sub_1499B
 		mov	cx, ax
@@ -13440,7 +13470,7 @@ loc_1CC2D:				; CODE XREF: seg007:7F68j seg007:7F73j
 		jnz	short loc_1CC4E
 		or	cx, cx
 		jnz	short loc_1CC65
-		jmp	scr27
+		jmp	scr27_DoInput
 ; ---------------------------------------------------------------------------
 
 loc_1CC4E:				; CODE XREF: seg007:7FCEj seg007:7FD5j
@@ -13452,7 +13482,7 @@ loc_1CC4E:				; CODE XREF: seg007:7FCEj seg007:7FD5j
 loc_1CC5A:				; CODE XREF: seg007:7FC3j
 		or	cx, cx
 		jnz	short loc_1CC61
-		jmp	scr27
+		jmp	scr27_DoInput
 ; ---------------------------------------------------------------------------
 
 loc_1CC61:				; CODE XREF: seg007:7FECj
@@ -13642,7 +13672,7 @@ loc_1CD9E:				; CODE XREF: seg007:8125j
 		push	10h
 		push	10h
 		push	cx
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		mov	cx, cs:tempVar0
 		test	cx, 8000h
@@ -13654,7 +13684,7 @@ loc_1CD9E:				; CODE XREF: seg007:8125j
 		push	10h
 		push	10h
 		push	0Ah
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		jmp	short loc_1CE18
 ; ---------------------------------------------------------------------------
@@ -13667,7 +13697,7 @@ loc_1CDE8:				; CODE XREF: seg007:8163j
 		push	10h
 		push	10h
 		push	0Ch
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		jmp	short loc_1CE18
 ; ---------------------------------------------------------------------------
@@ -13680,7 +13710,7 @@ loc_1CE01:				; CODE XREF: seg007:817Cj
 		push	10h
 		push	10h
 		push	0Eh
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 
 loc_1CE18:				; CODE XREF: seg007:815Dj seg007:8176j ...
@@ -13721,7 +13751,7 @@ loc_1CE3B:				; CODE XREF: seg007:81BDj
 		push	10h
 		push	10h
 		push	di
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		push	2
 		call	sub_13ECE
@@ -13731,7 +13761,7 @@ loc_1CE3B:				; CODE XREF: seg007:81BDj
 		push	10h
 		push	10h
 		push	cx
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		push	0
 		call	sub_13ECE
@@ -13741,7 +13771,7 @@ loc_1CE3B:				; CODE XREF: seg007:81BDj
 		push	10h
 		push	10h
 		push	di
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		pop	si
 		pop	ds
@@ -13792,7 +13822,7 @@ scr31:					; DATA XREF: seg007:scrJumpTblo
 		push	10h
 		push	10h
 		push	di
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
@@ -13854,7 +13884,7 @@ scr34:					; DATA XREF: seg007:scrJumpTblo
 		push	10h
 		push	10h
 		push	di
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
@@ -14260,7 +14290,7 @@ loc_1D221:				; CODE XREF: seg007:85B7j
 		jmp	short loc_1D218	; success - continue
 ; ---------------------------------------------------------------------------
 
-scr41:					; DATA XREF: seg007:scrJumpTblo
+scr41_ImgCopy4Val:			; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si+8]
 		push	word ptr [si+6]
 		push	word ptr [si+4]
@@ -14630,7 +14660,7 @@ loc_1D567:				; CODE XREF: seg007:891Cj
 		push	1
 		push	640
 		push	bx
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		add	dx, 1
 		push	dx
@@ -14656,7 +14686,7 @@ loc_1D5A4:				; CODE XREF: seg007:8959j
 		push	1
 		push	640
 		push	bx
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		sub	dx, 1
 		push	dx
@@ -14724,12 +14754,12 @@ scr52_DivVarVar:			; DATA XREF: seg007:scrJumpTblo
 		jmp	short loc_1D601
 ; ---------------------------------------------------------------------------
 
-scr53:					; DATA XREF: seg007:scrJumpTblo
+scr53_GetItemData:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
 		mov	bx, 24h
 		mul	bx
-		mov	bx, (offset ScriptMemory+23B0h)
+		mov	bx, offset ItemData
 		add	bx, ax
 		push	ds
 		push	si
@@ -14739,7 +14769,7 @@ scr53:					; DATA XREF: seg007:scrJumpTblo
 		mov	si, bx
 		mov	es, ax
 		assume es:seg007
-		mov	di, (offset ScriptMemory+238Ch)
+		mov	di, offset CurItemData ; copy to ScriptMemory+11C6h
 		mov	cx, 12h
 		rep movsw
 		pop	si
@@ -14748,12 +14778,12 @@ scr53:					; DATA XREF: seg007:scrJumpTblo
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr54:					; DATA XREF: seg007:scrJumpTblo
+scr54_GetMonsterData:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
 		mov	bx, 48h
 		mul	bx
-		mov	bx, offset byte_19DB1
+		mov	bx, offset MonsterData
 		add	bx, ax
 		push	ds
 		push	si
@@ -14762,7 +14792,7 @@ scr54:					; DATA XREF: seg007:scrJumpTblo
 		assume ds:seg007
 		mov	si, bx
 		mov	es, ax
-		mov	di, (offset byte_19C5B+10Eh)
+		mov	di, offset CurMonsterData ; copy to ScriptMemory+4EEEh
 		mov	cx, 24h
 		rep movsw
 		pop	si
@@ -14771,7 +14801,7 @@ scr54:					; DATA XREF: seg007:scrJumpTblo
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr55:					; DATA XREF: seg007:scrJumpTblo
+scr55_ImgCopy1Var:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
 		mov	cs:tempVar0, ax
@@ -14792,12 +14822,12 @@ scr55:					; DATA XREF: seg007:scrJumpTblo
 		push	cx
 		push	bx
 		push	cs:tempVar0
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr56:					; DATA XREF: seg007:scrJumpTblo
+scr56_ImgCopy2Var:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	bx, cs:[di]
 		add	si, 2
@@ -14815,12 +14845,12 @@ scr56:					; DATA XREF: seg007:scrJumpTblo
 		push	cx
 		push	bx
 		call	WaitForVSync
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr57:					; DATA XREF: seg007:scrJumpTblo
+scr57_ImgFXVar:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
 		mov	cs:tempVar0, ax
@@ -14841,12 +14871,12 @@ scr57:					; DATA XREF: seg007:scrJumpTblo
 		push	cx
 		push	bx
 		push	cs:tempVar0
-		call	sub_14489
+		call	ImageCopy2
 		add	sp, 0Ah
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr58:					; DATA XREF: seg007:scrJumpTblo
+scr58_ImgCopy3Var:			; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	ax, cs:[di]
 		mov	cs:tempVar0, ax
@@ -14870,12 +14900,12 @@ scr58:					; DATA XREF: seg007:scrJumpTblo
 		push	cx
 		push	bx
 		push	cs:tempVar0
-		call	sub_145D6
+		call	ImageCopy3
 		add	sp, 0Ah
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr59:					; DATA XREF: seg007:scrJumpTblo
+scr59_LoadGTA:				; DATA XREF: seg007:scrJumpTblo
 		call	GetScriptVarVal
 		mov	bx, di
 		add	si, 2
@@ -15330,7 +15360,7 @@ sub_1DA6B	proc near		; CODE XREF: seg007:loc_1CA0Ep
 		push	10h
 		push	cs:tempVar3
 		push	ax
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		retn
 sub_1DA6B	endp
@@ -15359,7 +15389,7 @@ sub_1DA95	proc near		; CODE XREF: seg007:7D66p seg007:7D8Ep ...
 		push	10h
 		push	cs:tempVar3
 		push	bx
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		retn
 sub_1DA95	endp
@@ -15412,7 +15442,7 @@ loc_1DAEC:				; CODE XREF: seg007:8E78j
 		push	10h
 		push	10h
 		push	7800h
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		jmp	short loc_1DB31
 ; ---------------------------------------------------------------------------
@@ -15425,7 +15455,7 @@ loc_1DB14:				; CODE XREF: seg007:8E8Aj
 		push	10h
 		push	10h
 		push	7802h
-		call	sub_143B8
+		call	ImageCopy1
 		add	sp, 0Ah
 		xor	ax, ax
 
@@ -15720,13 +15750,14 @@ off_1DCEE	dw offset nullsub_3	; DATA XREF: sub_10FBD+17r
 		dw offset sub_1202D
 aCopyright1991B	db 'Copyright 1991 Borland Intl.',0
 aDivideError	db 'Divide error',0Dh,0Ah,0
-dword_1DD1E	dd 0			; DATA XREF: sub_10171+6w sub_101B4+4r ...
-dword_1DD22	dd 0			; DATA XREF: sub_10171+13w
-					; sub_101B4+Fr	...
-dword_1DD26	dd 0			; DATA XREF: sub_10171+20w
-					; sub_101B4+1Ar ...
-dword_1DD2A	dd 0			; DATA XREF: sub_10171+2Dw
-					; sub_101B4+25r ...
+OldIntVec00	dd 0			; DATA XREF: SetupIntVects+6w
+					; RestoreIntVects+4r ...
+OldIntVec04	dd 0			; DATA XREF: SetupIntVects+13w
+					; RestoreIntVects+Fr ...
+OldIntVec05a	dd 0			; DATA XREF: SetupIntVects+20w
+					; RestoreIntVects+1Ar ...
+OldIntVec06a	dd 0			; DATA XREF: SetupIntVects+2Dw
+					; RestoreIntVects+25r ...
 word_1DD2E	dw 0			; DATA XREF: start+130r seg000:1B46w
 word_1DD30	dw 0			; DATA XREF: start+12Cr seg000:1B52w
 word_1DD32	dw 0			; DATA XREF: start+128r seg000:1B4Cw
@@ -15785,7 +15816,7 @@ word_1DE2A	dw 0			; DATA XREF: seg000:03E1w
 					; sub_10777+14Aw
 word_1DE2C	dw 0			; DATA XREF: seg000:03D8w
 					; sub_10777:loc_1087Er
-byte_1DE2E	db 0BDh	dup(0)		; DATA XREF: sub_148D5+Do
+byte_1DE2E	db 0BDh	dup(0)		; DATA XREF: ImageCopySetup+Do
 		db 74h dup(0)
 byte_1DF5F	db 231h	dup(0)		; DATA XREF: sub_13EF4+12o
 byte_1E190	db 1B2h	dup(0)
@@ -15802,9 +15833,9 @@ gtaNameBuffer	db 80h dup(0)		; DATA XREF: LoadGTAFile+6Eo
 					; LoadGTAFile+7Co ...
 textDrawPtr	dw 0			; DATA XREF: PrintFontChar+E4r
 					; PrintFontChar+16Dw ...
-word_21EA6	dw 1			; DATA XREF: PrintFontChar+110r
+txtColorMain	dw 1			; DATA XREF: PrintFontChar+110r
 					; seg007:72AEw	...
-word_21EA8	dw 0			; DATA XREF: PrintFontChar+C3r
+txtColorShdw	dw 0			; DATA XREF: PrintFontChar+C3r
 					; seg007:72B5w	...
 word_21EAA	dw 0			; DATA XREF: sub_1092A+5r
 					; sub_1096C+60r ...

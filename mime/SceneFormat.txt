@@ -24,6 +24,9 @@ Commands
 	This only loads music data into the sound driver. It does not start playback.
 02 - print full-screen talk
 	? bytes - Shift-JIS string, see command 00 for details
+	Special handling:
+	- "##" (hex code 2323h) will be replaced with the character name
+	- The closing bracket (Shift-JIS code 817Ah) enforces a tab (sets X position to full-width character 7) and indents all following lines accordingly.
 	This is used to show character talk during full-screen cutscenes.
 	It writes to the text box in the lower part of the screen.
 	Automatic line breaks happen after 37 full-width characters.
@@ -333,7 +336,7 @@ Commands
 	2 bytes - source register ID
 	The command adds the value from [source register] to a 6-digit number, which is spread across multiple registers starting with [destination register].
 	See command 46 for details.
-4A - subtract register value to register digits
+4A - subtract register value from register digits
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	The command subtracts the value from [source register] from a 6-digit number, which is spread across multiple registers starting with [destination register].

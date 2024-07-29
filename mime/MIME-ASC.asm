@@ -11,6 +11,10 @@ SEG_BASE_OFS EQU 5160h	; We assume "seg007", whose code begins at offset 5160h i
 
 RelocDummy EQU 0DCDEh	; unused offset (segment 4C7h, offset 906Eh)
 
+; code segment GfxSeg (seg002)
+GfxSeg EQU 0310h
+WaitForVSync EQU 0159h
+
 ; code segment PrintSeg (seg003)
 PrintSeg EQU 0327h
 ShiftJIS2JIS EQU 06AFh
@@ -35,19 +39,22 @@ textDrawPtr EQU 41C4h
 ; === relocation table patches ===
 ; include relocation table and patch a few of the EXE relocation entries
 
-	incbin "MIME.EXE", $, 016Eh-($-$$)
-	dw	RelocDummy, 000h	; originally: scr00_PrintDTalk: call PrintSeg:ShiftJIS2JIS
-	dw	RelocDummy, 000h	; originally: scr00_PrintDTalk: call PrintSeg:PrintFontChar
-	incbin "MIME.EXE", $, 0186h-($-$$)
-	dw	RelocDummy, 000h	; originally: scr02_PrintFSTalk: call PrintSeg:ShiftJIS2JIS
-	dw	RelocDummy, 000h	; originally: scr02_PrintFSTalk: call PrintSeg:PrintFontChar
+	incbin "MIME.EXE", $, 0166h-($-$$)
+	dw	RelocDummy, 000h	; originally: scr00_TalkDungeon: mov ax, seg DataSeg
+	dw	reloc_ptwait+3, MainCodeSeg	; originally: scr00_TalkDungeon: call GfxSeg:WaitForVSync
+	dw	RelocDummy, 000h	; originally: scr00_TalkDungeon: call PrintSeg:ShiftJIS2JIS
+	dw	RelocDummy, 000h	; originally: scr00_TalkDungeon: call PrintSeg:PrintFontChar
+	incbin "MIME.EXE", $, 017Eh-($-$$)
+	dw	RelocDummy, 000h	; originally: scr02_TalkFullScr: mov ax, seg DataSeg
+	dw	RelocDummy, 000h	; originally: scr02_TalkFullScr: call GfxSeg:WaitForVSync
+	dw	RelocDummy, 000h	; originally: scr02_TalkFullScr: call PrintSeg:ShiftJIS2JIS
+	dw	RelocDummy, 000h	; originally: scr02_TalkFullScr: call PrintSeg:PrintFontChar
 
 	incbin "MIME.EXE", $, 01CAh-($-$$)
 	; patch Print_NoData calls
 	dw	reloc_01+3, MainCodeSeg
 	dw	reloc_02+3, MainCodeSeg
 	dw	reloc_03+3, MainCodeSeg
-	dw	reloc_04+1, MainCodeSeg
 %rep (22Ah-($-$$))/4
 	dw	RelocDummy, 000h
 %endrep
@@ -91,168 +98,125 @@ saveNamePattern:
 	db	"**/** **:**  Lv**", 0, 0, 0	; shorten "Level" text to just "Lv " (save 3 characters)
 
 ; --- patch scenario script commands, part 1 ---
-; patching scr00_PrintDTalk
-	incbin "MIME.EXE", $, 70DFh - ($-$$-SEG_BASE_OFS)
-	;mov	bh, 32		; patch from 16 full-width to 32 half-width characters per line
-	mov	bh, 31		; use 31, so that mixing half-width and full-width characters does NOT result in a text box overflow
-	incbin "MIME.EXE", $, 70E8h - ($-$$-SEG_BASE_OFS)
-loc_1BD58:
-	mov	[es:41C4h], di
-	or	dl, dl
-	jz	short loc_1BD64
-	add	di, byte 2
-loc_1BD64:
-	xor	bl, bl
+	incbin "MIME.EXE", $, 70D0h - ($-$$-SEG_BASE_OFS)
+scr00_TalkDungeon:
+	mov	di, 5AB8h	; start writing at (192, 122)
+	mov	word [cs:ptLineStep], 5F0h	; 19 lines
+	mov	bh, 16*2	; 32 half-width characters per line
+	mov	word [cs:ptBrktFunc], pt_brkt_dungeon
+	jmp	PrintTalk
 
-loc_1BD66:
-	test	word [cs:016Eh], 1
-	jz	short loc_1BD88
-	
-	push	di
-	mov	di, ScriptMemory
-	add	di, [cs:0170h]
-	mov	ax, [cs:di]
-	pop	di
-	or	ax, ax		; bytes 00 00 -> return to "original" string
-	jz	short loc_1BD88
-	
-	push	ax
-	call	scr00_print_chr
-	add	[cs:0170h], cx
-	jmp	short scr00_chr_check
+ptLineStep EQU tempVars+00h
+ptBrktFunc EQU tempVars+02h
+ptPtrMem EQU tempVars+04h
+pt_end EQU scr_fin_2b
 
-loc_1BD88:
-	mov	ax, [si]
+PrintTalk:
+	mov	ax, ds
+	mov	es, ax		; es = DataSeg
+reloc_ptwait:
+	call	GfxSeg:WaitForVSync
+	xor	dl, dl		; reset flags
+	jmp	short pt_line_start
+
+pt_newline:
+	add	si, byte 1
+pt_nextline:
+	add	di, [cs:ptLineStep]
+	;jmp	short pt_line_start
+
+pt_line_start:
+	mov	[textDrawPtr], di	; NOTE: We assume that "ds" = dataSeg
+	xor	bl, bl	; initialize/reset line character counter
+pt_loop:
+	mov	ax, [es:si]
 	cmp	ax, 5C5Ch	; '\\'
-	jz	short scr00_ret
+	jz	pt_end
+	or	al, al		; check for null terminator
+	jz	short pt_name_end
+	cmp	al, 0Ah		; [not in original game] check for newline character
+	jz	short pt_newline
 	cmp	ax, 2323h	; '##'
-	jz	short scr00_print_name
+	jz	short pt_name
 	
-	push	ax
-	call	scr00_print_chr
-	add	si, cx
-scr00_chr_check:
-	add	bl, cl
+pt_draw:
+	call	GetCharType
+	add	bl, cl		; advance line character counter
+	cmp	bl, bh		; attempting to write beyond line size?
+	jg	short pt_nextline	; yes - next line, then try again (signed compare for indent handling)
 	
-	pop	cx
-	cmp	bl, bh
-	jae	short loc_1BDD5
-	cmp	cx, 7A81h	; Shift-JIS closing bracket
-	jnz	short loc_1BD66
-	
-	mov	dl, 1		; enforce line break
-	jmp	short loc_1BDDD
-loc_1BDD5:
-	or	dl, dl
-	jz	short loc_1BDDD
-	sub	bh, 2
-	xor	dl, dl
-loc_1BDDD:
-	add	di, 5F0h
-	jmp	loc_1BD58
-
-scr00_print_name:
-	add	si, byte 2
-	or	word [cs:016Eh], byte 1
-	mov	word [cs:0170h], 0
-	jmp	short loc_1BD66
-
-scr00_ret:
-scr02_ret:	; shared code
-	add	si, byte 2
-	jmp	ScriptMainLoop
-
-scr00_print_chr:
 	push	word [cs:ScriptMemory+0Ch]
 	call	WaitFrames
 	add	sp, byte 2
-	jmp	PrintChar
+	
+	push	ax
+	call	PrintChar
+	add	si, cx	; advance text pointer
+	pop	ax
+	
+	cmp	ax, 7A81h	; Shift-JIS closing bracket (817A)
+	;jz	short pt_close_brkt
+	jnz	short pt_loop
+pt_close_brkt:
+	jmp	[cs:ptBrktFunc]
+
+pt_name:
+	test	dl, 01h
+	jnz	pt_draw			; "name mode" already active -> just draw the ## directly
+	
+	add	si, byte 2
+	mov	[cs:ptPtrMem], si	; save actual text pointer
+	mov	ax, cs
+	mov	es, ax			; ScriptMemory is in the CodeSegment
+	mov	si, ScriptMemory+00h	; read name from script memory
+	or	dl, 01h			; enable "name mode"
+	jmp	short pt_loop
+
+pt_name_end:
+	add	si, byte 1
+	test	dl, 01h
+	jz	short pt_loop		; ignore when not in "name mode"
+	
+	mov	ax, ds
+	mov	es, ax
+	mov	si, [cs:ptPtrMem]	; restore actual "text" pointer
+	and	dl, ~01h		; disable "name mode"
+	jmp	short pt_loop
 
 	times 7174h-($-$$-SEG_BASE_OFS) db 90h
 
-; patching scr02_PrintFSTalk
-	incbin "MIME.EXE", $, 71EEh - ($-$$-SEG_BASE_OFS)
-	;mov	bh, 74		; patch from 37 full-width to 74 half-width characters per line
-	mov	bh, 73		; use 73, so that mixing half-width and full-width characters does NOT result in a text box overflow
-	incbin "MIME.EXE", $, 71F7h - ($-$$-SEG_BASE_OFS)
-loc_1BE67:
-	mov	[es:41C4h], di
-	or	dl, dl
-	jz	short loc_1BE72
-	add	di, byte 2
-	dec	bh
-	xor	dl, dl
-loc_1BE72:
-	xor	bl, bl
+	incbin "MIME.EXE", $, 71DFh - ($-$$-SEG_BASE_OFS)
+scr02_TalkFullScr:
+	mov	di, 6723h	; start writing at (24, 330)
+	mov	word [cs:ptLineStep], 5A0h	; 18 lines
+	mov	bh, 37*2	; 74 half-width characters per line
+	mov	word [cs:ptBrktFunc], pt_brkt_fullscr
+	jmp	PrintTalk
 
-loc_1BE79:
-	test	word [cs:016Eh], 1
-	jz	short loc_1BE9B
-
-	push	di
-	mov	di, ScriptMemory
-	add	di, [cs:0170h]
-	mov	ax, [cs:di]
-	pop	di
-	or	ax, ax
-	jz	short loc_1BE9B
-
-	push	ax
-	call	scr00_print_chr
-	add	[cs:0170h], cx
-	jmp	short scr02_chr_check
-
-loc_1BE9B:
+pt_brkt_dungeon:
 	mov	ax, [si]
-	cmp	ax, 5C5Ch	; '\\'
-	jz	scr02_ret
-	cmp	ax, 2323h	; '##'
-	jz	short scr02_print_name
+	cmp	ax, 7581h	; check for Shift-JIS 8175
+	;jz	short ptbd_indent	; yes - do additional 2-char indent for all following lines
+	jnz	pt_nextline
+	
+ptbd_indent:
+	add	di, [cs:ptLineStep]	; move to next line
+	mov	[textDrawPtr], di	; set text pointer *without* indent
+	
+	add	di, byte 2	; then add indent for all following lines
+	mov	bl, -2		; set initial line position relative to indented text
+	add	bh, bl		; and then reduce the line width
+	jmp	pt_loop
 
-	push	ax
-	call	scr00_print_chr
-	add	si, cx
-scr02_chr_check:
-	add	bl, cl
-
-	pop	cx
-	cmp	bl, bh
-	jae	short loc_1BF04
-	cmp	cx, 7A81h	; Shift-JIS closing bracket
-	jnz	short loc_1BE79
-
-	mov	dl, 1		; enforce line break
-	; Note: The code path with (bl<=7) is responsible for doing talk indentation.
-	; When there is a closing bracket within the first 7 characters,
-	; it assumes that a person is talking.
-	; In that case, the next character will be printed to X position 7 and
-	; all consecutive lines will start at X=7 as well. (instead of X=0)
-	cmp	bl, 7*2		; X position <= 7 full-width characters?
-	ja	short loc_1BEFD
-	mov	bl, 7*2		; yes - set new "base" X position
-	mov	di, 6731h	; and move draw pointer
-	mov	[es:41C4h], di
-loc_1BEF8:
-	mov	dh, bl
-	jmp	loc_1BE79
-
-loc_1BEFD:
-	mov	di, [es:41C4h]
-	jmp	short loc_1BEF8
-
-loc_1BF04:
-	or	dl, dl
-	jz	short loc_1BF0A
-	sub	bh, dh
-loc_1BF0A:
-	add	di, 5A0h
-	jmp	loc_1BE67
-
-scr02_print_name:
-	add	si, byte 2
-	or	word [cs:016Eh], byte 1
-	mov	word [cs:0170h], 0
-	jmp	loc_1BE79
+pt_brkt_fullscr:
+	mov	ax, 7*2
+	cmp	bl, al		; X position < 7 full-width characters?
+	jl	ptbfs_indent
+	mov	al, bl		; yes - enforce indent of at least 14 characters
+ptbfs_indent:
+	add	di, ax		; move draw pointer to indent position
+	sub	bh, al		; and then reduce the line width
+	jmp	pt_line_start	; stay on the same line
 
 	times 72A1h-($-$$-SEG_BASE_OFS) db 90h
 
@@ -273,9 +237,9 @@ txtNoData:
 ; *** custom text drawing routines ***
 ; I'm inserting them here, because size-optimizing the function freed lots of space.
 PrintChar:
-	or	al, al
-	jns	short pchr_asc
-	;js	pchr_sjis
+	call	GetCharType
+	jnc	short pchr_asc
+	;jc	pchr_sjis
 
 pchr_sjis:
 	push	ax	; reads value from stack
@@ -285,7 +249,6 @@ reloc_01:
 reloc_02:
 	call	PrintSeg:PrintFontChar
 	add	sp, byte 4
-	mov	cx, 2
 	ret
 
 pchr_asc:
@@ -294,16 +257,36 @@ pchr_asc:
 reloc_03:
 	call	PrintSeg:PrintFontChar
 	add	sp, byte 2
+	ret
+
+GetCharType:
+	cmp	al, 81h
+	jb	short gct_halfwidth	; 00..80 -> ASCII
+	cmp	al, 0A0h
+	jb	short gct_fullwidth	; 81xx .. 9Fxx -> Shift-JIS
+	cmp	al, 0E0h
+	jb	short gct_halfwidth	; A0..DF -> half-width Katakana
+	cmp	al, 0FDh
+	jb	short gct_fullwidth	; E0xx .. FCxx -> Shift-JIS
+	;jnb	short gct_halfwidth	; FD..FF -> half-width
+
+gct_halfwidth:
+	xor	ah, ah
 	mov	cx, 1
+	clc	; clear carry
+	ret
+
+gct_fullwidth:
+	mov	cx, 2
+	stc	; set carry
 	ret
 
 ; for scr30_PrintSJIS and scr5D_PrintSJIS
 ; prints text stored at offset <ds:si> until two backslashes (5C5C) occour
 PrintStr_SI:
-reloc_04:
-	mov	ax, DataSeg
-	mov	es, ax
-	mov	di, [es:textDrawPtr]
+	; Note: Unlike most of the existing code, we assume that register DS = DataSeg.
+	;       We can do that without risk, because the script data (read using [SI]) is *also* stored in DataSeg.
+	mov	di, [textDrawPtr]
 	
 	push	cx
 pstr_si_loop:
@@ -319,7 +302,7 @@ pstr_si_loop:
 
 pstr_si_newline:
 	add	di, 20*80	; 20 lines * 80 bytes per line (Note: This is the line spacing during battles.)
-	mov	[es:textDrawPtr], di
+	mov	[textDrawPtr], di
 	add	si, byte 1
 	jmp	short pstr_si_loop
 
@@ -426,7 +409,7 @@ txtCancel:
 	push	cx		; save CX, as it is used for counting the menu entries
 	push	bx		; save BX, which gets textDrawPtr
 	push	di		; save DI - should be unused, but let's be safe
-	mov	di, 41C4h
+	mov	di, textDrawPtr
 PrintMenuEntry:
 	mov	ax, [si]
 	cmp	ax, 5C5Ch
