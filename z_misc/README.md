@@ -14,6 +14,11 @@
 - [visitte_packer.py](visitte_packer.py) - archive (un-)packer for `DISK#.LBX` archives used by the game "Visitte", published by Mischief [^1]
 - [valkyrie_save-decoder.py](valkyrie_save-decoder.py) - de-/encryption tool for story save games (`DATA#.SAV`) of "Valkyrie: The Power Beauties", published by DISCOVERY
 - Valkyrie `GSIC.EXE` disassembly: [ASM file](valkyrie_GSIC.asm) / [IDB database](valkyrie_GSIC.idb)
+- [vg-txt-tool.py](vg-txt-tool.py) - tool for decoding/reencoding the `TXT` message files in "V.G.: Variable Geo"
+  - The game uses the ASCII letter `n` to indicate line breaks, which the tool converts to `\n`.
+  - ASCII letters can be converted to the JIS ASCII mirror page (default) or to full-width characters.
+  - The `TXT` message format consists of a list of 2-byte pointers (each pointing to a message), followed by the actual message data.
+    Messages are encoded in Shift-JIS and are terminated with a 00 byte.
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
 - Python tools dealing with the NEC PC-9801 font:

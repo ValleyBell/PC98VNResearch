@@ -57,6 +57,20 @@ TOKEN_ALPHABET = [chr(x) for x in \
 config = {}
 
 
+def unquote_column(text: str) -> str:
+	if not text.startswith('"'):
+		return text
+	
+	text = text[1:]
+	pos = text.find('"')
+	while pos >= 0:
+		if not (pos + 1 < len(text) and text[pos+1] == '"'):
+			text = text[:pos]
+			break
+		text = text[:pos] + '"' + text[pos+2:]
+		pos = text.find('"', pos + 1)
+	return text
+
 def parse_tsv(lines: list) -> list:
 	global config
 	
@@ -113,7 +127,7 @@ def parse_tsv(lines: list) -> list:
 			"mode": mode,
 			"tbox": tbox,
 			"tloc": tloc,
-			"text": text,
+			"text": unquote_column(text),
 		})
 	return result
 
