@@ -5,6 +5,7 @@ import typing
 import argparse
 import unicodedata
 import yaml
+import hyphen	# requires pip package "pyhyphen"
 
 DEBUG_OUTPUT_PATH = None
 #DEBUG_OUTPUT_PATH = "/tmp/linebrk_"
@@ -117,6 +118,12 @@ def do_textsize_check(tb_size, tsv_cols, line_id, lines, text_size, xpos):
 	print("\ttext: " + str(lines))
 	return
 
+def split_keep(text: str, sep: str) -> list:
+	parts = text.split(sep)
+	for idx in range(len(parts) - 1):
+		parts[idx] += sep
+	return parts
+
 def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 	global config
 	global var_dict
@@ -211,11 +218,60 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 		#print(f"CPos {pos}, XPos {xpos}, Lines {len(lines)}, NextChr: '{text[pos:pos+chrlen]}' (width {chrwidth}), LastLine: {lines[-1]}")
 		
 		if can_add_linebreaks and (xpos + chrwidth > tb_width) and not no_linebreak_now:
-			# TODO: add in-word line breaks using: hyp_en.wrap("word", lineLength)
 			# add line breaks only in "txt" mode
 			#print(f"    split ({xpos + chrwidth} > {tb_width}), word chr-pos {last_word_lpos}, word X-pos {last_word_xpos}, maxlen {tb_width*0.75-4}")
-			if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace() or \
-				(last_word_xpos < (tb_width*0.75 - 4)):
+			break_mode = None
+			if config.hyphenation and ((xpos - last_word_xpos) > 2):
+				# try doing hyphenation on (current word + rest of the phrase)
+				phrase = lines[-1][last_word_lpos:] + text[pos:]
+				# The hypenation algorithm sometimes crashes when feeding the whole sentence,
+				# so let's try to extract just a single word.
+				has_alpha = False
+				min_len = len(lines[-1]) - last_word_lpos
+				for (phr_pos, phr_chr) in enumerate(phrase):
+					if not has_alpha:
+						has_alpha = phr_chr.isalpha()
+					elif not phr_chr.isalnum() and (phr_pos > min_len):
+						phrase = phrase[:phr_pos]
+						break
+				
+				if has_alpha and ('-' in phrase):
+					# The hyphenation library has issues with "concatenated-words" and can crash on them.
+					# So let's be safe and just remove all parts that fit on the line.
+					phr_split = split_keep(phrase, '-')
+					#print(f"{lines[-1][:last_word_lpos]} | {lines[-1][last_word_lpos:]}")
+					while len(phr_split) > 1:
+						phr_width = get_cjk_string_width(phr_split[0])
+						if last_word_xpos + phr_width > xpos:
+							break
+						last_word_lpos += len(phr_split[0])
+						last_word_xpos += phr_width
+						phr_split.pop(0)
+					#	print(f"{lines[-1][:last_word_lpos]} | {lines[-1][last_word_lpos:]}")
+					phrase = "".join(phr_split)
+				if has_alpha:	# The phrase *needs* at least one actual letter.
+					#print(f"Line-1: {lines[-1]}\nPhrase: {phrase}\nWordXPos: {last_word_xpos}, XPos: {xpos}, diff: {xpos-last_word_xpos}")
+					try:
+						word_hyp = hyp_en.wrap(phrase, xpos - last_word_xpos)
+					except:
+						print(f'Error hyphenating "{phrase}", wrap at <{xpos - last_word_xpos}')
+						word_hyp = []
+					if len(word_hyp) > 1:
+						break_mode = 2	# break using hyphenation
+						hyp_pos = len(phrase) - len(word_hyp[1])	# determine word split point in phrase
+			if break_mode is None:
+				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace():
+					# (a) there were no spaces OR
+					# (b) the only spaces were indentation
+					break_mode = 0	# break in the middle of the word
+				elif last_word_xpos < (tb_width*0.75 - 4):
+					# the last word is very long (more than 30% of the line)
+					#     (approximating "30%" with "25% + 4 characters" here for better behaviour with short text boxes)
+					break_mode = 0	# break in the middle of the word
+				else:
+					break_mode = 1	# insert a line break at the beginning of the last word (and strip spaces)
+			
+			if break_mode == 0:
 				# (a) there were no spaces OR
 				# (b) the only spaces were indentation OR
 				# (c) the last word is very long (more than 30% of the line)
@@ -224,7 +280,7 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 				#print(f"Line break after: {str(lines)}")
 				lines.append("")	# start new line
 				xpos = 0
-			else:
+			elif break_mode == 1:
 				# insert a line break at the beginning of the last word (and strip spaces)
 				#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - last_word_xpos}")
 				#print(f"Line-Beginning: Word Pos {last_word_lpos}, Word XPos {last_word_xpos}, \"{lines[-1][:last_word_lpos]}\"")
@@ -232,8 +288,13 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 				lines[-1] = lines[-1][:last_word_lpos]
 				lines.append(rem_line)
 				xpos -= last_word_xpos
+			elif break_mode == 2:
+				rem_line = lines[-1][last_word_lpos+hyp_pos:]
+				lines[-1] = lines[-1][:last_word_lpos] + word_hyp[0]
+				lines.append(rem_line)
+				xpos -= (last_word_xpos + get_cjk_string_width(word_hyp[0]))
 			xpos += line_xbase
-			last_word_lpos = line_xbase
+			last_word_lpos = 0
 			last_word_xpos = line_xbase
 		
 		chrdata = text[pos : pos+chrlen]
@@ -248,8 +309,6 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 				# 32-character text box
 				tbox_ybase -= 1		# simulate starting a new line
 				xpos = line_xbase
-				last_word_lpos = line_xbase
-				last_word_xpos = line_xbase
 				# modify indent for all following lines
 				if pos < len(text) and text[pos] == '「':
 					# Shift-JIS 8175: person talk begin
@@ -262,6 +321,8 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 					xpos = 14
 				line_xbase = xpos
 				# stay on the same line
+			last_word_lpos = pos
+			last_word_xpos = xpos
 	do_textsize_check((tb_width, tb_height), line_cols, line_id, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 	
 	lines = [line.rstrip() for line in lines]
@@ -368,6 +429,8 @@ def line_breaks_add(tsv_data: list) -> list:
 				f.write(str(cols) + "\n")
 	tsv_data = tsv_data.copy()
 	
+	if config.hyphenation:
+		hyp_en = hyphen.Hyphenator('en_GB')
 	for (line_id, cols) in enumerate(tsv_data):
 		if type(cols) is not list:
 			continue
@@ -391,6 +454,7 @@ def main(argv):
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
 	aparse.add_argument("-n", "--text-column", type=int, help="column to use for text to insert (1 = first column)", default=6)
+	aparse.add_argument("-p", "--hyphenation", action="store_true", help="apply hypenation to words when breaking lines (saves screen space)")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	
