@@ -15,6 +15,8 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
   "Print" commands have their screen target position noted where set.
 - [scenario text reinsertion tool](ScenarioTsvReinsert.py) - takes a TSV text table file and reinserts the text into existing ASM files  
   For print and selection commands, the tool also writes the target position back.
+- [text table line break tool](tsvLineBreak.py) - takes a TSV text table file and removes or reinserts line breaks for running text according to text box info  
+  This is a special version for MIME text tables that takes the special indentation algorithm of the game into account.
 - [text table merging tool](tsvMerge.py) - takes TSV files and transfers additional columns into the "base" TSV  
   (I needed this tool to transfer translated strings from older TSV dumps to newer ones based on modified ASM files.)
 - [item/monster list format description](MiscFormats.txt)
