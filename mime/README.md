@@ -19,6 +19,8 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
   This is a special version for MIME text tables that takes the special indentation algorithm of the game into account.
 - [text table merging tool](tsvMerge.py) - takes TSV files and transfers additional columns into the "base" TSV  
   (I needed this tool to transfer translated strings from older TSV dumps to newer ones based on modified ASM files.)
+- [GTA image format documentation](GTAFormat.txt) and a tool to convert [between .GTA and .PI format](gta-tool.py)
+- Python tool to convert the game's custom font data (extracted as `font.bin`) to an image: [font2img.py](font2img.py) (supports BMP/PNG/... through Pillow library)
 - [item/monster list format description](MiscFormats.txt)
 - [item/monster list name extraction/reinsertion tool](list-tsv.py)
   - The resulting file can be used with the [text table translation tool](../four-nine_system98/tsvTranslate.py) from the four-nine folder.

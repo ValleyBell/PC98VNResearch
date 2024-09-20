@@ -38,10 +38,15 @@ Pos	Len	Description
 			This specifies which .GTA file the monster uses.
 			It is a null-terminated string and thus can only be up to 5 bytes long.
 08	16	monster name (Shift-JIS string, terminated/padded with backslashes, i.e. byte 5Ch)
-1E	02	??
+1E	02	element (bit-mask)
+			If the current time matches an element that is marked in the mask, the monster's strength will be boosted.
+			Bit 0 (0001h): earth
+			Bit 1 (0002h): water
+			Bit 2 (0004h): fire
+			Bit 3 (0008h): wind
 20	02	??
 22	02	??
-24	02	??
+24	02	health points
 26	02	??
 28	02	??
 2A	02	??

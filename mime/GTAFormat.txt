@@ -1,0 +1,49 @@
+﻿GTA Image Format
+================
+used by MIME (Studio Twin'kle)
+
+Pos	Len	Description
+--------------------------------
+00h	0Ah	signature "GTA_FORMAT"
+0Ah	02h	image width (Little Endian)
+0Ch	02h	image height (Little Endian)
+0Eh	02h	image flags (usually 0xFFFF)
+		The low byte is ignored by the game.
+		The high byte seems to control some additional masking. Only its lower 4 bits are used.
+10h	18h	palette data (16 colours * 3 nibbles)
+		order: Red, Green, Blue
+		Note: The data is compressed + encrypted.
+28h	??	PI image data (compressed)
+
+The actual image compression matches the ".PI" graphics format:
+https://mooncore.eu/bunny/txt/pi-pic.htm
+
+
+Palette compression/encryption
+------------------------------
+The palette data is compressed and encrypted the following way:
+1. compression
+   - Take all the 48 bytes of the PI palette data: [rr0] [gg0] [bb0] [rr1] [gg1] [bb1] [rr2] [gg2] [bb2] ...
+   - Take the high 4 bits of each byte (-> "nibble") and combine each set of 2 nibbles into 1 byte.
+     The 1st nibble is put into the lower 4 bits and the 2nd nibble is put into the higher 4 bits of the new byte:
+     [g0r0] [r1b0] [b1g1] [g2r2] [r3b2] ..
+2. encryption
+   - For each of the 24 bytes of palette data, XOR the byte with (0xFF - remaining_bytes).
+     That is how the game calculates the key.
+   - Alternatively you can XOR with (0xE7 + byte_position).
+   - The key is effectively: E7 E8 E9 EA .. FE
+
+Example:
+  PI palette: 00 11 23 80 80 80 CC DD EE 40 80 FF ...
+  extract high 4 bits: 0 1 2 8 8 8 C D E 4 8 F ...
+  combine into bytes: 10 82 88 DC 4E F8 ...
+  XOR key:            E7 E8 E9 EA EB EC ...
+  encrypted:          F7 6A 61 36 A5 14 ...
+
+
+Image flags
+-----------
+The only 3 images in MIME that use special image flags, are:
+B021E.PI: flags 0x0700
+D041C.PI: flags 0x0700
+OP_02B.PI: flags 0x0000

@@ -206,7 +206,7 @@ nullsub_1	endp
 
 ; Attributes: noreturn bp-based	frame
 
-sub_10153	proc near		; CODE XREF: sub_10A88+4Ep
+exit		proc near		; CODE XREF: sub_10A88+4Ep
 
 arg_2		= byte ptr  4
 
@@ -214,7 +214,7 @@ arg_2		= byte ptr  4
 		mov	ah, 4Ch
 		mov	al, [bp+arg_2]
 		int	21h		; DOS -	2+ - QUIT WITH EXIT CODE (EXIT)
-sub_10153	endp			; AL = exit code
+exit		endp			; AL = exit code
 
 ; ---------------------------------------------------------------------------
 
@@ -429,15 +429,14 @@ seg_10266	dw 0			; DATA XREF: start+3w start+B0r ...
 		db    0, 0Fh, 0Fh
 		db  0Fh, 0Fh,	0
 		db  0Fh, 0Fh, 0Fh
-word_1029A	dw 0			; DATA XREF: seg000:02D6w
-					; sub_1074B+1Dr ...
-word_1029C	dw 0			; DATA XREF: seg000:02DBw seg000:0361r
+word_1029A	dw 0			; DATA XREF: seg000:02D6w fread+1Dr ...
+fSegment	dw 0			; DATA XREF: seg000:02DBw seg000:0361r
 
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Attributes: bp-based frame
 
-sub_1029E	proc far		; CODE XREF: LoadGTAFile+145P
+LoadGTA		proc far		; CODE XREF: LoadGTAFile+145P
 
 arg_0		= dword	ptr  6
 arg_4		= word ptr  0Ah
@@ -467,13 +466,13 @@ arg_10		= word ptr  16h
 		mov	cx, [bp+arg_C]
 		mov	di, [bp+arg_E]
 		mov	ax, [bp+arg_10]
-		call	loc_102D5
+		call	LoadGTAMain
 		pop	ds
 		pop	di
 		pop	si
 		pop	bp
 		retf
-sub_1029E	endp
+LoadGTA		endp
 
 ; ---------------------------------------------------------------------------
 
@@ -481,22 +480,22 @@ locret_102D4:				; CODE XREF: seg000:02F7j
 		retn
 ; ---------------------------------------------------------------------------
 
-loc_102D5:				; CODE XREF: sub_1029E+2Ep
+LoadGTAMain:				; CODE XREF: LoadGTA+2Ep
 		cld
 		mov	cs:word_1029A, sp
-		mov	cs:word_1029C, ds
+		mov	cs:fSegment, ds
 		mov	word_1DE10, bx
 		mov	word_1DE12, cx
-		mov	word_1DE19, ax
+		mov	word ptr byte_1DE19, ax
 		mov	ax, di
 		mov	byte_1DE18, al
 		mov	ax, -8
 		cmp	si, 10A2h
 		jb	short locret_102D4
 		mov	ax, si
-		sub	ax, 1060h
-		mov	word_1DE26, ax
-		add	ax, 1060h
+		sub	ax, 1060h	; AX = SI - 1060h
+		mov	fByteCount, ax	; maximum bytes	to read
+		add	ax, 1060h	; buffer size
 		mov	word ptr cs:loc_105A9+2, ax
 		mov	word ptr cs:loc_105B9+2, ax
 		mov	word ptr cs:loc_105C9+2, ax
@@ -521,15 +520,15 @@ loc_102D5:				; CODE XREF: sub_1029E+2Ep
 		mov	word ptr cs:loc_10716+2, ax
 		push	es
 		pop	ds
-		call	sub_10745
-		mov	bx, cs:word_1029C
+		call	fopen
+		mov	bx, cs:fSegment
 		mov	ds, bx
 		mov	es, bx
 		jb	short locret_10379
-		mov	word_1DE20, ax
-		call	sub_1074B
+		mov	fHandle, ax
+		call	fread
 		mov	si, bx
-		add	si, 0Ah
+		add	si, 0Ah		; skip "GTA_FORMAT" signature
 		jmp	short loc_1037A
 ; ---------------------------------------------------------------------------
 
@@ -547,8 +546,8 @@ loc_1037A:				; CODE XREF: seg000:0377j
 		shl	ax, 2
 		add	cx, ax
 		mov	word_1DE1E, cx
-		lodsw
-		mov	word_1DE14, ax
+		lodsw			; read image width (pixels)
+		mov	gtaImgWidth, ax
 		mov	cx, ax
 		neg	ax
 		mov	word ptr cs:loc_104DA+1, ax
@@ -570,31 +569,32 @@ loc_1037A:				; CODE XREF: seg000:0377j
 		mov	word ptr cs:loc_104C3+2, ax
 		mov	ax, word_1DE10
 		and	ax, 7
-		add	ax, word_1DE14
+		add	ax, gtaImgWidth
 		mov	word_1DE2C, ax
 		mov	cx, ax
-		lodsw
-		mov	word_1DE16, ax
-		mov	word_1DE2A, ax
-		lodsw
+		lodsw			; read image height (pixels)
+		mov	gtaImgHeight, ax
+		mov	gtaRemLines, ax	; remaining lines to process
+		lodsw			; read flags
 		xchg	al, ah
 		xor	ah, ah
-		test	byte ptr word_1DE19, 40h
-		jz	short loc_10405
-		cmp	byte ptr word_1DE19+1, 0FFh
-		jnz	short loc_10405
+		test	byte_1DE19, 40h
+		jz	short gtaDecodePal
+		cmp	byte_1DE1A, 0FFh
+		jnz	short gtaDecodePal
 		cmp	al, 0FFh
 		jz	short loc_10400
-		mov	byte ptr word_1DE19+1, al
-		jmp	short loc_10405
+		mov	byte_1DE1A, al
+		jmp	short gtaDecodePal
 ; ---------------------------------------------------------------------------
 
 loc_10400:				; CODE XREF: seg000:03F9j
-		and	byte ptr word_1DE19, 0BFh
+		and	byte_1DE19, 0BFh
 
-loc_10405:				; CODE XREF: seg000:03EEj seg000:03F5j ...
-		mov	cx, 18h
-		mov	di, 100h
+gtaDecodePal:				; CODE XREF: seg000:03EEj seg000:03F5j ...
+		mov	cx, 24		; 16 palette entries * 3 components (RGB) = 48 nibbles = 24 bytes
+		; decode palette data
+		mov	di, 100h	; di = Palette
 
 loc_1040B:				; CODE XREF: seg000:0422j
 		lodsb
@@ -610,18 +610,20 @@ loc_1040B:				; CODE XREF: seg000:0422j
 		mov	al, ah
 		stosb
 		loop	loc_1040B
+		; decode palette data END
 		mov	bx, si
-		test	byte ptr word_1DE19, 1
+		test	byte_1DE19, 1
 		jz	short loc_10430
-		call	sub_108DF
+		call	LoadGTAPalette
 
 loc_10430:				; CODE XREF: seg000:042Bj
-		call	sub_10731
+		call	InitPiLUT
+		; from here on,	this is	"PI" graphics data
 		mov	dh, 1
 		mov	di, 160h
 		xor	al, al
 		call	loc_10609
-		mov	cx, word_1DE14
+		mov	cx, gtaImgWidth
 		rep stosw
 		xor	bp, bp
 		jmp	loc_104CC
@@ -635,7 +637,7 @@ loc_10448:				; CODE XREF: seg000:046Aj
 loc_1044D:				; DATA XREF: seg000:031Cw
 		cmp	bx, 0
 		jnz	short loc_1046C
-		call	sub_1074B
+		call	fread
 		jmp	short loc_1046C
 ; ---------------------------------------------------------------------------
 
@@ -647,7 +649,7 @@ loc_10458:				; CODE XREF: seg000:0475j
 loc_1045D:				; DATA XREF: seg000:0320w
 		cmp	bx, 0
 		jnz	short loc_10477
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10477
 ; ---------------------------------------------------------------------------
 
@@ -683,7 +685,7 @@ loc_10482:				; CODE XREF: seg000:04CEj
 loc_10487:				; DATA XREF: seg000:0324w
 		cmp	bx, 0
 		jnz	short loc_104D0
-		call	sub_1074B
+		call	fread
 		jmp	short loc_104D0
 ; ---------------------------------------------------------------------------
 
@@ -695,7 +697,7 @@ loc_10492:				; CODE XREF: seg000:04D6j
 loc_10497:				; DATA XREF: seg000:0328w
 		cmp	bx, 0
 		jnz	short loc_104D8
-		call	sub_1074B
+		call	fread
 		jmp	short loc_104D8
 ; ---------------------------------------------------------------------------
 
@@ -707,7 +709,7 @@ loc_104A2:				; CODE XREF: seg000:04F3j
 loc_104A7:				; DATA XREF: seg000:032Cw
 		cmp	bx, 0
 		jnz	short loc_104F5
-		call	sub_1074B
+		call	fread
 
 loc_104B0:
 		jmp	short loc_104F5
@@ -721,7 +723,7 @@ loc_104B2:				; CODE XREF: seg000:0501j
 loc_104B7:				; DATA XREF: seg000:0330w
 		cmp	bx, 0
 		jnz	short loc_10503
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10503
 ; ---------------------------------------------------------------------------
 
@@ -811,7 +813,7 @@ loc_10524:				; CODE XREF: seg000:0509j
 loc_10529:				; DATA XREF: seg000:0334w
 		cmp	bx, 0
 		jnz	short loc_1050B
-		call	sub_1074B
+		call	fread
 		jmp	short loc_1050B
 ; ---------------------------------------------------------------------------
 
@@ -882,7 +884,7 @@ loc_10584:				; CODE XREF: seg000:0550j
 loc_10589:				; DATA XREF: seg000:0338w
 		cmp	bx, 0
 		jnz	short loc_10552
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10552
 ; ---------------------------------------------------------------------------
 
@@ -894,7 +896,7 @@ loc_10594:				; CODE XREF: seg000:05F6j
 loc_10599:				; DATA XREF: seg000:033Cw
 		cmp	bx, 0
 		jnz	short loc_105F8
-		call	sub_1074B
+		call	fread
 		jmp	short loc_105F8
 ; ---------------------------------------------------------------------------
 
@@ -906,7 +908,7 @@ loc_105A4:				; CODE XREF: seg000:0611j
 loc_105A9:				; DATA XREF: seg000:0304w
 		cmp	bx, 0
 		jnz	short loc_10613
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10613
 ; ---------------------------------------------------------------------------
 
@@ -918,7 +920,7 @@ loc_105B4:				; CODE XREF: seg000:0619j
 loc_105B9:				; DATA XREF: seg000:0308w
 		cmp	bx, 0
 		jnz	short loc_1061B
-		call	sub_1074B
+		call	fread
 		jmp	short loc_1061B
 ; ---------------------------------------------------------------------------
 
@@ -930,7 +932,7 @@ loc_105C4:				; CODE XREF: seg000:0624j
 loc_105C9:				; DATA XREF: seg000:030Cw
 		cmp	bx, 0
 		jnz	short loc_10626
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10626
 ; ---------------------------------------------------------------------------
 
@@ -942,7 +944,7 @@ loc_105D4:				; CODE XREF: seg000:062Cj
 loc_105D9:				; DATA XREF: seg000:0310w
 		cmp	bx, 0
 		jnz	short loc_1062E
-		call	sub_1074B
+		call	fread
 		jmp	short loc_1062E
 ; ---------------------------------------------------------------------------
 
@@ -954,7 +956,7 @@ loc_105E4:				; CODE XREF: seg000:0634j
 loc_105E9:				; DATA XREF: seg000:0314w
 		cmp	bx, 0
 		jnz	short loc_10636
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10636
 ; ---------------------------------------------------------------------------
 
@@ -1040,7 +1042,7 @@ loc_1064E:				; CODE XREF: seg000:063Cj
 loc_10653:				; DATA XREF: seg000:0318w
 		cmp	bx, 0
 		jnz	short loc_1063E
-		call	sub_1074B
+		call	fread
 		jmp	short loc_1063E
 ; ---------------------------------------------------------------------------
 
@@ -1052,7 +1054,7 @@ loc_1065E:				; CODE XREF: seg000:0674j
 loc_10663:				; DATA XREF: seg000:0344w
 		cmp	bx, 0
 		jnz	short loc_10676
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10676
 ; ---------------------------------------------------------------------------
 
@@ -1144,7 +1146,7 @@ loc_106D1:				; CODE XREF: seg000:067Cj
 loc_106D6:				; DATA XREF: seg000:0348w
 		cmp	bx, 0
 		jnz	short loc_1067E
-		call	sub_1074B
+		call	fread
 		jmp	short loc_1067E
 ; ---------------------------------------------------------------------------
 
@@ -1156,7 +1158,7 @@ loc_106E1:				; CODE XREF: seg000:0687j
 loc_106E6:				; DATA XREF: seg000:034Cw
 		cmp	bx, 0
 		jnz	short loc_10689
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10689
 ; ---------------------------------------------------------------------------
 
@@ -1168,7 +1170,7 @@ loc_106F1:				; CODE XREF: seg000:068Fj
 loc_106F6:				; DATA XREF: seg000:0350w
 		cmp	bx, 0
 		jnz	short loc_10691
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10691
 ; ---------------------------------------------------------------------------
 
@@ -1180,7 +1182,7 @@ loc_10701:				; CODE XREF: seg000:0697j
 loc_10706:				; DATA XREF: seg000:0354w
 		cmp	bx, 0
 		jnz	short loc_10699
-		call	sub_1074B
+		call	fread
 		jmp	short loc_10699
 ; ---------------------------------------------------------------------------
 
@@ -1192,7 +1194,7 @@ loc_10711:				; CODE XREF: seg000:069Fj
 loc_10716:				; DATA XREF: seg000:0358w
 		cmp	bx, 0
 		jnz	short loc_106A1
-		call	sub_1074B
+		call	fread
 		jmp	short loc_106A1
 ; ---------------------------------------------------------------------------
 
@@ -1204,20 +1206,20 @@ loc_10721:				; CODE XREF: seg000:06B9j
 loc_10726:				; DATA XREF: seg000:0340w
 		cmp	bx, 0
 		jnz	short loc_106BB
-		call	sub_1074B
+		call	fread
 		jmp	short loc_106BB
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_10731	proc near		; CODE XREF: seg000:loc_10430p
+InitPiLUT	proc near		; CODE XREF: seg000:loc_10430p
 		xor	di, di
 		mov	ax, 1000h
 
-loc_10736:				; CODE XREF: sub_10731+11j
+loc_10736:				; CODE XREF: InitPiLUT+11j
 		mov	cx, 10h
 
-loc_10739:				; CODE XREF: sub_10731+Bj
+loc_10739:				; CODE XREF: InitPiLUT+Bj
 		stosb
 		sub	al, 10h
 		loop	loc_10739
@@ -1225,33 +1227,33 @@ loc_10739:				; CODE XREF: sub_10731+Bj
 		dec	ah
 		jnz	short loc_10736
 		retn
-sub_10731	endp
+InitPiLUT	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_10745	proc near		; CODE XREF: seg000:035Ep
+fopen		proc near		; CODE XREF: seg000:035Ep
 		mov	ax, 3D00h
 		int	21h		; DOS -	2+ - OPEN DISK FILE WITH HANDLE
 					; DS:DX	-> ASCIZ filename
 					; AL = access mode
 					; 0 - read
 		retn
-sub_10745	endp
+fopen		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1074B	proc near		; CODE XREF: seg000:036Fp seg000:0453p ...
+fread		proc near		; CODE XREF: seg000:036Fp seg000:0453p ...
 		push	ax
 		push	cx
 		push	dx
-		mov	bx, word_1DE20
+		mov	bx, fHandle
 		mov	dx, 1060h
 		push	dx
-		mov	cx, word_1DE26
+		mov	cx, fByteCount
 		mov	ah, 3Fh
 		int	21h		; DOS -	2+ - READ FROM FILE WITH HANDLE
 					; BX = file handle, CX = number	of bytes to read
@@ -1264,24 +1266,24 @@ sub_1074B	proc near		; CODE XREF: seg000:036Fp seg000:0453p ...
 		retn
 ; ---------------------------------------------------------------------------
 
-loc_10765:				; CODE XREF: sub_1074B+13j
-		call	sub_1076E
+loc_10765:				; CODE XREF: fread+13j
+		call	fclose
 		mov	sp, cs:word_1029A
 		retn
-sub_1074B	endp
+fread		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_1076E	proc near		; CODE XREF: sub_1074B:loc_10765p
+fclose		proc near		; CODE XREF: fread:loc_10765p
 					; sub_10777:loc_108D4p
-		mov	bx, word_1DE20
+		mov	bx, fHandle
 		mov	ah, 3Eh
 		int	21h		; DOS -	2+ - CLOSE A FILE WITH HANDLE
 					; BX = file handle
 		retn
-sub_1076E	endp
+fclose		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -1293,7 +1295,7 @@ sub_10777	proc near		; CODE XREF: seg000:04C9p
 		push	es
 		mov	si, word_1DE24
 		mov	di, 160h
-		mov	cx, word_1DE14
+		mov	cx, gtaImgWidth
 		sub	si, cx
 		sub	si, cx
 		rep movsw
@@ -1326,7 +1328,7 @@ loc_107AC:				; CODE XREF: sub_10777+46j
 		add	al, al
 		adc	dh, dh
 		loop	loc_107AC
-		test	byte ptr word_1DE19, 40h
+		test	byte_1DE19, 40h
 		jz	short loc_107CB
 		call	sub_1096C
 		jmp	short loc_107CE
@@ -1337,14 +1339,14 @@ loc_107CB:				; CODE XREF: sub_10777+4Dj
 
 loc_107CE:				; CODE XREF: sub_10777+52j
 		pop	ax
-		mov	cx, word_1DE14
+		mov	cx, gtaImgWidth
 		sub	cx, ax
 		shr	cx, 3
 		jmp	short loc_107E1
 ; ---------------------------------------------------------------------------
 
 loc_107DA:				; CODE XREF: sub_10777+23j
-		mov	cx, word_1DE14
+		mov	cx, gtaImgWidth
 		shr	cx, 3
 
 loc_107E1:				; CODE XREF: sub_10777+61j
@@ -1417,7 +1419,7 @@ loc_107E1:				; CODE XREF: sub_10777+61j
 		adc	dh, dh
 		add	ah, ah
 		adc	dh, dh
-		test	byte ptr word_1DE19, 40h
+		test	byte_1DE19, 40h
 		jnz	short loc_10875
 		call	sub_1092A
 		dec	cx
@@ -1458,7 +1460,7 @@ loc_1088F:				; CODE XREF: sub_10777+129j
 		shl	ch, cl
 		shl	bx, cl
 		shl	dx, cl
-		test	byte ptr word_1DE19, 40h
+		test	byte_1DE19, 40h
 		jz	short loc_108B8
 		call	sub_1096C
 		jmp	short loc_108BB
@@ -1471,7 +1473,7 @@ loc_108BB:				; CODE XREF: sub_10777+10Ej
 					; sub_10777+13Fj
 		pop	cx
 		add	word_1DE1E, 50h	; 'P'
-		dec	word_1DE2A
+		dec	gtaRemLines
 		jz	short loc_108D4
 		dec	cx
 		jz	short loc_108CD
@@ -1486,7 +1488,7 @@ loc_108CD:				; CODE XREF: sub_10777+151j
 ; ---------------------------------------------------------------------------
 
 loc_108D4:				; CODE XREF: sub_10777+14Ej
-		call	sub_1076E
+		call	fclose
 		mov	sp, cs:word_1029A
 		xor	ax, ax
 		retn
@@ -1496,14 +1498,14 @@ sub_10777	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_108DF	proc near		; CODE XREF: seg000:042Dp
+LoadGTAPalette	proc near		; CODE XREF: seg000:042Dp
 		push	bx
 		mov	bl, byte_1DE18
-		mov	bh, 64h	; 'd'
+		mov	bh, 100
 		mov	di, 150h
 		xor	cx, cx
 
-loc_108EB:				; CODE XREF: sub_108DF+18j
+loc_108EB:				; CODE XREF: LoadGTAPalette+18j
 		mov	al, cl
 		mul	bl
 		div	bh
@@ -1522,7 +1524,7 @@ loc_108EB:				; CODE XREF: sub_108DF+18j
 		mov	cx, 10h
 		xor	ah, ah
 
-loc_1090E:				; CODE XREF: sub_108DF+45j
+loc_1090E:				; CODE XREF: LoadGTAPalette+45j
 		mov	al, ah
 		lodsb
 		xlat
@@ -1543,7 +1545,7 @@ loc_1090E:				; CODE XREF: sub_108DF+45j
 		assume es:nothing
 		pop	bx
 		retn
-sub_108DF	endp
+LoadGTAPalette	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -1594,7 +1596,7 @@ sub_1092A	endp
 sub_1096C	proc near		; CODE XREF: sub_10777+4Fp
 					; sub_10777:loc_10875p	...
 		pusha
-		mov	cl, byte ptr word_1DE19+1
+		mov	cl, byte_1DE1A
 		mov	ch, 0FFh
 		test	cl, 1
 		jz	short loc_1097A
@@ -1826,7 +1828,7 @@ loc_10AD1:				; CODE XREF: sub_10A88+3Fj
 		push	[bp+arg_0]
 		nop
 		push	cs
-		call	sub_10153
+		call	exit
 ; ---------------------------------------------------------------------------
 		pop	cx
 
@@ -1926,7 +1928,7 @@ RNG_Advance	endp
 
 ; Attributes: bp-based frame
 
-sub_10B31	proc far		; CODE XREF: sub_10F09+Dp
+GetDate		proc far		; CODE XREF: sub_10F09+Dp
 					; sub_10F09+25p
 
 arg_0		= dword	ptr  6
@@ -1942,14 +1944,14 @@ arg_0		= dword	ptr  6
 		mov	es:[bx+2], dx
 		pop	bp
 		retf
-sub_10B31	endp
+GetDate		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Attributes: bp-based frame
 
-sub_10B44	proc far		; CODE XREF: sub_10F09+19p
+GetTime		proc far		; CODE XREF: sub_10F09+19p
 
 arg_0		= dword	ptr  6
 
@@ -1964,7 +1966,7 @@ arg_0		= dword	ptr  6
 		mov	es:[bx+2], dx
 		pop	bp
 		retf
-sub_10B44	endp
+GetTime		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -2207,7 +2209,7 @@ sub_10C26	endp ; sp-analysis failed
 ; Attributes: bp-based frame
 
 sub_10C86	proc near		; CODE XREF: seg000:0CC7p
-					; sub_10D84+23p ...
+					; seek_something+23p ...
 
 arg_0		= word ptr  4
 
@@ -2261,7 +2263,7 @@ sub_10C86	endp
 
 ; Attributes: bp-based frame
 
-sub_10CD1	proc far		; CODE XREF: seg000:0E57p seg000:0E93p
+ioctl		proc far		; CODE XREF: seg000:0E57p seg000:0E93p
 
 arg_0		= word ptr  6
 
@@ -2275,7 +2277,7 @@ arg_0		= word ptr  6
 		and	ax, 80h
 		pop	bp
 		retf
-sub_10CD1	endp
+ioctl		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -2401,21 +2403,21 @@ sub_10CE2	endp
 
 ; Attributes: bp-based frame
 
-sub_10D84	proc far		; CODE XREF: sub_11E38+66p
+seek_something	proc far		; CODE XREF: sub_11E38+66p
 					; seg000:1ED3p	...
 
 arg_0		= word ptr  6
 arg_2		= word ptr  8
 arg_4		= word ptr  0Ah
-arg_6		= byte ptr  0Ch
+method		= byte ptr  0Ch
 
 		push	bp
 		mov	bp, sp
 		mov	bx, [bp+arg_0]
 		shl	bx, 1
-		and	word ptr [bx-431Eh], 0FDFFh
-		mov	ah, 42h	; 'B'
-		mov	al, [bp+arg_6]
+		and	word ptr byte_299C2[bx], 0FDFFh
+		mov	ah, 42h
+		mov	al, [bp+method]
 		mov	bx, [bp+arg_0]
 		mov	cx, [bp+arg_4]
 		mov	dx, [bp+arg_2]
@@ -2426,15 +2428,15 @@ arg_6		= byte ptr  0Ch
 		jmp	short loc_10DAB
 ; ---------------------------------------------------------------------------
 
-loc_10DA6:				; CODE XREF: sub_10D84+1Ej
+loc_10DA6:				; CODE XREF: seek_something+1Ej
 		push	ax
 		call	sub_10C86
 		cwd
 
-loc_10DAB:				; CODE XREF: sub_10D84+20j
+loc_10DAB:				; CODE XREF: seek_something+20j
 		pop	bp
 		retf
-sub_10D84	endp
+seek_something	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -2495,14 +2497,14 @@ sub_10DC4	endp
 
 ; Attributes: bp-based frame
 
-sub_10DE5	proc far		; CODE XREF: seg000:0EF2p
+SetDate		proc far		; CODE XREF: seg000:0EF2p
 
 arg_0		= dword	ptr  6
 
 		push	bp
 		mov	bp, sp
 		push	si
-		mov	ah, 2Bh	; '+'
+		mov	ah, 2Bh
 		les	si, [bp+arg_0]
 		mov	cx, es:[si]
 		mov	dx, es:[si+2]
@@ -2512,21 +2514,21 @@ arg_0		= dword	ptr  6
 		pop	si
 		pop	bp
 		retf
-sub_10DE5	endp
+SetDate		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Attributes: bp-based frame
 
-sub_10DFA	proc far		; CODE XREF: seg000:0EFEp
+SetTime		proc far		; CODE XREF: seg000:0EFEp
 
 arg_0		= dword	ptr  6
 
 		push	bp
 		mov	bp, sp
 		push	si
-		mov	ah, 2Dh	; '-'
+		mov	ah, 2Dh
 		les	si, [bp+arg_0]
 		mov	cx, es:[si]
 		mov	dx, es:[si+2]
@@ -2536,7 +2538,7 @@ arg_0		= dword	ptr  6
 		pop	si
 		pop	bp
 		retf
-sub_10DFA	endp
+SetTime		endp
 
 ; ---------------------------------------------------------------------------
 		mov	cx, 5
@@ -2546,12 +2548,12 @@ sub_10DFA	endp
 loc_10E18:				; CODE XREF: seg000:0E4Ej
 		mov	bx, cx
 		shl	bx, 1
-		mov	word ptr [bx-431Eh], 0
+		mov	word ptr byte_299C2[bx], 0
 		mov	ax, cx
 		mov	dx, 14h
 		imul	dx
 		mov	bx, ax
-		mov	byte ptr [bx-44ACh], 0FFh
+		mov	byte_29834[bx],	0FFh
 		mov	ax, cx
 		mov	dx, 14h
 		imul	dx
@@ -2562,7 +2564,7 @@ loc_10E18:				; CODE XREF: seg000:0E4Ej
 		imul	dx
 		mov	bx, ax
 		pop	ax
-		mov	[bx-449Eh], ax
+		mov	word ptr (byte_29834+0Eh)[bx], ax
 		inc	cx
 		cmp	cx, word_299C0
 		jb	short loc_10E18
@@ -2573,7 +2575,7 @@ loc_10E50:				; CODE XREF: seg000:0E16j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10CD1
+		call	near ptr ioctl
 		pop	cx
 		or	ax, ax
 		jnz	short loc_10E65
@@ -2598,7 +2600,7 @@ loc_10E78:				; CODE XREF: seg000:0E74j
 		push	ax
 		push	dx
 		push	ds
-		mov	ax, 0BB50h
+		mov	ax, offset unk_29830
 		push	ax
 		nop
 		push	cs
@@ -2609,7 +2611,7 @@ loc_10E78:				; CODE XREF: seg000:0E74j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10CD1
+		call	near ptr ioctl
 		pop	cx
 		or	ax, ax
 		jnz	short loc_10EA1
@@ -2634,7 +2636,7 @@ loc_10EB4:				; CODE XREF: seg000:0EB0j
 		push	ax
 		push	dx
 		push	ds
-		mov	ax, 0BB64h
+		mov	ax, (offset byte_29834+10h)
 		push	ax
 		nop
 		push	cs
@@ -2663,7 +2665,7 @@ loc_10EB4:				; CODE XREF: seg000:0EB0j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10DE5
+		call	near ptr SetDate
 		pop	cx
 		pop	cx
 		push	ss
@@ -2671,7 +2673,7 @@ loc_10EB4:				; CODE XREF: seg000:0EB0j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10DFA
+		call	near ptr SetTime
 		pop	cx
 		pop	cx
 		xor	ax, ax
@@ -2704,7 +2706,7 @@ loc_10F0F:				; CODE XREF: sub_10F09+30j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10B31
+		call	near ptr GetDate
 		pop	cx
 		pop	cx
 		push	ss
@@ -2712,7 +2714,7 @@ loc_10F0F:				; CODE XREF: sub_10F09+30j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10B44
+		call	near ptr GetTime
 		pop	cx
 		pop	cx
 		push	ss
@@ -2720,7 +2722,7 @@ loc_10F0F:				; CODE XREF: sub_10F09+30j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10B31
+		call	near ptr GetDate
 		pop	cx
 		pop	cx
 		mov	al, [bp+var_2]
@@ -5276,7 +5278,7 @@ loc_11E71:				; CODE XREF: sub_11E38+20j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 		cmp	dx, 0FFFFh
 		jnz	short loc_11EB3
@@ -5313,7 +5315,7 @@ sub_11E38	endp
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 		mov	[bp-2],	dx
 		mov	[bp-4],	ax
@@ -5350,7 +5352,7 @@ loc_11EF8:				; CODE XREF: seg000:1EF3j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 		mov	[bp-6],	dx
 		mov	[bp-8],	ax
@@ -5370,7 +5372,7 @@ loc_11F34:				; CODE XREF: seg000:1F2Dj
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 		cmp	dx, 0FFFFh
 		jnz	short loc_11F60
@@ -5812,7 +5814,7 @@ loc_121A9:				; CODE XREF: sub_120A6+92j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 
 loc_121D8:				; CODE XREF: sub_120A6+115j
@@ -5986,7 +5988,7 @@ loc_122C9:				; CODE XREF: sub_1224F+69j
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 
 loc_122F8:				; CODE XREF: sub_1224F+8Cj
@@ -6078,7 +6080,7 @@ loc_12379:				; CODE XREF: sub_1224F+5Cj
 		push	ax
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 
 loc_123A8:				; CODE XREF: sub_1224F+13Cj
@@ -7345,7 +7347,7 @@ loc_12C65:				; CODE XREF: sub_12C3B+23j
 		push	di
 		nop
 		push	cs
-		call	near ptr sub_10D84
+		call	near ptr seek_something
 		add	sp, 8
 
 loc_12C84:				; CODE XREF: sub_12C3B+34j
@@ -7760,7 +7762,7 @@ loc_12F17:				; CODE XREF: LoadGTAFile+CDj
 		push	offset byte_1DDF2
 		push	ds
 		push	offset gtaNameBuffer
-		call	sub_1029E
+		call	LoadGTA
 		add	sp, 12h
 		cmp	[bp+var_2], 0
 		jnz	short loc_12F6B
@@ -7776,7 +7778,7 @@ loc_12F17:				; CODE XREF: LoadGTAFile+CDj
 loc_12F6B:				; CODE XREF: LoadGTAFile+151j
 		test	[bp+arg_6], 100h
 		jz	short loc_12F77
-		call	sub_13FE3
+		call	CopyGTAPalette
 
 loc_12F77:				; CODE XREF: LoadGTAFile+170j
 		pop	di
@@ -7846,12 +7848,12 @@ arg_4		= word ptr  0Ah
 		add	sp, 4
 		push	0
 		push	40h ; '@'
-		call	sub_13122
+		call	malloc
 		push	0
 		push	ax
 		call	sub_10B5A
 		mov	[bp+var_2], ax
-		call	sub_13122
+		call	malloc
 		cmp	ax, 5E00h
 		ja	short loc_12FFB
 		push	ds
@@ -7933,13 +7935,13 @@ loc_13063:				; CODE XREF: sub_12FB3+4Cj
 		push	2
 		call	sub_14375
 		add	sp, 4
-		call	sub_13130
+		call	ReadEnvFile
 		mov	ah, 2
 		int	68h		;  - APPC/PC
 					; DS:DX	-> control block
 		push	0
 		push	64
-		call	sub_13122
+		call	malloc
 		push	0
 		push	ax
 		call	sub_10B5A
@@ -7986,7 +7988,7 @@ seg002		segment	byte public 'CODE' use16
 		assume cs:seg002
 		;org 0Ch
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
-aStssp_env	db 'STSSP.ENV',0
+aStssp_env	db 'STSSP.ENV',0        ; DATA XREF: ReadEnvFile+6o
 OldIntVec05b	dd 0			; DATA XREF: SetupIntVec24+2Cw
 					; RestoreIntVec24+9r ...
 OldIntVec06b	dd 0			; DATA XREF: SetupIntVec24+49w
@@ -7997,7 +7999,7 @@ OldIntVec24	dd 0			; DATA XREF: SetupIntVec24+Fw
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_13122	proc far		; CODE XREF: sub_12FB3+18P
+malloc		proc far		; CODE XREF: sub_12FB3+18P
 					; sub_12FB3+28P ...
 		pushf
 		push	bx
@@ -8009,19 +8011,19 @@ sub_13122	proc far		; CODE XREF: sub_12FB3+18P
 		pop	bx
 		popf
 		retf
-sub_13122	endp
+malloc		endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_13130	proc far		; CODE XREF: sub_12FB3+E8P
+ReadEnvFile	proc far		; CODE XREF: sub_12FB3+E8P
 		pusha
 		push	ds
 		mov	ax, cs
 		mov	ds, ax
 		assume ds:seg002
-		mov	dx, 0Ch
+		mov	dx, offset aStssp_env ;	"STSSP.ENV"
 		xor	al, al
 		mov	ah, 3Dh
 		int	21h		; DOS -	2+ - OPEN DISK FILE WITH HANDLE
@@ -8051,27 +8053,27 @@ sub_13130	proc far		; CODE XREF: sub_12FB3+E8P
 		jmp	short loc_13172
 ; ---------------------------------------------------------------------------
 
-loc_13166:				; CODE XREF: sub_13130+2Dj
+loc_13166:				; CODE XREF: ReadEnvFile+2Dj
 		cmp	byte ptr cs:[si+2], 1
 		jnz	short loc_13172
 		or	MiscFlags, 8
 
-loc_13172:				; CODE XREF: sub_13130+34j
-					; sub_13130+3Bj
+loc_13172:				; CODE XREF: ReadEnvFile+34j
+					; ReadEnvFile+3Bj
 		cmp	byte ptr cs:[si], 1
 		jnz	short loc_1317D
 		or	MiscFlags, 10h
 
-loc_1317D:				; CODE XREF: sub_13130+46j
+loc_1317D:				; CODE XREF: ReadEnvFile+46j
 		cmp	byte ptr cs:[si+3], 0
 		jz	short loc_13189
 		or	MiscFlags, 2
 
-loc_13189:				; CODE XREF: sub_13130+52j
+loc_13189:				; CODE XREF: ReadEnvFile+52j
 		pop	ds
 		popa
 		retf
-sub_13130	endp
+ReadEnvFile	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -9267,7 +9269,7 @@ WritePortA6	endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_13FE3	proc far		; CODE XREF: LoadGTAFile+172P
+CopyGTAPalette	proc far		; CODE XREF: LoadGTAFile+172P
 		push	ax
 		push	cx
 		push	si
@@ -9291,7 +9293,7 @@ sub_13FE3	proc far		; CODE XREF: LoadGTAFile+172P
 		pop	cx
 		pop	ax
 		retf
-sub_13FE3	endp
+CopyGTAPalette	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -14769,7 +14771,7 @@ scr53_GetItemData:			; DATA XREF: seg007:scrJumpTblo
 		mov	si, bx
 		mov	es, ax
 		assume es:seg007
-		mov	di, offset CurItemData ; copy to ScriptMemory+11C6h
+		mov	di, offset CurItemData ; copy to ScriptMemory+238Ch
 		mov	cx, 12h
 		rep movsw
 		pop	si
@@ -15797,22 +15799,24 @@ byte_1DDF2	db 0Ch dup(0)		; DATA XREF: LoadGTAFile+13Eo
 byte_1DDFE	db 12h dup(0)		; DATA XREF: sub_1421E+87o
 word_1DE10	dw 0			; DATA XREF: seg000:02E0w seg000:037Dr ...
 word_1DE12	dw 0			; DATA XREF: seg000:02E4w seg000:0381r
-word_1DE14	dw 0			; DATA XREF: seg000:0396w seg000:03D4r ...
-word_1DE16	dw 0			; DATA XREF: seg000:03DEw
-byte_1DE18	db 0			; DATA XREF: seg000:02EDw sub_108DF+1r
-word_1DE19	dw 0			; DATA XREF: seg000:02E8w seg000:03E9r ...
-		align 2
+gtaImgWidth	dw 0			; DATA XREF: seg000:0396w seg000:03D4r ...
+gtaImgHeight	dw 0			; DATA XREF: seg000:03DEw
+byte_1DE18	db 0			; DATA XREF: seg000:02EDw
+					; LoadGTAPalette+1r
+byte_1DE19	db 0			; DATA XREF: seg000:02E8w seg000:03E9r ...
+byte_1DE1A	db 0			; DATA XREF: seg000:03F0r seg000:03FBw ...
+		db    0
 word_1DE1C	dw 0			; DATA XREF: seg000:03B9w seg000:0568r ...
 word_1DE1E	dw 0			; DATA XREF: seg000:0391w
 					; sub_10777+19r ...
-word_1DE20	dw 0			; DATA XREF: seg000:036Cw sub_1074B+3r ...
+fHandle		dw 0			; DATA XREF: seg000:036Cw fread+3r ...
 word_1DE22	dw 0			; DATA XREF: seg000:03B4w
 					; sub_10777+158r
 word_1DE24	dw 0			; DATA XREF: seg000:03BFw seg000:0571r ...
-word_1DE26	dw 0			; DATA XREF: seg000:02FEw sub_1074B+Br
+fByteCount	dw 0			; DATA XREF: seg000:02FEw fread+Br
 		db    0
 		db    0
-word_1DE2A	dw 0			; DATA XREF: seg000:03E1w
+gtaRemLines	dw 0			; DATA XREF: seg000:03E1w
 					; sub_10777+14Aw
 word_1DE2C	dw 0			; DATA XREF: seg000:03D8w
 					; sub_10777:loc_1087Er
@@ -15822,8 +15826,8 @@ byte_1DF5F	db 231h	dup(0)		; DATA XREF: sub_13EF4+12o
 byte_1E190	db 1B2h	dup(0)
 byte_1E342	db 0C74h dup(0)		; DATA XREF: seg007:82D1o seg007:8320o
 byte_1EFB6	db 2E3Ch dup(0)		; DATA XREF: seg007:scr31o
-byte_21DF2	db 30h dup(0)		; DATA XREF: sub_108DF+21o
-					; sub_13FE3+Bo
+byte_21DF2	db 30h dup(0)		; DATA XREF: LoadGTAPalette+21o
+					; CopyGTAPalette+Bo
 MiscFlags	dw 0			; DATA XREF: LoadGTAFile:loc_12E64r
 					; sub_12FB3:loc_1303Dw	...
 					; Bit 0	(01h): HDD installation	(disables disk swapping)
@@ -15847,7 +15851,7 @@ word_21EB0	dw 0			; DATA XREF: sub_1092A+35r
 					; sub_1096C+9Fr ...
 byte_21EB2	db 0			; DATA XREF: sub_1431D+Fw
 					; sub_147D0+BBr ...
-byte_21EB3	db 30h dup(0)		; DATA XREF: sub_13FE3+13o
+byte_21EB3	db 30h dup(0)		; DATA XREF: CopyGTAPalette+13o
 					; sub_142DC+Co	...
 word_21EE3	dw 100			; DATA XREF: sub_140FA:loc_14108r
 					; sub_140FA+2Cw ...
@@ -15908,17 +15912,19 @@ off_29824	dd nullsub_2		; DATA XREF: sub_10A88+29r
 					; sub_124AA+C1w ...
 off_29828	dd nullsub_2		; DATA XREF: sub_10A88+41r
 off_2982C	dd nullsub_2		; DATA XREF: sub_10A88+45r
-		db    0
+unk_29830	db    0			; DATA XREF: seg000:0E80o
 		db    0
 word_29832	dw 209h			; DATA XREF: seg000:0E5Fw seg000:0E69r
-byte_29834	db 0Eh dup(0), 50h, 0BBh, 2 dup(0) ; DATA XREF:	seg000:loc_10E50r
+byte_29834	db 0Eh dup(0), 50h, 0BBh, 2 dup(0) ; DATA XREF:	seg000:0E2Bw
+					; seg000:loc_10E50r ...
 word_29846	dw 20Ah			; DATA XREF: seg000:0E9Bw seg000:0EA5r
 byte_29848	db 1, 0Dh dup(0), 64h, 0BBh, 2 dup(0), 3 dup(2), 0Dh dup(0)
 					; DATA XREF: seg000:0E8Cr
 		db 78h,	0BBh, 2	dup(0),	43h, 2,	3, 0Dh dup(0), 8Ch, 0BBh
 		db 2 dup(0), 42h, 2, 4,	0Dh dup(0), 0A0h, 0BBh,	12Ch dup(0)
 word_299C0	dw 14h			; DATA XREF: start+C0r	start+E3r ...
-		db 1, 60h
+byte_299C2	db 1, 60h		; DATA XREF: seek_something+8w
+					; seg000:0E1Cw
 		db 2, 60h
 		db 2, 60h
 		db 4, 0A0h
