@@ -44,6 +44,6 @@ Example:
 Image flags
 -----------
 The only 3 images in MIME that use special image flags, are:
-B021E.PI: flags 0x0700
-D041C.PI: flags 0x0700
-OP_02B.PI: flags 0x0000
+B021E.GTA: flags 0x0700
+D041C.GTA: flags 0x0700
+OP_02B.GTA: flags 0x0000

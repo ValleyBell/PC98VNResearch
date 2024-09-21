@@ -10,6 +10,11 @@ SEG_BASE_OFS EQU 00A0h	; We assume "seg000", whose code begins at offset 00A0h i
 	org	-SEG_BASE_OFS
 
 seg001_Ofs EQU 74D0h
+Op1_DrawSpeed EQU 0455h
+Op1_FadeWidth EQU 0458h
+Op1_DrawPtr EQU 045Ch
+Op1_SpeedTimeout EQU 045Eh
+Op1_FadeStart EQU 0466h
 
 
 ; include EXE header
@@ -19,6 +24,41 @@ seg001_Ofs EQU 74D0h
 	incbin "MIME_OP.EXE", $, 000Eh - ($-$$)
 	dw	(end + 0Fh - $$ - SEG_BASE_OFS) / 10h	; place stack segment right after the data
 
+; modify draw positions for intro graphic text
+	incbin "MIME_OP.EXE", $, 0446h - ($-$$-SEG_BASE_OFS)
+	; draw 1st line
+	mov	[Op1_DrawSpeed], byte 0 ; draw quickly
+	mov	ax, 88/8	; start X (originally 96/8)
+	shl	ax, 1
+	mov	bx, 64/16	; start Y (originally 64/16)
+	imul	di, bx, 0A0h
+	db	03h, 0F8h	; add	di, ax (NASM encoded this as: 01h 0C7h)
+	mov	[Op1_FadeStart], di
+	mov	[Op1_FadeWidth], word 496/8	; draw width (originally 480/8)
+
+	incbin "MIME_OP.EXE", $, 048Fh - ($-$$-SEG_BASE_OFS)
+	; draw 2nd line
+	mov	[Op1_DrawSpeed], byte 0 ; draw quickly
+	mov	ax, 88/8	; start X (originally 80/8)
+	shl	ax, 1
+	mov	bx, 144/16	; start Y (originally 144/16)
+	imul	di, bx, 0A0h
+	db	03h, 0F8h	; add	di, ax
+	mov	[Op1_FadeStart], di
+	mov	[Op1_FadeWidth], word 496/8	; draw width (originally 520/8)
+
+	incbin "MIME_OP.EXE", $, 04D8h - ($-$$-SEG_BASE_OFS)
+	; draw 3rd line
+	mov	[Op1_DrawSpeed], byte 1 ; draw slowly
+	mov	ax, 88/8	; start X (originally 160/8)
+	shl	ax, 1
+	mov	bx, 208/16	; start Y (originally 208/16)
+	imul	di, bx, 0A0h
+	db	03h, 0F8h	; add	di, ax
+	mov	[Op1_FadeStart], di
+	mov	[Op1_FadeWidth], word 496/8	; draw width (originally 360/8)
+
+; add ASCII text drawing
 	incbin "MIME_OP.EXE", $, 61B2h - ($-$$-SEG_BASE_OFS)
 parse_text_loop:
 	lodsw
@@ -45,6 +85,11 @@ ptl_halfwidth:
 	times 61D8h-($-$$-SEG_BASE_OFS) db 90h
 loc_161D8:
 loc_161F6 EQU 61F6h + (loc_161D8-61D8h)
+
+	; --- opening fade-in draw effect patch, part 2 ---
+	incbin "MIME_OP.EXE", $, 6250h - ($-$$-SEG_BASE_OFS)
+	mov	[Op1_SpeedTimeout], word 6	; frame timeout for slow drawing (originally: 8)
+	; --- end ---
 
 	incbin "MIME_OP.EXE", $, 6BEAh - ($-$$-SEG_BASE_OFS)
 ptl_fullwidth:
@@ -83,6 +128,12 @@ aFileNotFound:
 aMallocError:
 	db	"Unable to allocate memory.\r\n$"
 	times seg001_Ofs+00A9h-($-$$-SEG_BASE_OFS) db 00h
+
+	; --- opening fade-in draw effect patch, part 2 ---
+	incbin "MIME_OP.EXE", $, seg001_Ofs+0426h - ($-$$-SEG_BASE_OFS)
+	; patch LUT used for fade-in animation to support 6-step drawing speed
+	db	88h, 89h, 8Ah, 8Bh, 8Ch, 87h, 00h, 00h
+	; --- end ---
 
 	incbin "MIME_OP.EXE", $, seg001_Ofs+0694h - ($-$$-SEG_BASE_OFS)
 OpeningText:

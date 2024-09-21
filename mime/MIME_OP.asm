@@ -168,7 +168,7 @@ loc_100E7:				; CODE XREF: start+E2j
 loc_100F3:				; CODE XREF: start+EEj
 		mov	word_1757C, bx
 		mov	byte_17932, 0
-		mov	byte_17924, 0
+		mov	DrawOp1Fade, 0
 		mov	byte_1793E, 0
 		mov	byte_1790D, 0
 		call	SetupInts
@@ -189,7 +189,7 @@ loc_1010E:				; CODE XREF: start+5F9Ej
 		mov	word_17912, 0
 		mov	byte_1758A, 0
 		mov	byte_1758B, 0
-		mov	byte_17924, 0
+		mov	DrawOp1Fade, 0
 		mov	byte_17932, 0
 		call	DoBlackPalette
 		mov	al, 0
@@ -450,15 +450,15 @@ loc_1043E:				; CODE XREF: start+439j
 ; ---------------------------------------------------------------------------
 
 loc_10446:				; CODE XREF: start+434j start+441j
-		mov	byte_17925, 0
-		mov	ax, 0Ch
+		mov	Op1_DrawSpeed, 0 ; draw	quickly
+		mov	ax, 12		; column 12 -> *8 = start at X = 96
 		shl	ax, 1
-		mov	bx, 4
+		mov	bx, 4		; row 4	-> *16 = start at Y = 64
 		imul	di, bx,	0A0h
 		add	di, ax
-		mov	word_17936, di
-		mov	word_17928, 60
-		mov	byte_17924, 1
+		mov	Op1_FadeStart, di
+		mov	Op1_FadeWidth, 60 ; draw over 60 columns -> *8 = 480 pixels
+		mov	DrawOp1Fade, 1
 		mov	DestFrmWaitTick, 223h
 		mov	DestFMWaitTick,	0E3h
 		mov	DestMIDWaitTick, 17Dh
@@ -476,15 +476,15 @@ loc_10487:				; CODE XREF: start+482j
 ; ---------------------------------------------------------------------------
 
 loc_1048F:				; CODE XREF: start+47Dj start+48Aj
-		mov	byte_17925, 0
-		mov	ax, 0Ah
+		mov	Op1_DrawSpeed, 0 ; draw	quickly
+		mov	ax, 10		; column 10 -> *8 = start at X = 80
 		shl	ax, 1
-		mov	bx, 9
+		mov	bx, 9		; row 9	-> *16 = start at Y = 144
 		imul	di, bx,	0A0h
 		add	di, ax
-		mov	word_17936, di
-		mov	word_17928, 41h	; 'A'
-		mov	byte_17924, 1
+		mov	Op1_FadeStart, di
+		mov	Op1_FadeWidth, 65 ; draw over 65 columns -> *8 = 520 pixels
+		mov	DrawOp1Fade, 1
 		mov	DestFrmWaitTick, 4A3h
 		mov	DestFMWaitTick,	263h
 		mov	DestMIDWaitTick, 2FDh
@@ -502,15 +502,15 @@ loc_104D0:				; CODE XREF: start+4CBj
 ; ---------------------------------------------------------------------------
 
 loc_104D8:				; CODE XREF: start+4C6j start+4D3j
-		mov	byte_17925, 1
-		mov	ax, 14h
+		mov	Op1_DrawSpeed, 1 ; draw	slowly
+		mov	ax, 20		; column 20 -> *8 = start at X = 160
 		shl	ax, 1
-		mov	bx, 0Dh
+		mov	bx, 13		; row 13 -> *16	= start	at Y = 208
 		imul	di, bx,	0A0h
 		add	di, ax
-		mov	word_17936, di
-		mov	word_17928, 2Dh	; '-'
-		mov	byte_17924, 1
+		mov	Op1_FadeStart, di
+		mov	Op1_FadeWidth, 45 ; draw over 45 columns -> *8 = 360 pixels
+		mov	DrawOp1Fade, 1
 		mov	DestFrmWaitTick, 723h
 		mov	DestFMWaitTick,	323h
 		mov	DestMIDWaitTick, 3C0h
@@ -552,7 +552,7 @@ loc_10567:				; CODE XREF: start+562j
 ; ---------------------------------------------------------------------------
 
 loc_1056F:				; CODE XREF: start+55Dj start+56Aj
-		mov	byte_17924, 0
+		mov	DrawOp1Fade, 0
 		push	es
 		mov	ax, 0A000h
 		mov	es, ax
@@ -640,10 +640,10 @@ loc_10639:				; CODE XREF: start+627j start+634j
 		call	sub_168CE
 		mov	bx, 0
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -664,12 +664,12 @@ loc_10679:				; CODE XREF: start+67Fj
 		mov	bx, 2
 		mov	dx, 0
 		call	sub_168CE
-		mov	bx, 28h	; '('
+		mov	bx, 40
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -704,10 +704,10 @@ loc_10708:				; CODE XREF: start+6F6j start+703j
 		call	sub_168CE
 		mov	bx, 0
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -728,12 +728,12 @@ loc_10748:				; CODE XREF: start+74Ej
 		mov	bx, 2
 		mov	dx, 0
 		call	sub_168CE
-		mov	bx, 3E80h
+		mov	bx, 16000
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -768,10 +768,10 @@ loc_107D7:				; CODE XREF: start+7C5j start+7D2j
 		call	sub_168CE
 		mov	bx, 0
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -792,12 +792,12 @@ loc_10817:				; CODE XREF: start+81Dj
 		mov	bx, 2
 		mov	dx, 0
 		call	sub_168CE
-		mov	bx, 3EA8h
+		mov	bx, 16040
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -832,10 +832,10 @@ loc_108A6:				; CODE XREF: start+894j start+8A1j
 		call	sub_168CE
 		mov	bx, 0
 		mov	dx, 1F54h
-		mov	cx, 0C8h ; '»'
+		mov	cx, 200
 		mov	cs:word_16D90, bx
 		mov	cs:word_16D92, dx
-		mov	cs:word_16D98, 28h ; '('
+		mov	cs:word_16D98, 40
 		mov	cs:word_16D9A, cx
 		dec	cx
 		imul	cx, 50h
@@ -873,10 +873,10 @@ loc_10915:				; CODE XREF: start+903j start+910j
 		mov	bx, 2
 		mov	dx, 1
 		call	sub_168CE
-		mov	bx, 28h	; '('
-		mov	dx, 28h	; '('
-		mov	ax, 28h	; '('
-		mov	cx, 0C8h ; '»'
+		mov	bx, 40
+		mov	dx, 40
+		mov	ax, 40
+		mov	cx, 200
 		call	sub_169BD
 		mov	DestFrmWaitTick, 2AC8h
 		mov	DestFMWaitTick,	1947h
@@ -898,10 +898,10 @@ loc_1096C:				; CODE XREF: start+95Aj start+967j
 		mov	bx, 2
 		mov	dx, 1
 		call	sub_168CE
-		mov	bx, 3E80h
-		mov	dx, 28h	; '('
-		mov	ax, 28h	; '('
-		mov	cx, 0C8h ; '»'
+		mov	bx, 16000
+		mov	dx, 40
+		mov	ax, 40
+		mov	cx, 200
 		call	sub_169BD
 		mov	DestFrmWaitTick, 2AD0h
 		mov	DestFMWaitTick,	194Bh
@@ -923,10 +923,10 @@ loc_109AB:				; CODE XREF: start+999j start+9A6j
 		mov	bx, 2
 		mov	dx, 1
 		call	sub_168CE
-		mov	bx, 3EA8h
-		mov	dx, 28h	; '('
-		mov	ax, 28h	; '('
-		mov	cx, 0C8h ; '»'
+		mov	bx, 16040
+		mov	dx, 40
+		mov	ax, 40
+		mov	cx, 200
 		call	sub_169BD
 		mov	DestFrmWaitTick, 2B50h
 		mov	DestFMWaitTick,	199Eh
@@ -995,8 +995,8 @@ loc_10A74:				; CODE XREF: start+A62j start+A6Fj
 		call	sub_168CE
 		mov	bx, 0
 		mov	dx, 0
-		mov	ax, 50h	; 'P'
-		mov	cx, 190h
+		mov	ax, 80
+		mov	cx, 400
 		call	sub_16909
 		mov	DestFrmWaitTick, 353Fh
 		mov	DestFMWaitTick,	1F01h
@@ -1078,7 +1078,7 @@ loc_10B68:				; CODE XREF: start+443j start+48Cj ...
 		mov	word_17912, 0
 		mov	byte_1758A, 0
 		mov	byte_1758B, 0
-		mov	byte_17924, 0
+		mov	DrawOp1Fade, 0
 		mov	byte_17932, 0
 		mov	al, 0
 		out	0A6h, al	; Interrupt Controller #2, 8259A
@@ -10236,39 +10236,39 @@ loc_161FD:				; CODE XREF: seg000:61EDj seg000:6201j
 		mov	byte_17934, 0
 
 loc_16221:				; CODE XREF: seg000:6184j seg000:6192j ...
-		cmp	byte_17924, 1
+		cmp	DrawOp1Fade, 1
 		jnz	short loc_1628A
-		mov	di, word_17936
-		cmp	word_1792E, 0
+		mov	di, Op1_FadeStart
+		cmp	Op1_SpeedTimeout, 0
 		jnz	short loc_16256
-		cmp	byte_17925, 1
+		cmp	Op1_DrawSpeed, 1
 		jz	short loc_16249
-		mov	si, offset byte_178F2
-		mov	word_1792C, si
-		mov	word_1792E, 4
+		mov	si, offset Op1_DrawLut4
+		mov	Op1_DrawPtr, si
+		mov	Op1_SpeedTimeout, 4 ; speed 0 -> timeout = 4 (fast drawing)
 		jmp	short loc_16256
 ; ---------------------------------------------------------------------------
 
 loc_16249:				; CODE XREF: seg000:6238j
-		mov	si, offset byte_178F6
-		mov	word_1792C, si
-		mov	word_1792E, 8
+		mov	si, offset Op1_DrawLut8
+		mov	Op1_DrawPtr, si
+		mov	Op1_SpeedTimeout, 8 ; speed 0 -> timeout = 8 (slow drawing)
 
 loc_16256:				; CODE XREF: seg000:6231j seg000:6247j
 		xor	ax, ax
-		mov	si, word_1792C
+		mov	si, Op1_DrawPtr
 		mov	al, [si]
 		mov	es:[di], ax
 		mov	es:[di+0A0h], ax
 		mov	es:[di+140h], ax
 		mov	es:[di+1E0h], ax
-		inc	word_1792C
-		dec	word_1792E
+		inc	Op1_DrawPtr
+		dec	Op1_SpeedTimeout
 		jnz	short loc_1628A
-		add	word_17936, 2
-		dec	word_17928
+		add	Op1_FadeStart, 2
+		dec	Op1_FadeWidth
 		jnz	short loc_1628A
-		mov	byte_17924, 0FFh
+		mov	DrawOp1Fade, 0FFh
 
 loc_1628A:				; CODE XREF: seg000:6226j seg000:6278j ...
 		cmp	byte_1793E, 1
@@ -13149,9 +13149,8 @@ aBMusOp_1_m	db 'B:MUS\OP_1.M',0     ; DATA XREF: PlayBGM+22o
 aBMusOp_2_m	db 'B:MUS\OP_2.M',0     ; DATA XREF: PlayBGM:loc_1675Bo
 aBMusOp_1_n	db 'B:MUS\OP_1.N',0     ; DATA XREF: PlayBGM+4Co
 aBMusOp_2_n	db 'B:MUS\OP_2.N',0     ; DATA XREF: PlayBGM:loc_16785o
-byte_178F2	db 89h,	8Bh, 8Dh, 87h	; DATA XREF: seg000:623Ao
-byte_178F6	db 88h,	89h, 8Ah, 8Bh	; DATA XREF: seg000:loc_16249o
-		db 8Ch,	8Dh, 8Eh, 87h
+Op1_DrawLut4	db 89h,	8Bh, 8Dh, 87h	; DATA XREF: seg000:623Ao
+Op1_DrawLut8	db 88h,	89h, 8Ah, 8Bh, 8Ch, 8Dh, 8Eh, 87h ; DATA XREF: seg000:loc_16249o
 unk_178FE	db    0			; DATA XREF: start:loc_10049o
 		db    0
 MusicMode	db 0			; DATA XREF: WaitForMusic1+6r
@@ -13185,14 +13184,14 @@ byte_17921	db 0			; DATA XREF: sub_16B10+Cw sub_16B58+1r
 byte_17922	db 0			; DATA XREF: start+163w
 					; start:loc_10168r ...
 		db  90h	; ê
-byte_17924	db 0			; DATA XREF: start+FCw	start+148w ...
-byte_17925	db 0			; DATA XREF: start:loc_10446w
+DrawOp1Fade	db 0			; DATA XREF: start+FCw	start+148w ...
+Op1_DrawSpeed	db 0			; DATA XREF: start:loc_10446w
 					; start:loc_1048Fw ...
 		align 4
-word_17928	dw 0			; DATA XREF: start+45Dw start+4A6w ...
+Op1_FadeWidth	dw 0			; DATA XREF: start+45Dw start+4A6w ...
 		align 4
-word_1792C	dw 0			; DATA XREF: seg000:623Dw seg000:624Cw ...
-word_1792E	dw 0			; DATA XREF: seg000:622Cr seg000:6241w ...
+Op1_DrawPtr	dw 0			; DATA XREF: seg000:623Dw seg000:624Cw ...
+Op1_SpeedTimeout dw 0			; DATA XREF: seg000:622Cr seg000:6241w ...
 DispTextPtr	dw 0			; DATA XREF: start+5BBw seg000:61A1r ...
 byte_17932	db 0			; DATA XREF: start+F7w	start+14Dw ...
 byte_17933	db 0			; DATA XREF: seg000:loc_16187w
@@ -13200,7 +13199,7 @@ byte_17933	db 0			; DATA XREF: seg000:loc_16187w
 byte_17934	db 0			; DATA XREF: seg000:619Ar seg000:61E1w ...
 byte_17935	db 0			; DATA XREF: seg000:61DCw
 					; seg000:loc_161E6r ...
-word_17936	dw 0			; DATA XREF: start+459w start+4A2w ...
+Op1_FadeStart	dw 0			; DATA XREF: start+459w start+4A2w ...
 word_17938	dw 0			; DATA XREF: start:loc_100BAw
 					; LoadGTA+25r
 word_1793A	dw 0			; DATA XREF: start+17Fw start+297w ...
