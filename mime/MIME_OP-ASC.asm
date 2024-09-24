@@ -28,7 +28,7 @@ Op1_FadeStart EQU 0466h
 	incbin "MIME_OP.EXE", $, 0446h - ($-$$-SEG_BASE_OFS)
 	; draw 1st line
 	mov	[Op1_DrawSpeed], byte 0 ; draw quickly
-	mov	ax, 88/8	; start X (originally 96/8)
+	mov	ax, 80/8	; start X (originally 96/8)
 	shl	ax, 1
 	mov	bx, 64/16	; start Y (originally 64/16)
 	imul	di, bx, 0A0h
@@ -39,7 +39,7 @@ Op1_FadeStart EQU 0466h
 	incbin "MIME_OP.EXE", $, 048Fh - ($-$$-SEG_BASE_OFS)
 	; draw 2nd line
 	mov	[Op1_DrawSpeed], byte 0 ; draw quickly
-	mov	ax, 88/8	; start X (originally 80/8)
+	mov	ax, 80/8	; start X (originally 80/8)
 	shl	ax, 1
 	mov	bx, 144/16	; start Y (originally 144/16)
 	imul	di, bx, 0A0h
@@ -50,7 +50,7 @@ Op1_FadeStart EQU 0466h
 	incbin "MIME_OP.EXE", $, 04D8h - ($-$$-SEG_BASE_OFS)
 	; draw 3rd line
 	mov	[Op1_DrawSpeed], byte 1 ; draw slowly
-	mov	ax, 88/8	; start X (originally 160/8)
+	mov	ax, 80/8	; start X (originally 160/8)
 	shl	ax, 1
 	mov	bx, 208/16	; start Y (originally 208/16)
 	imul	di, bx, 0A0h

@@ -76,6 +76,10 @@ def pi2gta(fn_in: str, fn_out: str) -> int:
 			return 1
 		hdr_ofs += 0x02
 		
+		bit_depth = data[hdr_ofs + 0x03]
+		if bit_depth != 4:
+			print(f"Bit depth is {bit_depth} bits! Only 4-bit PI images can be converted!")
+			return 1
 		compr_size = struct.unpack_from(">H", data, hdr_ofs + 0x08)[0]
 		start_ofs = hdr_ofs + 0x0A + compr_size	# usually 0x0E
 	

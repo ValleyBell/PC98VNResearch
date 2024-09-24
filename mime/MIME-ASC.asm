@@ -229,7 +229,7 @@ Print_NoData:
 	jmp	PrintStr_DI
 
 txtNoData:
-	db	"       No data available.", 0, 0
+	db	"            No data.", 0, 0
 	times 8 db 00h
 	db	"ASCII patch by Valley Bell.", 0
 	times 75C0h-($-$$-SEG_BASE_OFS) db 00h
@@ -336,49 +336,49 @@ pstr_di_ret:
 	incbin "MIME.EXE", $, 769Dh - ($-$$-SEG_BASE_OFS)
 PrintSaveGameName:
 	mov	ax, [cs:6DF6h]	; get save game "floor ID"
-	cmp	ax, (txtLabNamesEnd-txtLabNames)/2
-	jb	short psgn_show_lab
-	mov	ax, (txtLabNamesEnd-txtLabNames)/2-1
-psgn_show_lab:
+	cmp	ax, (txtMazeNamesEnd-txtMazeNames)/2
+	jb	short psgn_show_maze
+	mov	ax, (txtMazeNamesEnd-txtMazeNames)/2-1
+psgn_show_maze:
 	add	ax, ax
-	mov	di, txtLabNames
+	mov	di, txtMazeNames
 	add	di, ax
-	mov	di, [cs:di]	; get labyrinth name from table
+	mov	di, [cs:di]	; get maze name from table
 	call	PrintStr_DI
 	
 	mov	di, saveNamePattern
 	jmp	PrintStr_DI
 
-txtLabNames:
-	dw	txtLabC	;  0
-	dw	txtLabD	;  1
-	dw	txtLabD	;  2
-	dw	txtLabD	;  3
-	dw	txtLabE	;  4
-	dw	txtLabF	;  5
-	dw	txtLabG	;  6
-	dw	txtLabH	;  7
-	dw	txtLabI	;  8
-	dw	txtLabJ	;  9
-	dw	txtLabK	; 10
-	dw	txtLabL	; 11
-	dw	txtLabB	; 12
-	dw	txtLabA	; 13+
-txtLabNamesEnd:
+txtMazeNames:
+	dw	txtMazeC	;  0
+	dw	txtMazeD	;  1
+	dw	txtMazeD	;  2
+	dw	txtMazeD	;  3
+	dw	txtMazeE	;  4
+	dw	txtMazeF	;  5
+	dw	txtMazeG	;  6
+	dw	txtMazeH	;  7
+	dw	txtMazeI	;  8
+	dw	txtMazeJ	;  9
+	dw	txtMazeK	; 10
+	dw	txtMazeL	; 11
+	dw	txtMazeB	; 12
+	dw	txtMazeA	; 13+
+txtMazeNamesEnd:
 
 		; each text must be 14 characters long, for proper alignment
-txtLabA:	db	"    Holy Lab. ", 0, 0
-txtLabB:	db	" Nothing Lab. ", 0, 0
-txtLabC:	db	"Illusion Lab. ", 0, 0
-txtLabD:	db	"    Tree Lab. ", 0, 0
-txtLabE:	db	"     Fun Lab. ", 0, 0
-txtLabF:	db	"   Tears Lab. ", 0, 0
-txtLabG:	db	"     Ash Lab. ", 0, 0
-txtLabH:	db	"  Cursed Lab. ", 0, 0
-txtLabI:	db	"   Ocean Lab. ", 0, 0
-txtLabJ:	db	"   Flame Lab. ", 0, 0
-txtLabK:	db	"   Earth Lab. ", 0, 0
-txtLabL:	db	"    Wind Lab. ", 0, 0
+txtMazeA:	db	"    Holy Maze ", 0, 0
+txtMazeB:	db	"    Null Maze ", 0, 0
+txtMazeC:	db	" Phantom Maze ", 0, 0
+txtMazeD:	db	"    Tree Maze ", 0, 0
+txtMazeE:	db	"     Fun Maze ", 0, 0
+txtMazeF:	db	"    Tear Maze ", 0, 0
+txtMazeG:	db	"     Ash Maze ", 0, 0
+txtMazeH:	db	"   Curse Maze ", 0, 0
+txtMazeI:	db	"     Sea Maze ", 0, 0
+txtMazeJ:	db	"   Flame Maze ", 0, 0
+txtMazeK:	db	"   Earth Maze ", 0, 0
+txtMazeL:	db	"    Wind Maze ", 0, 0
 	times 787Ch-($-$$-SEG_BASE_OFS) db 00h
 
 	; adjust offsets of changed (hardcoded) "saveNamePattern" text

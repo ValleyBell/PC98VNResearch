@@ -450,7 +450,7 @@ Commands
 62 - print register value (full-width, up to 5 digits)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
-	This command is the full-width version of command 3C.
+	This command is the full-width version of command 61.
 	The register's contents are read and the resulting number drawn on the screen. There is no alignment or padding.
 	It uses full-width characters to show the number.
 63 - set file path disk letter
