@@ -1,0 +1,56 @@
+Dragon Half
+===========
+
+Note: All multi-byte values are stored in Little Endian byte order.
+
+Data files with header (BGM, GPP, LOB, P0#, VDP)
+----------
+Files with the extentions BGM, GPP, LOB, P0# and VDP have follow the following structure:
+
+Pos	Len	Description
+00	04	file signature (null-terminated string, varies by file type, e.g. "BGM", "GRP", "LOB", "VDT", "N00", "N01")
+04	04	total file size when decompressed (includes the 10h-byte file header)
+08	08	?? (format-specific header data)
+10	??	file data (compressed or uncompressed, depending on file type)
+
+The LZSS compression uses a nametable initialized with all 00s.
+The control byte stores bits from low to high. (same as LZSS.C reference implementation)
+The reference word is formatted slightly differently than usual:
+    Bytes 12 34 form "offset 0x412, length 0x03"
+    i.e. the "length" is stored in the high nibble of the 2nd byte. (LZSS.C has it in the low nibble of the 2nd byte)
+
+For "lzss-tool", the parameters are:
+    nametable initialization: -n 0x00
+    reference word: -R 0x00
+    archive header: -a "sGRP,b00,o4,i00,i00,i00,i00,i00,i00,i00,i00"
+
+The following file formats are known:
+file ext.   signature   compression     description
+  .BGM        "BGM"       none          music
+  .GPP        "GRP"       LZSS          graphics data
+  .LOB        "LOB"       none          disk file index
+  .VDP        "VDT"       LZSS          some script? (often accompanied by MSG files)
+  .P00        "N00"       LZSS          cutscene script
+  .P01        "N01"       LZSS          cutscene script
+
+MSG files
+---------
+These files contain raw text without any header.
+Bytes 0Dh 0Ah are used as line endings.
+Byte 1Ah marks the end of the file.
+
+FPP files
+---------
+These are archives that contain multiple GPP files.
+They start with a 2-byte file count (n), followed by n 4-byte values specifying the absolute starting offset of each archived file.
+The stored GPP files use the same format as when they are stored as separate files.
+
+BEL files
+---------
+These are archives. (for sound effects?)
+They start with a 2-byte file count (n), followed by n 2-byte values specifying the absolute starting offset of each archived file.
+
+LOP files
+---------
+These are archives that contain multiple SCN files.
+They start with a 2-byte file count (n), followed by n 4-byte values specifying the absolute starting offset of each archived file.

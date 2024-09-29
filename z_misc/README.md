@@ -2,6 +2,7 @@
 
 - [uk2DlbUnpack.py](uk2DlbUnpack.py) - `DLB` archive unpacker for the format used by the *AyPio UK2* engine [^1]
 - [dshellDlbUnpack.py](dshellDlbUnpack.py) - `DLB` archive unpacker for the format used by the *Four･Nine D-SHELL* engine [^1]
+- [DragonHalf.txt](DragonHalf.txt) - notes about file formats used by the game "Dragon Half", published by Micro Cabin
 - [lenam_packer.py](lenam_packer.py) - archive (un-)packer for "Lenam: Sword of Legend", published by Hertz [^1]
 - [forest_packer.py](forest_packer.py) - archive (un-)packer for `.FA1` archives used by games published by Forest [^1]
 - [mgr_packer.py](mgr_packer.py) - archive (un-)packer for `DISK#.NDX/LIB` archives used by the game "Merry Go Round", published by Mischief [^1]
