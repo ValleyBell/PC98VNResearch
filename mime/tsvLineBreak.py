@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 import sys
-import os
 import typing
 import argparse
-import unicodedata
-import yaml
-import hyphen	# requires pip package "pyhyphen"
+#import unicodedata
+import hyphen	# requires pip package "PyHyphen"
 
 DEBUG_OUTPUT_PATH = None
 #DEBUG_OUTPUT_PATH = "/tmp/linebrk_"
@@ -124,33 +122,24 @@ def split_keep(text: str, sep: str) -> list:
 		parts[idx] += sep
 	return parts
 
-def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
+TXTFLAG_SPACE		= 0x01	# character is a space
+TXTFLAG_LINE_BREAK	= 0x02	# line break after this character
+TXTFLAG_SPC_BREAK	= 0x04	# special line break character
+TXTFLAG_NO_BREAK	= 0x08	# prevent line break at this character
+TXTFLAG_LWORD_BEGIN	= 0x10	# "long word" can be a concatenated word with trailing punctiation ("abc-def.")
+TXTFLAG_LWORD_END	= 0x20
+TXTFLAG_CWORD_BEGIN	= 0x40	# "core word" is just a single word that consists only of alphabet letters
+TXTFLAG_CWORD_END	= 0x80
+
+def parse_text(text: str) -> list:
 	global config
 	global var_dict
 	
-	if line_cols[TEXTCOL_TYPE] == "sel":
-		return text	# skip "selection" lines, as its text box size is determined by the game
-	
-	tbox_size = line_cols[TEXTCOL_TBOX].split('@')[0]
-	if not "x" in tbox_size:
-		return text	# not text box size set - skip these as well
-	(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
-	
-	can_add_linebreaks = False
-	if line_cols[TEXTCOL_TYPE] == "txt":
-		if tb_height > 1:
-			can_add_linebreaks = True	# line breaks may be added to longer text paragraphs
-
-	# split text data into multiple lines for the TSV
+	# split text data into "tokens", with annotated width/height/...
+	ptext = []
+	state_space = 0x01
+	state_alpha = 0x00
 	pos = 0
-	line_xbase = 0
-	tbox_ybase = 0
-	xpos = line_xbase
-	max_xpos = xpos
-	lines = [""]
-	# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
-	last_word_lpos = pos	# character position (in *line*) of the beginning of the last "word"
-	last_word_xpos = xpos	# text X position of the beginning of the last "word"
 	while pos < len(text):
 		text_var = None
 		for tv in var_dict["words"]:
@@ -162,12 +151,15 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 		
 		chrlen = 1
 		chrwidth = 0
-		no_linebreak_now = False
-		special_linebreak = False
+		flags = 0x00
+		state_space = (state_space << 1) & 0x33
+		state_alpha = (state_alpha << 1) & 0x03
 		if text_var is not None:
 			chrlen = len(text_var["key"])
 			chrwidth = text_var["length"]
 			# afterwards, we process it as a normal "word" (including line splitting etc.)
+			flags |= (TXTFLAG_CWORD_BEGIN | TXTFLAG_CWORD_END)
+			state_space |= 0x10
 		elif (text[pos] == '\\') and (pos + 1 < len(text)):
 			ctrl_chr = text[pos + 1]
 			chrlen += 1
@@ -184,87 +176,193 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 			
 			if ctrl_chr == 'u':
 				ccode = int(text[pos+chrlen : pos+chrlen+4], 0x10)
-				chrwidth = get_cjk_char_width(chr(ccode))
+				ccstr = chr(ccode)
+				chrwidth = get_cjk_char_width(ccstr)
 				chrlen += 4
+				state_space |= 0x01 if text[pos].isspace() else 0x10
+				if text[pos].isalpha():
+					state_alpha |= 0x01
 			elif ctrl_chr == 'U':
 				ccode = int(text[pos+chrlen : pos+chrlen+8], 0x10)
-				chrwidth = get_cjk_char_width(chr(ccode))
+				ccstr = chr(ccode)
+				chrwidth = get_cjk_char_width(ccstr)
 				chrlen += 8
+				state_space |= 0x01 if text[pos].isspace() else 0x10
+				if text[pos].isalpha():
+					state_alpha |= 0x01
 			elif ctrl_chr == 't':	# tab
 				chrwidth = 8
+				state_space |= 0x01
 			elif ctrl_chr == 'n':	# new line
-				lines[-1] += text[pos : pos+chrlen]
-				pos += chrlen
-				lines.append("")	# start new line
-				xpos = line_xbase
-				continue
+				chrwidth = 0
+				flags |= TXTFLAG_LINE_BREAK
+				state_space |= 0x20	# enforce LWORD_END
 			elif ctrl_chr == '\n':	# new TSV line
-				pos += chrlen
-				continue
+				continue		# just ignore
 		elif ord(text[pos]) >= 0x20:
-			if text[pos] in "\u201C\u201D\u2018\u2019":
+			ccstr = text[pos]
+			if ccstr in "\u201C\u201D\u2018\u2019":
 				chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
-			elif text[pos] == "\u2026":
+			elif ccstr == "\u2026":
 				chrwidth = 3	# the "reinsert" script will convert this to "..."
 			else:
-				chrwidth = get_cjk_char_width(text[pos])
-			if text[pos].isspace():
-				no_linebreak_now = True	# prevent line breaks before spaces
-				last_word_lpos = len(lines[-1]) + chrlen
-				last_word_xpos = xpos + chrwidth
-			if text[pos] == '】':
+				chrwidth = get_cjk_char_width(ccstr)
+			
+			state_space |= 0x01 if ccstr.isspace() else 0x10
+			if ccstr.isalpha():
+				state_alpha |= 0x01
+			if ccstr == '】':
 				# Shift-JIS closing bracket (817A): special code for "person name END"
-				special_linebreak = True
-		#print(f"CPos {pos}, XPos {xpos}, Lines {len(lines)}, NextChr: '{text[pos:pos+chrlen]}' (width {chrwidth}), LastLine: {lines[-1]}")
+				flags |= (TXTFLAG_SPC_BREAK | TXTFLAG_LWORD_END)
 		
-		if can_add_linebreaks and (xpos + chrwidth > tb_width) and not no_linebreak_now:
-			# add line breaks only in "txt" mode
-			#print(f"    split ({xpos + chrwidth} > {tb_width}), word chr-pos {last_word_lpos}, word X-pos {last_word_xpos}, maxlen {tb_width*0.75-4}")
+		if (state_space & 0x01):
+			flags |= TXTFLAG_SPACE
+			flags |= TXTFLAG_NO_BREAK	# prevent line breaks before spaces
+		if (state_space & 0x03) == 0x02:	# transition space -> non-space
+			flags |= TXTFLAG_LWORD_BEGIN
+		elif (state_space & 0x30) == 0x20:	# transition non-space -> space
+			ptext[-1]["flags"] |= TXTFLAG_LWORD_END
+		if state_alpha == 0x01:
+			flags |= TXTFLAG_CWORD_BEGIN
+		elif state_alpha == 0x02:
+			ptext[-1]["flags"] |= TXTFLAG_CWORD_END
+
+		if (flags & (TXTFLAG_LINE_BREAK | TXTFLAG_SPC_BREAK)):
+			state_space = 0x01	# enforce LWORD_BEGIN at next letter/control character
+		
+		ptext.append({
+			"data": text[pos : pos+chrlen],
+			"pos": pos,
+			"width": chrwidth,
+			"flags": flags,
+		})
+		pos += chrlen
+	
+	state_space = (state_space << 1) & 0x33
+	state_alpha = (state_alpha << 1) & 0x03
+	if (state_space & 0x30) == 0x20:	# transition non-space -> space
+		ptext[-1]["flags"] |= TXTFLAG_LWORD_END
+	if state_alpha == 0x02:
+		ptext[-1]["flags"] |= TXTFLAG_CWORD_END
+	return ptext
+
+def extract_word_tokens(tokens: list, startIdx: int, flagBegin: int, flagEnd: int) -> tuple:
+	beginIdx = startIdx
+	while beginIdx > 0:
+		if tokens[beginIdx]["flags"] & flagBegin:
+			break
+		beginIdx -= 1
+	
+	endIdx = beginIdx
+	while endIdx < len(tokens):
+		if tokens[endIdx]["flags"] & flagEnd:
+			endIdx += 1	# the "END" flag marks the last letter in the word, but we return the index *after* it
+			break
+		endIdx += 1
+	
+	return (beginIdx, endIdx)
+
+def has_alpha(text: str) -> bool:
+	for tchr in text:
+		if tchr.isalpha():
+			return True
+	return False
+
+def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
+	global config
+	global var_dict
+	
+	if line_cols[TEXTCOL_TYPE] == "sel":
+		return text	# skip "selection" lines, as its text box size is determined by the game
+	
+	tbox_size = line_cols[TEXTCOL_TBOX].split('@')[0]
+	if not "x" in tbox_size:
+		return text	# not text box size set - skip these as well
+	(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
+	
+	multiline_text = False
+	if line_cols[TEXTCOL_TYPE] == "txt":
+		if tb_height > 1:
+			multiline_text = True	# line breaks may be added to longer text paragraphs
+	
+	ptext = parse_text(text)
+	
+	# split text data into multiple lines for the TSV
+	line_xbase = 0
+	tbox_ybase = 0
+	xpos = line_xbase
+	max_xpos = xpos
+	lines = [""]
+	# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
+	for (ptid, ptinfo) in enumerate(ptext):
+		chrwidth = ptinfo["width"]
+		flags = ptinfo["flags"]
+		if (flags & TXTFLAG_LINE_BREAK):
+			ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)
+			lines[-1] += ptinfo["data"]
+			lines.append("")	# start new line
+			xpos = line_xbase
+			continue
+		
+		can_add_linebreaks = multiline_text and not (flags & TXTFLAG_NO_BREAK)
+		#print(f"CPos {ptinfo['pos']}, XPos {xpos}, Lines {len(lines)}, NextChr: '{ptinfo['data']}' (width {chrwidth}), LastLine: {lines[-1]}")
+		
+		if can_add_linebreaks and (xpos + chrwidth > tb_width):
+			ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)	# make token search below work properly
+			
 			break_mode = None
-			if config.hyphenation and ((xpos - last_word_xpos) > 2):
-				# try doing hyphenation on (current word + rest of the phrase)
-				phrase = lines[-1][last_word_lpos:] + text[pos:]
-				# The hypenation algorithm sometimes crashes when feeding the whole sentence,
-				# so let's try to extract just a single word.
-				has_alpha = False
-				min_len = len(lines[-1]) - last_word_lpos
-				for (phr_pos, phr_chr) in enumerate(phrase):
-					if not has_alpha:
-						has_alpha = phr_chr.isalpha()
-					elif not phr_chr.isalnum() and (phr_pos > min_len):
-						phrase = phrase[:phr_pos]
-						break
+			(lwBegIdx, lwEndIdx) = extract_word_tokens(ptext, ptid, TXTFLAG_LWORD_BEGIN, TXTFLAG_LWORD_END)
+			(cwBegIdx, cwEndIdx) = extract_word_tokens(ptext, ptid, TXTFLAG_CWORD_BEGIN | TXTFLAG_LWORD_BEGIN, TXTFLAG_CWORD_END | TXTFLAG_LWORD_END)
+			if (ptext[cwBegIdx]["linepos"][2] > ptext[lwBegIdx]["linepos"][2]) and \
+				(ptext[cwBegIdx - 1]["data"][-1] == '-'):
+				# When the last word ended with a hyphen, assume we can break after that as if it was a space.
+				# (comparing the X position is a harder requirement than comparing the index)
+				lwBegIdx = cwBegIdx
+			lw_lpos = ptext[lwBegIdx]["linepos"][1]	# character position (in *line*) of the beginning of the last "word"
+			lw_xpos = ptext[lwBegIdx]["linepos"][2]	# text X position of the beginning of the last "word"
+			
+			#print(f"    split ({xpos + chrwidth} > {tb_width}), word chr-pos {lw_lpos}, word X-pos {lw_xpos}, maxlen {tb_width*0.75-4}")
+			if config.hyphenation and ((xpos - lw_xpos) > 2):
+				# try doing hyphenation on the current word
 				
-				if has_alpha and ('-' in phrase):
-					# The hyphenation library has issues with "concatenated-words" and can crash on them.
-					# So let's be safe and just remove all parts that fit on the line.
-					phr_split = split_keep(phrase, '-')
-					#print(f"{lines[-1][:last_word_lpos]} | {lines[-1][last_word_lpos:]}")
-					while len(phr_split) > 1:
-						phr_width = get_cjk_string_width(phr_split[0])
-						if last_word_xpos + phr_width > xpos:
-							break
-						last_word_lpos += len(phr_split[0])
-						last_word_xpos += phr_width
-						phr_split.pop(0)
-					#	print(f"{lines[-1][:last_word_lpos]} | {lines[-1][last_word_lpos:]}")
-					phrase = "".join(phr_split)
-				if has_alpha:	# The phrase *needs* at least one actual letter.
-					#print(f"Line-1: {lines[-1]}\nPhrase: {phrase}\nWordXPos: {last_word_xpos}, XPos: {xpos}, diff: {xpos-last_word_xpos}")
+				# The hyphenation library has issues with "concatenated-words" and can crash on them,
+				# so let's just give it the "main" word.
+				phrase = "".join([ptitem["data"] for ptitem in ptext[cwBegIdx : cwEndIdx]])
+				if has_alpha(phrase):	# The phrase *needs* at least one actual letter.
+					if ptid < cwEndIdx:
+						# Line end happens in the middle of the word: just take the position as split point.
+						# The library may split at earlier points to make space for the required hyphen.
+						hyp_split_pos = sum([len(ptitem["data"]) for ptitem in ptext[cwBegIdx : ptid]])
+					else:
+						# Line end happens during punctuation after the word: split point = before last character.
+						hyp_split_pos = len(phrase) - 1
+					
+					#cw_xpos = ptext[cwBegIdx]['linepos'][2]
+					#print(f"Line-1: {lines[-1]}\nPhrase: {phrase}\nWordXPos: {cw_xpos}, XPos: {xpos}, BreakCharPos: {hyp_split_pos}")
 					try:
-						word_hyp = hyp_en.wrap(phrase, xpos - last_word_xpos)
+						word_hyp = hyp_en.wrap(phrase, hyp_split_pos)
 					except:
-						print(f'Error hyphenating "{phrase}", wrap at <{xpos - last_word_xpos}')
+						print(f'Error hyphenating "{phrase}", wrap at <{hyp_split_pos}')
 						word_hyp = []
 					if len(word_hyp) > 1:
 						break_mode = 2	# break using hyphenation
-						hyp_pos = len(phrase) - len(word_hyp[1])	# determine word split point in phrase
+						hyp_w0pos = ptext[cwBegIdx]["linepos"][1]
+						# determine word split point in phrase
+						rem_phrase = word_hyp[1]
+						for hyp_w1idx in range(cwEndIdx, cwBegIdx, -1):
+							ptitem = ptext[hyp_w1idx - 1]
+							if len(rem_phrase) == 0 or not rem_phrase.endswith(ptitem["data"]):
+								break
+							rem_phrase = rem_phrase[0 : -len(ptitem["data"])]
+						hyp_w1pos = ptext[hyp_w1idx]["linepos"][1]
+			
 			if break_mode is None:
-				if (last_word_lpos <= 0) or lines[-1][:last_word_lpos].isspace():
+				# fallback when no hypenation was used
+				if (lw_lpos <= 0) or lines[-1][:lw_lpos].isspace():
 					# (a) there were no spaces OR
 					# (b) the only spaces were indentation
 					break_mode = 0	# break in the middle of the word
-				elif last_word_xpos < (tb_width*0.75 - 4):
+				elif lw_xpos < (tb_width*0.75 - 4):
 					# the last word is very long (more than 30% of the line)
 					#     (approximating "30%" with "25% + 4 characters" here for better behaviour with short text boxes)
 					break_mode = 0	# break in the middle of the word
@@ -279,38 +377,45 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 				# -> just break in the middle of the word
 				#print(f"Line break after: {str(lines)}")
 				lines.append("")	# start new line
-				xpos = 0
+				ptinfo["flags"] |= TXTFLAG_LWORD_BEGIN
+				xpos = line_xbase
 			elif break_mode == 1:
 				# insert a line break at the beginning of the last word (and strip spaces)
-				#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - last_word_xpos}")
-				#print(f"Line-Beginning: Word Pos {last_word_lpos}, Word XPos {last_word_xpos}, \"{lines[-1][:last_word_lpos]}\"")
-				rem_line = lines[-1][last_word_lpos:]
-				lines[-1] = lines[-1][:last_word_lpos]
+				#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - lw_xpos}")
+				#print(f"Line-Beginning: Word Pos {lw_lpos}, Word XPos {lw_xpos}, \"{lines[-1][:lw_lpos]}\"")
+				rem_line = lines[-1][lw_lpos:]
+				lines[-1] = lines[-1][:lw_lpos]
 				lines.append(rem_line)
-				xpos -= last_word_xpos
+				ptext[lwBegIdx]["flags"] |= TXTFLAG_LWORD_BEGIN
+				for ptMoveId in range(lwBegIdx, ptid):
+					ptlp = ptext[ptMoveId]["linepos"]
+					ptext[ptMoveId]["linepos"] = (len(lines) - 1, ptlp[1] - lw_lpos, ptlp[2] - lw_xpos + line_xbase)
+				xpos = xpos - lw_xpos + line_xbase
 			elif break_mode == 2:
-				rem_line = lines[-1][last_word_lpos+hyp_pos:]
-				lines[-1] = lines[-1][:last_word_lpos] + word_hyp[0]
+				rem_line = lines[-1][hyp_w1pos:]
+				lines[-1] = lines[-1][:hyp_w0pos] + word_hyp[0]
 				lines.append(rem_line)
-				xpos -= (last_word_xpos + get_cjk_string_width(word_hyp[0]))
-			xpos += line_xbase
-			last_word_lpos = 0
-			last_word_xpos = line_xbase
+				lw_lpos = ptext[hyp_w1idx]["linepos"][1]
+				lw_xpos = ptext[hyp_w1idx]["linepos"][2]
+				ptext[hyp_w1idx]["flags"] |= TXTFLAG_LWORD_BEGIN
+				for ptMoveId in range(hyp_w1idx, ptid):
+					ptlp = ptext[ptMoveId]["linepos"]
+					ptext[ptMoveId]["linepos"] = (len(lines) - 1, ptlp[1] - lw_lpos, ptlp[2] - lw_xpos + line_xbase)
+				xpos = xpos - lw_xpos + line_xbase
 		
-		chrdata = text[pos : pos+chrlen]
-		lines[-1] += chrdata
+		ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)	# (line index/Y position, character index, screen X position)
+		lines[-1] += ptinfo["data"]
 		xpos += chrwidth
-		pos += chrlen
-		if not chrdata.isspace():
+		if not (flags & TXTFLAG_SPACE):
 			max_xpos = max([xpos, max_xpos])
 		
-		if special_linebreak:
+		if flags & TXTFLAG_SPC_BREAK:
 			if tb_width < 60:
 				# 32-character text box
 				tbox_ybase -= 1		# simulate starting a new line
 				xpos = line_xbase
 				# modify indent for all following lines
-				if pos < len(text) and text[pos] == '「':
+				if ptid + 1 < len(ptext) and ptext[ptid + 1]["data"] == '「':
 					# Shift-JIS 8175: person talk begin
 					line_xbase = 2	# indent by 1 full-width character
 				else:
@@ -321,8 +426,6 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 					xpos = 14
 				line_xbase = xpos
 				# stay on the same line
-			last_word_lpos = pos
-			last_word_xpos = xpos
 	do_textsize_check((tb_width, tb_height), line_cols, line_id, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 	
 	lines = [line.rstrip() for line in lines]
@@ -440,7 +543,7 @@ def line_breaks_add(tsv_data: list) -> list:
 			cols[config.text_column] = quote_column(text)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "07_tsvdata.log", "wt") as f:
-			for cols in tsv_newdata:
+			for cols in tsv_data:
 				f.write(str(cols) + "\n")
 	return tsv_data
 
@@ -454,7 +557,7 @@ def main(argv):
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
 	aparse.add_argument("-n", "--text-column", type=int, help="column to use for text to insert (1 = first column)", default=6)
-	aparse.add_argument("-p", "--hyphenation", action="store_true", help="apply hypenation to words when breaking lines (saves screen space)")
+	aparse.add_argument("-p", "--hyphenation", action="store_true", help="apply hyphenation to words when breaking lines (saves screen space)")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	
