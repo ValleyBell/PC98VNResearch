@@ -106,7 +106,7 @@ textDrawPtr EQU 41C4h
 
 	incbin "MIME.EXE", $, 6E02h - ($-$$-SEG_BASE_OFS)
 saveNamePattern:
-	db	"**/** **:**  Lv**", 0, 0, 0	; shorten "Level" text to just "Lv " (save 3 characters)
+	db	"**/** **:** Lvl**", 0, 0	; shorten "Level" text to just "Lvl" (save 3 characters)
 
 ; patch NameChg_CharTbl with ASCII characters
 	incbin "MIME.EXE", $, 6F76h - ($-$$-SEG_BASE_OFS)
@@ -391,20 +391,20 @@ txtMazeNames:
 	dw	txtMazeA	; 13+
 txtMazeNamesEnd:
 
-		; each text must be 14 characters long, for proper alignment
-txtMazeA:	db	"    Holy Maze ", 0, 0
-txtMazeB:	db	"    Null Maze ", 0, 0
-txtMazeC:	db	" Phantom Maze ", 0, 0
-txtMazeD:	db	"    Tree Maze ", 0, 0
-txtMazeE:	db	"     Fun Maze ", 0, 0
-txtMazeF:	db	"    Tear Maze ", 0, 0
-txtMazeG:	db	"     Ash Maze ", 0, 0
-txtMazeH:	db	"   Curse Maze ", 0, 0
-txtMazeI:	db	"     Sea Maze ", 0, 0
-txtMazeJ:	db	"   Flame Maze ", 0, 0
-txtMazeK:	db	"   Earth Maze ", 0, 0
-txtMazeL:	db	"    Wind Maze ", 0, 0
-	times 787Ch-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 228 bytes
+		; each text must be 13 characters long, for proper alignment
+txtMazeA:	db	"   Holy Maze ", 0, 0
+txtMazeB:	db	"   Null Maze ", 0, 0
+txtMazeC:	db	"Phantom Maze ", 0, 0
+txtMazeD:	db	"   Tree Maze ", 0, 0
+txtMazeE:	db	"    Fun Maze ", 0, 0
+txtMazeF:	db	"   Tear Maze ", 0, 0
+txtMazeG:	db	"    Ash Maze ", 0, 0
+txtMazeH:	db	"  Curse Maze ", 0, 0
+txtMazeI:	db	"    Sea Maze ", 0, 0
+txtMazeJ:	db	"  Flame Maze ", 0, 0
+txtMazeK:	db	"  Earth Maze ", 0, 0
+txtMazeL:	db	"   Wind Maze ", 0, 0
+	times 787Ch-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 240 bytes
 
 	; adjust offsets of changed (hardcoded) "saveNamePattern" text
 	incbin "MIME.EXE", $, 7963h - ($-$$-SEG_BASE_OFS)
