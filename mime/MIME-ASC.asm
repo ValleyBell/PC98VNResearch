@@ -20,16 +20,22 @@ PrintSeg EQU 0327h
 ShiftJIS2JIS EQU 06AFh
 PrintFontChar EQU 06D8h
 
+; image copy segment
+BlitSeg EQU 03D5h
+ImageCopy1 EQU 0668h
+
 ; code segment (seg007)
 MainCodeSeg EQU 4C7h
 tempVars EQU 016Eh
 ScriptMemory EQU 020Bh
+NameChg_CharTbl EQU 6E16h
 ScriptMainLoop EQU 70C0h
 scr_fin_2b EQU 72C9h
 WaitFrames EQU 8E59h
 
 ; data segment (dseg)
 DataSeg EQU 0DCEh
+plrName_ScrOfs EQU 0662h
 textDrawPtr EQU 41C4h
 
 
@@ -78,6 +84,11 @@ textDrawPtr EQU 41C4h
 	incbin "MIME.EXE", $, 03C2h-($-$$)
 	dw	RelocDummy, 000h	; originally: scr30_PrintSJIS: call PrintSeg:ShiftJIS2JIS
 	dw	RelocDummy, 000h	; originally: scr30_PrintSJIS: call PrintSeg:PrintFontChar
+	incbin "MIME.EXE", $, 03CEh-($-$$)
+	dw	RelocDummy, 000h	; originally: scr33_PlrName_AddChr: mov ax, seg DataSeg
+	dw	RelocDummy, 000h	; originally: scr33_PlrName_AddChr: call PrintSeg:ShiftJIS2JIS
+	dw	RelocDummy, 000h	; originally: scr33_PlrName_AddChr: call PrintSeg:PrintFontChar
+	dw	reloc_scr34+3, MainCodeSeg	; originally: scr34_PlrName_DelChr: call BlitSeg:ImageCopy1
 	incbin "MIME.EXE", $, 03FAh-($-$$)
 	dw	RelocDummy, 000h	; originally: scr3B_PrintVarStr: call PrintSeg:ShiftJIS2JIS
 	dw	RelocDummy, 000h	; originally: scr3B_PrintVarStr: call PrintSeg:PrintFontChar
@@ -96,6 +107,20 @@ textDrawPtr EQU 41C4h
 	incbin "MIME.EXE", $, 6E02h - ($-$$-SEG_BASE_OFS)
 saveNamePattern:
 	db	"**/** **:**  Lv**", 0, 0, 0	; shorten "Level" text to just "Lv " (save 3 characters)
+
+; patch NameChg_CharTbl with ASCII characters
+	incbin "MIME.EXE", $, 6F76h - ($-$$-SEG_BASE_OFS)
+	dw	'0', '1', '2', '3', '4'
+	incbin "MIME.EXE", $, 6F98h - ($-$$-SEG_BASE_OFS)
+	dw	'5', '6', '7', '8', '9'
+	incbin "MIME.EXE", $, 6FAEh - ($-$$-SEG_BASE_OFS)
+	dw	'A', 'B', 'C', 'D', 'E', 'F', 'G', 8140h, 'H', 'I', 'J', 'K', 'L', 'M', 'N'
+	incbin "MIME.EXE", $, 6FD0h - ($-$$-SEG_BASE_OFS)
+	dw	'O', 'P', 'Q', 'R', 'S', 'T', 'U', 8140h, 'V', 'W', 'X', 'Y', 'Z'
+	incbin "MIME.EXE", $, 6FF2h - ($-$$-SEG_BASE_OFS)
+	dw	'a', 'b', 'c', 'd', 'e', 'f', 'g', 8140h, 'h', 'i', 'j', 'k', 'l', 'm', 'n'
+	incbin "MIME.EXE", $, 7014h - ($-$$-SEG_BASE_OFS)
+	dw	'o', 'p', 'q', 'r', 's', 't', 'u', 8140h, 'v', 'w', 'x', 'y', 'z', 8145h, '.'
 
 ; --- patch scenario script commands, part 1 ---
 	incbin "MIME.EXE", $, 70D0h - ($-$$-SEG_BASE_OFS)
@@ -183,7 +208,7 @@ pt_name_end:
 	and	dl, ~01h		; disable "name mode"
 	jmp	short pt_loop
 
-	times 7174h-($-$$-SEG_BASE_OFS) db 90h
+	times 7174h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 8 bytes
 
 	incbin "MIME.EXE", $, 71DFh - ($-$$-SEG_BASE_OFS)
 scr02_TalkFullScr:
@@ -211,14 +236,14 @@ ptbd_indent:
 pt_brkt_fullscr:
 	mov	ax, 7*2
 	cmp	bl, al		; X position < 7 full-width characters?
-	jl	ptbfs_indent
+	jl	ptbfs_indent	; (signed compare for indent handling)
 	mov	al, bl		; yes - enforce indent of at least 14 characters
 ptbfs_indent:
 	add	di, ax		; move draw pointer to indent position
 	sub	bh, al		; and then reduce the line width
 	jmp	pt_line_start	; stay on the same line
 
-	times 72A1h-($-$$-SEG_BASE_OFS) db 90h
+	times 72A1h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 128 bytes
 
 
 ; --- patch save game code ---
@@ -230,8 +255,8 @@ Print_NoData:
 
 txtNoData:
 	db	"            No data.", 0, 0
-	times 8 db 00h
-	db	"ASCII patch by Valley Bell.", 0
+	align	10h, db 00h
+	db	"ASCII patch by Valley Bell", 0
 	times 75C0h-($-$$-SEG_BASE_OFS) db 00h
 
 ; *** custom text drawing routines ***
@@ -331,7 +356,7 @@ pstr_di_ret:
 	pop	cx
 	ret
 ; *** custom text drawing routines END ***
-	times 7664h-($-$$-SEG_BASE_OFS) db 00h
+	times 7664h-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 37 bytes
 
 	incbin "MIME.EXE", $, 769Dh - ($-$$-SEG_BASE_OFS)
 PrintSaveGameName:
@@ -379,7 +404,7 @@ txtMazeI:	db	"     Sea Maze ", 0, 0
 txtMazeJ:	db	"   Flame Maze ", 0, 0
 txtMazeK:	db	"   Earth Maze ", 0, 0
 txtMazeL:	db	"    Wind Maze ", 0, 0
-	times 787Ch-($-$$-SEG_BASE_OFS) db 00h
+	times 787Ch-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 228 bytes
 
 	; adjust offsets of changed (hardcoded) "saveNamePattern" text
 	incbin "MIME.EXE", $, 7963h - ($-$$-SEG_BASE_OFS)
@@ -399,7 +424,27 @@ Print_Cancel:
 
 txtCancel:
 	db	"             Cancel ", 0, 0
-	times 7A94h-($-$$-SEG_BASE_OFS) db 00h
+
+pndel_var_width:
+	mov	dx, bx		; save end address
+	mov	bx, ScriptMemory
+	cmp	dx, bx
+	jbe	near pn_fail	; end address <= start address -> we have nothing to delete
+pndel_vw_loop:
+	mov	ax, [cs:bx]
+	call	GetCharType
+	add	bx, cx		; advance character-by-character
+	cmp	bx, dx
+	jb	short pndel_vw_loop
+	sub	bx, cx		; go back by one
+	sub	di, cx		; adjust draw pointer
+	mov	cx, bx		; keep BX (destination for "clear" operation)
+	sub	cx, ScriptMemory	; CX = new name length (without last character)
+	mov	[cs:ScriptMemory+0Eh], cl	; save new name length (low byte only, so that flags are kept)
+	mov	word [cs:ScriptMemory+6Eh], 1	; save "success" state in variable 55
+	jmp	near pndel_delete		; size: 48 bytes
+
+	times 7A94h-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 135 bytes
 
 ; --- patch menu selection text ---
 	incbin "MIME.EXE", $, 7AD0h - ($-$$-SEG_BASE_OFS)
@@ -437,7 +482,7 @@ reloc_pme:
 	sub	word [es:di], byte 28h
 	jmp	short PrintMenuEntry
 
-	times 7B3Ch-6-($-$$-SEG_BASE_OFS) db 90h
+	times 7B3Ch-6-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 9 bytes
 pme_ret:
 	add	si, byte 2	; skip 5C5C
 	pop	di
@@ -452,32 +497,130 @@ pme_ret:
 ; --- patch scenario script commands, part 2 ---
 	incbin "MIME.EXE", $, 825Ah - ($-$$-SEG_BASE_OFS)
 ; patching scr30_PrintSJIS
+scr_printsi:
 	call	PrintStr_SI
 	jmp	ScriptMainLoop
-	times 827Bh-($-$$-SEG_BASE_OFS) db 90h
+
+pndel_var_modes:
+	test	dh, 40h
+	jnz	near pndel_calc_len	; special "length calculation" function
+	jmp	near pndel_var_width	; new "variable width" mode
+						; size: 10 bytes (3+4+4)
+
+pn_fail:
+	mov	word [cs:ScriptMemory+6Eh], 0	; save "failed" state in variable 55
+	jmp	ScriptMainLoop			; size: 10 bytes
+
+	times 827Bh-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 7 bytes
+
+	incbin "MIME.EXE", $, 82C5h - ($-$$-SEG_BASE_OFS)
+scr33_PlrName_AddChr:
+	mov	di, [cs:ScriptMemory+22h]	; get table cursor X position
+	mov	ax, [cs:ScriptMemory+24h]	; get table cursor Y position
+	mov	dx, 17
+	mul	dx
+	add	di, ax		; index = Y * 17 + X
+	add	di, di		; index -> offset into 2-byte array
+	add	di, NameChg_CharTbl
+	mov	ax, [cs:di]	; look up character from "name change character table"
+	call	PlrName_Setup
+	mov	[textDrawPtr], di	; set screen offset
+	jnc	short pnadd_fixed_width
+pnadd_var_width:
+	; new "variable width" mode
+	mov	dl, cl		; save original name length
+	call	GetCharType	; get size
+	add	dl, cl		; increase name length by CX
+	cmp	dl, 8
+	ja	near pn_fail
+	mov	[cs:ScriptMemory+0Eh], dl	; save new name length (low byte only, so that flags are kept)
+	mov	word [cs:ScriptMemory+6Eh], 1	; save "success" state in variable 55
+	; fall through
+pnadd_fixed_width:
+	; "fixed 2-byte width" mode (fallback for original game scripts)
+	mov	[cs:bx], ax	; write character to script memory
+	call	PrintChar
+	jmp	ScriptMainLoop
+
+	times 8310h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 6 bytes
+	incbin "MIME.EXE", $, 8310h - ($-$$-SEG_BASE_OFS)
+scr34_PlrName_DelChr:
+	call	PlrName_Setup
+	jc	near pndel_var_modes	; register 7, bit 15 enables "new" modes
+pndel_delete:
+	mov	word [cs:bx], 0	; set the variable to 0 to clear the character
+	
+	push	2
+	push	di
+	push	10h
+	push	10h
+	push	di
+reloc_scr34:
+	call	BlitSeg:ImageCopy1
+	add	sp, byte 0Ah
+	jmp	ScriptMainLoop			; size: 27 bytes (since pndel_delete)
+
+	times 8338h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 6 bytes
 
 	incbin "MIME.EXE", $, 84BEh - ($-$$-SEG_BASE_OFS)
 ; patching scr3B_PrintVarStr
+scr_printdi:
 	call	PrintStr_DI
 	jmp	scr_fin_2b
-	times 84E8h-($-$$-SEG_BASE_OFS) db 90h
+
+PlrName_Setup:
+	mov	cx, [cs:ScriptMemory+0Eh]	; get register 7
+	add	cx, cx
+	pushf	; save carry flag (for switching between 2-byte and multi-byte mode)
+	jnc	short pns_sjis
+	; bit 15 was set - multi-byte mode
+	rcr	cx, 1	; rotate back
+	mov	dh, ch	; copy to DH for later evaluation
+	xor	ch, ch	; clear high byte so that we can use CX properly
+pns_sjis:
+	mov	bx, ScriptMemory
+	add	bx, cx
+	mov	di, plrName_ScrOfs
+	add	di, cx
+	popf
+	ret					; size: 28 bytes
+
+	times 84E8h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 8 bytes
 
 	incbin "MIME.EXE", $, 8BCBh - ($-$$-SEG_BASE_OFS)
 ; patching scr5D_PrintSJIS
-	call	PrintStr_SI
-	jmp	ScriptMainLoop
-	times 8BECh-($-$$-SEG_BASE_OFS) db 90h
+	;call	PrintStr_SI
+	;jmp	ScriptMainLoop
+	jmp	scr_printsi
+
+pndel_calc_len:
+	mov	ax, cs
+	mov	es, ax
+	mov	bx, ScriptMemory
+	mov	di, bx	; start searching at variable 0
+	mov	cx, 8+1	; search for at most 8 bytes (+1 to make up for overshoot in success)
+	xor	al, al	; search for 0-byte
+	cld		; search forward
+	repne scasb	; run string search
+	sub	di, bx	; caluclate offset
+	add	di, 8000h-1	; set bit 15 and subtract 1 (because "repne" always overshoots by 1)
+	mov	[cs:bx+0Eh], di	; save length
+	jmp	ScriptMainLoop			; size: 30 bytes
+
+	times 8BECh-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 0 bytes
 
 	incbin "MIME.EXE", $, 8C07h - ($-$$-SEG_BASE_OFS)
 ; patching scr5E_PrintVarStr
 	; NOTE: used during fight (highlighted text)
-	call	PrintStr_DI
-	jmp	scr_fin_2b
-	times 8C31h-($-$$-SEG_BASE_OFS) db 90h
+	;call	PrintStr_DI
+	;jmp	scr_fin_2b
+	jmp	scr_printdi
+
+	times 8C31h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 39 bytes
 
 
 	;incbin "MIME.EXE", $, 8F7Bh - ($-$$-SEG_BASE_OFS)
 	; The code at 8F7Bh seems to be unused.
-	;times 9062h-($-$$-SEG_BASE_OFS) db 90h
+	;times 9062h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 231 bytes
 
 	incbin "MIME.EXE", $
