@@ -39,6 +39,9 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
   - `.DEC` files are decompressed so that they can be hex-edited
   - `.DAT` files are compressed, for insertion into the game
   - `_insert.bat` - script to insert the `.DAT` files back into the HDI image of the game (requires NDC)
+- [Z1000-fixed.DAT](Z1000-fixed.DAT) - a fix for the "new game" file of the MIME v2 update
+  - When they added more passable walls for the v2 update, they broke the 1F maze map at coordinate (1,15). You can leave the map there by going south with no way to return.
+  - The new file fixes the map so that it behaves (and looks) as intended.
 
 ## Notes
 
