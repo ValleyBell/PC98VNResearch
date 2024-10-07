@@ -81,6 +81,8 @@ def parse_tsv(lines: list) -> list:
 	return result
 
 def get_cjk_char_width(c: str) -> int:
+	if len(c) == 2 and c[1] == '\uF87F':
+		return 1	# half-width ASCII mirror and Katakana
 	#return 2 if unicodedata.east_asian_width(c) in ["W", "F"] else 1
 	# This matches the usual PC-98 font handling better.
 	ccode = ord(c)
@@ -92,9 +94,6 @@ def get_cjk_char_width(c: str) -> int:
 		return 1
 	else:
 		return 2	# everything else should be considered 2 characters wide
-
-def get_cjk_string_width(text: str) -> int:
-	return sum([get_cjk_char_width(c) for c in text])
 
 def do_textsize_check(tb_size, tsv_cols, line_id, lines, text_size, xpos):
 	global config
@@ -201,7 +200,13 @@ def parse_text(text: str) -> list:
 				continue		# just ignore
 		elif ord(text[pos]) >= 0x20:
 			ccstr = text[pos]
-			if ccstr in "\u201C\u201D\u2018\u2019":
+			if (pos + 1 < len(text)) and (text[pos + 1] == '\uF87F'):
+				ccstr += text[pos + 1]
+				chrlen += 1
+			
+			if len(ccstr) == 2 and (ccstr[0] >= 'A' and ccstr[0] <= 'Z'):
+				chrwidth = 2	# special glyphs used for ancient language
+			elif ccstr in "\u201C\u201D\u2018\u2019":
 				chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
 			elif ccstr == "\u2026":
 				chrwidth = 3	# the "reinsert" script will convert this to "..."

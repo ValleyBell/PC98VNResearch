@@ -277,6 +277,9 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 		arrays_open = 0
 		citem = CommandItem(asmFile=asm_filename, lineID=lid, cmdName=keyword.upper(), params=[], commentPos=-1)
 		while pos < len(line):
+			if line[pos] == ';':	# comment
+				citem.commentPos = pos
+				break
 			res = get_token(line, pos)
 			if res is None:
 				print(f"Parse error in {asm_filename}:{1+lid}, column {1+pos}: Parsing error!")	# TODO: print details
@@ -295,8 +298,7 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 			if pos >= len(line):
 				break
 			if line[pos] == ';':	# comment
-				citem.commentPos = pos
-				break
+				continue
 			if ttype == TKTP_CTRL:
 				if tdata == "[":
 					continue	# we don't want a comma after this control character

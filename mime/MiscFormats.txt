@@ -1,3 +1,82 @@
+Z100#.DAT - save game/map data
+---------
+The file contains the current game state.
+This includes player names and attributes (levels, equipment, ...), quest states and map data.
+
+Z1000.DAT is the "template" file that is loaded when a new game starts and contains data for 4550 registers (2 bytes per register).
+
+r0..r3 - player name
+r12 - facing direction
+	0 = north
+	1 = west
+	2 = south
+	3 = east
+r13 - map X position (0 = left, 15 = right)
+r14 - map Y position (0 = top, 15 = bottom)
+r15 - current floor
+	0 = "B1F"
+	1 = "1F"
+	...
+	13 = "13F"
+	14 = character building maze
+
+r42 - current hour
+r56..r61 - current money (each register contains 1 digit, ordered from highest to lowest significant digit)
+
+r500..r4339 = map data (15 maps with 100h registers each)
+	Each value is a bitmask of the following:
+	bit  0 (0001h): door at east
+	bit  1 (0002h): door at south
+	bit  2 (0004h): door at west
+	bit  3 (0008h): door at north
+	bit  4 (0010h): wall at east
+	bit  5 (0020h): wall at south
+	bit  6 (0040h): wall at west
+	bit  7 (0080h): wall at north
+	bit  8 (0100h): position uncovered (Note: unset by default, set by then game script when visiting this place)
+	bit  9 (0200h): event (Note: game scripts can set this)
+	bit 10 (0400h): stairs up
+	bit 11 (0800h): stairs down
+	bit 12 (1000h): can pass at east
+	bit 13 (2000h): can pass at south
+	bit 14 (4000h): can pass at west
+	bit 15 (8000h): can pass at north
+	Bits 0..11 are for the map view.
+	Bits 12..15 are for actual collision.
+
+r4340..r4360 - Eagle character state
+	The order and meaning of the values is the same for all 4 characters.
+	r4340 - current level (0 = character not in the party)
+	r4341 - required experience points until next level
+	r4342 - current HP (1 = unconcious)
+	r4343 - maximum HP
+	r4344 - current MP
+	r4345 - maximum MP
+	r4346 - attack
+	r4347 - defense
+	r4348 - intelligence
+	r4349 - agility
+	r4350 - hunger level
+	r4351 - status bitfield
+		bit 0 (01): drunk
+		bit 3 (08): poisoned
+	r4352 - learned magic (bit 0 - first spell, bit 5 - last spell)
+	r4353 - hunger level fraction (counts up by 1 each step, when going over 9 it wraps back to 0 and increases the hunger level by 1)
+	r4354 - "drunk" countdown
+	r4355 - "poisoned" countdown
+	r4356 - equipment: right hand
+	r4357 - equipment: left hand
+	r4358 - equipment: body
+	r4359 - equipment: head
+	r4360 - equipment: accessory
+r4361..r4381 - Tear character state
+r4382..r4402 - Henzou character state
+r4403..r4423 - Eldelyca character state
+
+r4424..r4465 - Inventory items: item type
+r4466..r4507 - Inventory items: number of items in possession
+
+
 Z1010.DAT - item data
 ---------
 The file contains a list of item entries. Each entry is 24h bytes long.

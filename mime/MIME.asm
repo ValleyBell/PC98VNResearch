@@ -9104,7 +9104,7 @@ arg_0		= word ptr  6
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
-		mov	di, 41CAh
+		mov	di, offset word_21EAA
 		mov	cx, 4
 		rep movsw
 		pop	es
@@ -11316,7 +11316,8 @@ seg007		segment	byte public 'CODE' use16
 		assume cs:seg007
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 a0		db '0',0Dh,0Ah,'$'
-byte_14C74	db 0A2h	dup(0)		; DATA XREF: seg007:8F55r
+word_14C74	dw 0			; DATA XREF: seg007:8F55r
+		db 0A0h	dup(0)
 scrJumpTbl	dw offset scr00_TalkDungeon; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr01_BGMLoad	; 1
 		dw offset scr02_TalkFullScr; 2
@@ -11353,7 +11354,7 @@ scrJumpTbl	dw offset scr00_TalkDungeon; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr21_LoadSaveGame; 21h
 		dw offset scr22		; 22h
 		dw offset scr23		; 23h
-		dw offset scr24		; 24h
+		dw offset scr24_ReadMap	; 24h
 		dw offset scr25_VarBitTest; 25h
 		dw offset scr26_ImgCopy3Val; 26h
 		dw offset scr27_DoInput	; 27h
@@ -11363,13 +11364,13 @@ scrJumpTbl	dw offset scr00_TalkDungeon; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr2B_BGMPlay	; 2Bh
 		dw offset scr2C_BGMFadeWait; 2Ch
 		dw offset scr2D		; 2Dh
-		dw offset scr2E		; 2Eh
-		dw offset scr2F		; 2Fh
+		dw offset scr2E_WriteMap; 2Eh
+		dw offset scr2F_DrawMap	; 2Fh
 		dw offset scr30_PrintSJIS; 30h
 		dw offset scr31		; 31h
 		dw offset scr32		; 32h
-		dw offset scr33_NameChgThing; 33h
-		dw offset scr34		; 34h
+		dw offset scr33_PlrName_AddChr;	33h
+		dw offset scr34_PlrName_DelChr;	34h
 		dw offset scr35		; 35h
 		dw offset scr36		; 36h
 		dw offset scr37		; 37h
@@ -11454,7 +11455,7 @@ ScriptMemory	dw 11C6h dup(0)		; DATA XREF: seg007:7100o seg007:7213o ...
 CurItemData	dw 12h dup(0)		; DATA XREF: seg007:89E0o
 ItemData	db 2A30h dup(0)		; DATA XREF: LoadScript+2Eo
 					; seg007:89D1o
-LabyrinthData	dw 87h dup(0)		; DATA XREF: LoadScript+53o
+MonsterGrpData	dw 87h dup(0)		; DATA XREF: LoadScript+53o
 CurMonsterData	db 48h dup(0)		; DATA XREF: seg007:8A07o
 MonsterData	db 1B02h dup(0)		; DATA XREF: LoadScript+63o
 					; seg007:89F8o
@@ -11466,88 +11467,88 @@ aGbgcgugvgngogi	db 0Dh,0Ah
 		db 'メインプログラム最終調整 by TAKAHIRO NOGI. as NOGICHAN. 1995/09/1'
 		db '1(Mon.)',0Dh,0Ah
 		db 0Dh,0Ah
-byte_1B915	db    0,   0, 0Ah, 0Ah	; DATA XREF: seg007:810Eo
-		db    1,   0,	4, 1Eh
-		db    2,   0,	2, 23h
-		db    3,   0,	4, 23h
-		db    4,   0,	0, 1Eh
-		db    5,   0, 1Eh, 46h
-		db    6,   0,	0, 23h
-		db    7,   0, 0Ah, 23h
-		db    8,   0,	2, 19h
-		db    9,   0,	4, 19h
-		db  0Ah,   0, 1Eh, 41h
-		db  0Bh,   0, 0Ch, 1Eh
-		db  0Ch,   0,	0, 19h
-		db  0Dh,   0, 0Ah, 19h
-		db  0Eh,   0,	8, 1Eh
-		db  0Fh,   0,	2, 1Eh
-		db  10h,   0,	4, 0Ah
-		db  12h,   0,	2, 37h
-		db  14h,   0, 1Ah, 41h
-		db  16h,   0, 1Ah, 37h
-		db  18h,   0,	2, 32h
-		db  1Ah,   0, 24h, 32h
-		db  1Ch,   0, 12h, 2Dh
-		db  1Eh,   0,	8, 41h
-		db  20h,   0,	2, 0Fh
-		db  21h,   0,	2, 46h
-		db  24h,   0,	0, 46h
-		db  25h,   0, 22h, 37h
-		db  28h,   0, 16h, 41h
-		db  29h,   0, 14h, 32h
-		db  2Ch,   0, 18h, 32h
-		db  2Dh,   0,	8, 46h
-		db  30h,   0,	4, 0Fh
-		db  34h,   0, 12h, 23h
-		db  38h,   0, 1Ch, 1Eh
-		db  3Ch,   0, 0Ch, 41h
-		db  40h,   0,	0, 0Ah
-		db  41h,   0, 1Ah, 46h
-		db  42h,   0,	0, 37h
-		db  43h,   0, 12h, 37h
-		db  48h,   0,	0, 32h
-		db  49h,   0, 1Ah, 2Dh
-		db  4Ah,   0, 20h, 32h
-		db  4Bh,   0,	6, 46h
-		db  50h,   0, 14h, 0Ah
-		db  52h,   0, 22h, 23h
-		db  58h,   0, 22h, 19h
-		db  5Ah,   0, 12h, 41h
-		db  60h,   0,	0, 0Fh
-		db  61h,   0, 1Ah, 23h
-		db  68h,   0, 10h, 1Eh
-		db  69h,   0, 0Eh, 41h
-		db  70h,   0, 0Ah, 0Fh
-		db  78h,   0,	6, 32h
-		db  80h,   0,	2,   5
-		db  81h,   0,	2, 41h
-		db  82h,   0, 16h, 46h
-		db  83h,   0, 1Ch, 32h
-		db  84h,   0,	0, 41h
-		db  85h,   0, 22h, 2Dh
-		db  86h,   0, 10h, 32h
-		db  87h,   0,	6, 41h
-		db  90h,   0,	4,   5
-		db  92h,   0, 14h, 1Eh
-		db  94h,   0, 1Ah, 19h
-		db  96h,   0, 0Ch, 46h
-		db 0A0h,   0, 10h, 0Ah
-		db 0A1h,   0, 24h, 1Eh
-		db 0A4h,   0, 20h, 1Eh
-		db 0A5h,   0, 12h, 46h
-		db 0B0h,   0, 0Ch, 0Ah
-		db 0B4h,   0,	6, 37h
-		db 0C0h,   0,	0,   5
-		db 0C1h,   0, 12h, 19h
-		db 0C2h,   0, 18h, 1Eh
-		db 0C3h,   0, 0Eh, 46h
-		db 0D0h,   0, 0Ah,   5
-		db 0D2h,   0,	8, 37h
-		db 0E0h,   0,	8, 0Ah
-		db 0E1h,   0,	8, 32h
-		db 0F0h,   0,	2, 0Ah
-		db 0FFh,0FFh
+MapImageRects	dw	0, 0A0Ah	; DATA XREF: seg007:810Eo
+		dw	1, 1E04h
+		dw	2, 2302h
+		dw	3, 2304h
+		dw	4, 1E00h
+		dw	5, 461Eh
+		dw	6, 2300h
+		dw	7, 230Ah
+		dw	8, 1902h
+		dw	9, 1904h
+		dw    0Ah, 411Eh
+		dw    0Bh, 1E0Ch
+		dw    0Ch, 1900h
+		dw    0Dh, 190Ah
+		dw    0Eh, 1E08h
+		dw    0Fh, 1E02h
+		dw    10h, 0A04h
+		dw    12h, 3702h
+		dw    14h, 411Ah
+		dw    16h, 371Ah
+		dw    18h, 3202h
+		dw    1Ah, 3224h
+		dw    1Ch, 2D12h
+		dw    1Eh, 4108h
+		dw    20h, 0F02h
+		dw    21h, 4602h
+		dw    24h, 4600h
+		dw    25h, 3722h
+		dw    28h, 4116h
+		dw    29h, 3214h
+		dw    2Ch, 3218h
+		dw    2Dh, 4608h
+		dw    30h, 0F04h
+		dw    34h, 2312h
+		dw    38h, 1E1Ch
+		dw    3Ch, 410Ch
+		dw    40h, 0A00h
+		dw    41h, 461Ah
+		dw    42h, 3700h
+		dw    43h, 3712h
+		dw    48h, 3200h
+		dw    49h, 2D1Ah
+		dw    4Ah, 3220h
+		dw    4Bh, 4606h
+		dw    50h, 0A14h
+		dw    52h, 2322h
+		dw    58h, 1922h
+		dw    5Ah, 4112h
+		dw    60h, 0F00h
+		dw    61h, 231Ah
+		dw    68h, 1E10h
+		dw    69h, 410Eh
+		dw    70h, 0F0Ah
+		dw    78h, 3206h
+		dw    80h,  502h
+		dw    81h, 4102h
+		dw    82h, 4616h
+		dw    83h, 321Ch
+		dw    84h, 4100h
+		dw    85h, 2D22h
+		dw    86h, 3210h
+		dw    87h, 4106h
+		dw    90h,  504h
+		dw    92h, 1E14h
+		dw    94h, 191Ah
+		dw    96h, 460Ch
+		dw   0A0h, 0A10h
+		dw   0A1h, 1E24h
+		dw   0A4h, 1E20h
+		dw   0A5h, 4612h
+		dw   0B0h, 0A0Ch
+		dw   0B4h, 3706h
+		dw   0C0h,  500h
+		dw   0C1h, 1912h
+		dw   0C2h, 1E18h
+		dw   0C3h, 460Eh
+		dw   0D0h,  50Ah
+		dw   0D2h, 3708h
+		dw   0E0h, 0A08h
+		dw   0E1h, 3208h
+		dw   0F0h, 0A02h
+		dw 0FFFFh
 aZ1001_dat	db 'Z1001.DAT',0        ; DATA XREF: seg007:7533o seg007:7888o ...
 SaveGameID	db 0			; DATA XREF: seg007:750Ew seg007:7520r ...
 floorID		dw 0			; DATA XREF: seg007:7549o seg007:7559r ...
@@ -11605,13 +11606,13 @@ LoadScript	proc near		; CODE XREF: sub_12FB3:loc_130C7P
 		push	si
 		push	cs
 		push	offset ScriptToLoad ; "A:SCN\\Z0000.DAT"
-		call	ReadFile_Compr
+		call	ReadFile_Compr	; load game script data
 		add	sp, 8
 		push	cs
 		push	offset ItemData
 		push	cs
 		push	offset aZ1010_dat ; "Z1010.DAT"
-		call	ReadFile_Compr
+		call	ReadFile_Compr	; load item list
 		add	sp, 8
 		mov	ax, cs:ScriptMemory+1Eh
 		cmp	ax, 0Ah
@@ -11627,16 +11628,16 @@ loc_1BD00:				; CODE XREF: LoadScript+44j
 loc_1BD02:				; CODE XREF: LoadScript+4Aj
 		mov	byte ptr cs:aZ1030_dat+4, al
 		push	cs
-		push	offset LabyrinthData
+		push	offset MonsterGrpData
 		push	cs
 		push	offset aZ1030_dat ; "Z1030.DAT"
-		call	ReadFile_Compr
+		call	ReadFile_Compr	; load list of monster groups for the current floor
 		add	sp, 8
 		push	cs
 		push	offset MonsterData
 		push	cs
 		push	offset aZ1020_dat ; "Z1020.DAT"
-		call	ReadFile_Compr
+		call	ReadFile_Compr	; load monster list
 		add	sp, 8
 		push	0
 		call	WritePortA6
@@ -13361,8 +13362,8 @@ scr23:					; DATA XREF: seg007:scrJumpTblo
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr24:					; DATA XREF: seg007:scrJumpTblo
-		call	GetSomeIndexedVar
+scr24_ReadMap:				; DATA XREF: seg007:scrJumpTblo
+		call	GetMapDataPtr
 		mov	cs:ScriptMemory+0Eh, ax	; set ScriptMemory[07h]
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
@@ -13612,14 +13613,14 @@ scr2D:					; DATA XREF: seg007:scrJumpTblo
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr2E:					; DATA XREF: seg007:scrJumpTblo
-		call	GetSomeIndexedVar
+scr2E_WriteMap:				; DATA XREF: seg007:scrJumpTblo
+		call	GetMapDataPtr
 		mov	ax, cs:ScriptMemory+0Eh	; get ScriptMemory[07h]
 		mov	cs:[bx], ax
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr2F:					; DATA XREF: seg007:scrJumpTblo
+scr2F_DrawMap:				; DATA XREF: seg007:scrJumpTblo
 		push	ds
 		push	si
 		mov	ax, cs
@@ -13631,91 +13632,91 @@ scr2F:					; DATA XREF: seg007:scrJumpTblo
 		mov	cs:ScriptMemory+26h, 0
 		mov	cs:ScriptMemory+28h, 0
 
-loc_1CD63:				; CODE XREF: seg007:81C8j
-		call	GetSomeIndexedVar
+drawmap_loop:				; CODE XREF: seg007:81C8j
+		call	GetMapDataPtr
 		sub	si, 2
 		mov	cx, ax
-		test	cx, 100h
-		jz	short loc_1CD97
+		test	cx, 100h	; position uncovered?
+		jz	short loc_1CD97	; no - jump
 		or	cx, 8000h
-		mov	cs:tempVar0, cx
-		and	cx, 0FFh
-		mov	di, offset byte_1B915
+		mov	cs:tempVar0, cx	; mark as "in use"
+		and	cx, 0FFh	; keep only the	"door" and "wall" flags
+		mov	di, offset MapImageRects
 
 loc_1CD81:				; CODE XREF: seg007:811Fj
-		cmp	cx, cs:[di]
+		cmp	cx, cs:[di]	; walk through all values and choose the proper	16x16 graphic
 		jz	short loc_1CD91
 		add	di, 4
-		cmp	word ptr cs:[di], 0FFFFh
-		jz	short loc_1CD97
+		cmp	word ptr cs:[di], 0FFFFh ; reached end of the table?
+		jz	short loc_1CD97	; yes -	jump and draw empty square
 		jmp	short loc_1CD81
 ; ---------------------------------------------------------------------------
 
 loc_1CD91:				; CODE XREF: seg007:8114j
-		mov	cx, cs:[di+2]
+		mov	cx, cs:[di+2]	; get graphic address
 		jmp	short loc_1CD9E
 ; ---------------------------------------------------------------------------
 
 loc_1CD97:				; CODE XREF: seg007:80FFj seg007:811Dj
 		xor	cx, cx
-		mov	cs:tempVar0, cx
+		mov	cs:tempVar0, cx	; draw empty square
 
 loc_1CD9E:				; CODE XREF: seg007:8125j
-		mov	di, 518h
-		mov	ax, cs:ScriptMemory+26h
+		mov	di, 518h	; start	drawing	at X=192 Y=16
+		mov	ax, cs:ScriptMemory+26h	; get map X position
 		add	ax, ax
 		add	di, ax
-		mov	ax, cs:ScriptMemory+28h
+		mov	ax, cs:ScriptMemory+28h	; get map Y position
 		mov	dx, 500h
 		mul	dx
 		add	di, ax
 		push	2
 		push	di
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	cx
 		call	ImageCopy1
 		add	sp, 0Ah
 		mov	cx, cs:tempVar0
 		test	cx, 8000h
-		jz	short loc_1CE18
+		jz	short drawmap_next ; unknown spot - continue with next square
 		test	cx, 400h
 		jz	short loc_1CDE8
-		push	2
+		push	2		; draw "stairs up" on top
 		push	di
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	0Ah
 		call	ImageCopy3
 		add	sp, 0Ah
-		jmp	short loc_1CE18
+		jmp	short drawmap_next
 ; ---------------------------------------------------------------------------
 
 loc_1CDE8:				; CODE XREF: seg007:8163j
 		test	cx, 800h
 		jz	short loc_1CE01
-		push	2
+		push	2		; draw "stairs down" on	top
 		push	di
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	0Ch
 		call	ImageCopy3
 		add	sp, 0Ah
-		jmp	short loc_1CE18
+		jmp	short drawmap_next
 ; ---------------------------------------------------------------------------
 
 loc_1CE01:				; CODE XREF: seg007:817Cj
 		test	cx, 200h
-		jz	short loc_1CE18
-		push	2
+		jz	short drawmap_next
+		push	2		; draw "event" on top
 		push	di
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	0Eh
 		call	ImageCopy3
 		add	sp, 0Ah
 
-loc_1CE18:				; CODE XREF: seg007:815Dj seg007:8176j ...
+drawmap_next:				; CODE XREF: seg007:815Dj seg007:8176j ...
 		mov	ax, cs:ScriptMemory+26h
 		mov	bx, cs:ScriptMemory+28h
 		inc	ax
@@ -13729,7 +13730,7 @@ loc_1CE2A:				; CODE XREF: seg007:81B5j
 		jz	short loc_1CE3B
 		mov	cs:ScriptMemory+26h, ax
 		mov	cs:ScriptMemory+28h, bx
-		jmp	loc_1CD63
+		jmp	drawmap_loop
 ; ---------------------------------------------------------------------------
 
 loc_1CE3B:				; CODE XREF: seg007:81BDj
@@ -13750,8 +13751,8 @@ loc_1CE3B:				; CODE XREF: seg007:81BDj
 		add	sp, 2
 		push	1
 		push	7800h
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	di
 		call	ImageCopy1
 		add	sp, 0Ah
@@ -13760,8 +13761,8 @@ loc_1CE3B:				; CODE XREF: seg007:81BDj
 		add	sp, 2
 		push	2
 		push	di
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	cx
 		call	ImageCopy3
 		add	sp, 0Ah
@@ -13770,8 +13771,8 @@ loc_1CE3B:				; CODE XREF: seg007:81BDj
 		add	sp, 2
 		push	1
 		push	7802h
-		push	10h
-		push	10h
+		push	16
+		push	16
 		push	di
 		call	ImageCopy1
 		add	sp, 0Ah
@@ -13811,7 +13812,7 @@ loc_1CED7:				; CODE XREF: seg007:8262j
 ; ---------------------------------------------------------------------------
 
 scr31:					; DATA XREF: seg007:scrJumpTblo
-		mov	di, offset byte_1EFB6
+		mov	di, 12D6h
 		mov	ax, cs:ScriptMemory+22h
 		add	ax, ax
 		add	di, ax
@@ -13844,27 +13845,26 @@ scr32:					; DATA XREF: seg007:scrJumpTblo
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr33_NameChgThing:			; DATA XREF: seg007:scrJumpTblo
-		mov	cx, cs:ScriptMemory+0Eh
-		add	cx, cx
+scr33_PlrName_AddChr:			; DATA XREF: seg007:scrJumpTblo
+		mov	cx, cs:ScriptMemory+0Eh	; get variable 7 (player name length)
+		add	cx, cx		; index	-> offset for 2-byte words
 		mov	ax, seg	dseg
 		mov	es, ax
-		assume es:nothing
-		mov	ax, offset byte_1E342
+		mov	ax, offset plrName_ScrOfs
 		add	ax, cx
 		mov	es:textDrawPtr,	ax
-		mov	di, cs:ScriptMemory+22h
+		mov	di, cs:ScriptMemory+22h	; get table cursor X position
 		add	di, di
-		mov	ax, cs:ScriptMemory+24h
+		mov	ax, cs:ScriptMemory+24h	; get table cursor Y position
 		mov	dx, 22h
 		mul	dx
 		add	di, ax
 		add	di, offset NameChg_CharTbl
-		mov	ax, cs:[di]
+		mov	ax, cs:[di]	; look up character from "name change character	table"
 		mov	bx, offset ScriptMemory
 		add	bx, cx
-		mov	cs:[bx], ax
-		push	ax
+		mov	cs:[bx], ax	; place	the character into the respective variable
+		push	ax		; then draw it to the screen
 		call	ShiftJIS2JIS
 		add	sp, 2
 		push	ax
@@ -13873,15 +13873,15 @@ scr33_NameChgThing:			; DATA XREF: seg007:scrJumpTblo
 		jmp	ScriptMainLoop
 ; ---------------------------------------------------------------------------
 
-scr34:					; DATA XREF: seg007:scrJumpTblo
-		mov	ax, cs:ScriptMemory+0Eh
+scr34_PlrName_DelChr:			; DATA XREF: seg007:scrJumpTblo
+		mov	ax, cs:ScriptMemory+0Eh	; get variable 7 (player name length)
 		add	ax, ax
 		mov	bx, offset ScriptMemory
 		add	bx, ax
-		mov	word ptr cs:[bx], 0
-		mov	di, offset byte_1E342
+		mov	word ptr cs:[bx], 0 ; set the variable to 0 to clear the character
+		mov	di, offset plrName_ScrOfs
 		add	di, ax
-		push	2
+		push	2		; then draw the	background to the screen
 		push	di
 		push	10h
 		push	10h
@@ -15291,25 +15291,25 @@ scr63_SetDiskLetter endp
 ; =============== S U B	R O U T	I N E =======================================
 
 
-GetSomeIndexedVar proc near		; CODE XREF: seg007:scr24p
-					; seg007:scr2Ep ...
-		mov	ax, cs:ScriptMemory+1Eh	; AX = ScriptMemory[0Fh]
+GetMapDataPtr	proc near		; CODE XREF: seg007:scr24_ReadMapp
+					; seg007:scr2E_WriteMapp ...
+		mov	ax, cs:ScriptMemory+1Eh	; AX = ScriptMemory[0Fh] = floor index
 		mov	dx, 200h
 		mul	dx
 		add	ax, (offset ScriptMemory+3E8h)
 		mov	dx, ax		; DX = &ScriptMemory[500 + AX*100h]
 		call	GetScriptVarVal
-		mov	bx, cs:[di]	; get variable 1 value
+		mov	bx, cs:[di]	; read variable	1 value	to get X
 		add	si, 2
 		call	GetScriptVarVal
-		mov	cx, cs:[di]	; get variable 2 value
+		mov	cx, cs:[di]	; read variable	2 value	to get Y
 		shl	cx, 4
 		add	bx, cx
 		add	bx, bx
-		add	bx, dx		; BX = &DX[(var2 << 4) + var1]
+		add	bx, dx		; BX = &DX[Y * 0x10 + X]
 		mov	ax, cs:[bx]
 		retn
-GetSomeIndexedVar endp
+GetMapDataPtr	endp
 
 ; ---------------------------------------------------------------------------
 		retn
@@ -15531,7 +15531,7 @@ loc_1DBA3:				; CODE XREF: seg007:8F17j
 loc_1DBC3:				; CODE XREF: seg007:8F31j
 		pop	ax
 		inc	cx
-		cmp	cx, word ptr cs:byte_14C74
+		cmp	cx, cs:word_14C74
 		jnz	short loc_1DBD0
 		xor	ax, ax
 		xor	cx, cx
@@ -15824,8 +15824,9 @@ byte_1DE2E	db 0BDh	dup(0)		; DATA XREF: ImageCopySetup+Do
 		db 74h dup(0)
 byte_1DF5F	db 231h	dup(0)		; DATA XREF: sub_13EF4+12o
 byte_1E190	db 1B2h	dup(0)
-byte_1E342	db 0C74h dup(0)		; DATA XREF: seg007:82D1o seg007:8320o
-byte_1EFB6	db 2E3Ch dup(0)		; DATA XREF: seg007:scr31o
+plrName_ScrOfs	dw 0			; DATA XREF: seg007:82D1o seg007:8320o
+		db 0C72h dup(0)
+		db 2E3Ch dup(0)
 byte_21DF2	db 30h dup(0)		; DATA XREF: LoadGTAPalette+21o
 					; CopyGTAPalette+Bo
 MiscFlags	dw 0			; DATA XREF: LoadGTAFile:loc_12E64r

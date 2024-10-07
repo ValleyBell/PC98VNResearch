@@ -97,7 +97,7 @@ SCENE_CMD_LIST = {
 	0x21: ("SAVREAD", [SCPT_FNAME]),
 	0x22: ("CMD22"  , []),
 	0x23: ("PORTA4" , [SCPT_BYTE]),
-	0x24: ("IDXRD"  , [SCPT_REG, SCPT_INT]),
+	0x24: ("MAPREAD", [SCPT_REG, SCPT_REG]),
 	0x25: ("BTST"   , [SCPT_REG, SCPT_INT], SC_EXEC_SPC),
 	0x26: ("BLIT3"  , [SCPT_INTH, SCPT_INT, SCPT_INT, SCPT_INTH, SCPT_INT]),
 	0x27: ("CMD27"  , []),
@@ -107,13 +107,13 @@ SCENE_CMD_LIST = {
 	0x2B: ("BGMPLAY", []),
 	0x2C: ("BGMFADE", [SCPT_BYTE]),
 	0x2D: ("CMD2D"  , [SCPT_REG, SCPT_REG]),
-	0x2E: ("IDXWRT" , [SCPT_REG, SCPT_INT]),
-	0x2F: ("CMD2F"  , []),
+	0x2E: ("MAPWRT" , [SCPT_REG, SCPT_REG]),
+	0x2F: ("MAPDRAW", []),
 	0x30: ("PRINT2" , [SCPT_INTH, SCPT_STR2]),
 	0x31: ("CMD31"  , []),
 	0x32: ("CMD32"  , []),
-	0x33: ("CMD33"  , []),
-	0x34: ("CMD34"  , []),
+	0x33: ("PNAMADD", []),
+	0x34: ("PNAMDEL", []),
 	0x35: ("CMD35"  , [SCPT_INT]),
 	0x36: ("CMD36"  , []),
 	0x37: ("CMD37"  , []),
@@ -391,6 +391,9 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 		arrays_open = 0
 		citem = CommandItem(asmFile=asm_filename, lineID=lid, cmdName=keyword.upper(), params=[])
 		while pos < len(line):
+			if line[pos] == ';':	# comment
+				citem.commentPos = pos
+				break
 			res = get_token(line, pos)
 			if res is None:
 				print(f"Parse error in {asm_filename}:{1+lid}, column {1+pos}: Parsing error!")	# TODO: print details
@@ -409,8 +412,7 @@ def parse_asm(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, 
 			if pos >= len(line):
 				break
 			if line[pos] == ';':	# comment
-				citem.commentPos = pos
-				break
+				continue
 			if ttype == TKTP_CTRL:
 				if tdata == "[":
 					continue	# we don't want a comma after this control character
