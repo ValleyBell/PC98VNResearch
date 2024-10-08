@@ -17,6 +17,7 @@ WaitForVSync EQU 0159h
 
 ; code segment PrintSeg (seg003)
 PrintSeg EQU 0327h
+textChrMode EQU 0028h
 ShiftJIS2JIS EQU 06AFh
 PrintFontChar EQU 06D8h
 
@@ -104,6 +105,16 @@ textDrawPtr EQU 41C4h
 
 ; === main code patches ===
 
+; patch PrintFontChar
+	incbin "MIME.EXE", $, 3E61h - ($-$$)	; seg003, offset 0701
+get_get_ascii_loc_13971:
+	incbin "MIME.EXE", $, 3EC5h - ($-$$)	; seg003, offset 0765
+	jmp	near gfc_get_jis_patch
+	times 3EC9h-($-$$) db 90h
+gfc_get_jis_main:
+	incbin "MIME.EXE", $, 3EF6h - ($-$$)
+loc_13A06:
+
 	incbin "MIME.EXE", $, 6E02h - ($-$$-SEG_BASE_OFS)
 saveNamePattern:
 	db	"**/** **:** Lvl**", 0, 0	; shorten "Level" text to just "Lvl" (save 3 characters)
@@ -165,7 +176,7 @@ pt_loop:
 	jz	short pt_name
 	
 pt_draw:
-	call	GetCharType
+	call	GetCharWidth
 	add	bl, cl		; advance line character counter
 	cmp	bl, bh		; attempting to write beyond line size?
 	jg	short pt_nextline	; yes - next line, then try again (signed compare for indent handling)
@@ -243,7 +254,46 @@ ptbfs_indent:
 	sub	bh, al		; and then reduce the line width
 	jmp	pt_line_start	; stay on the same line
 
-	times 72A1h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 128 bytes
+gfc_get_jis_patch:
+	mov	si, CustomFont_HalfWidth + (MainCodeSeg-PrintSeg)*10h
+gfc_cfhw_loop:
+	mov	bx, [cs:si]
+	or	bx, bx
+	jz	short gfc_get_jis_hwcheck	; list end reached - jump
+	cmp	bx, ax
+	jz	short gfc_custom_hw	; character has an entry in the Custom Font list - jump
+	add	si, 12h
+	jmp	short gfc_cfhw_loop
+
+gfc_custom_hw:
+	;mov	[cs:002Ah], 0	; keep at 0 to enable "bold mode"
+	mov	ax, cs
+	mov	es, ax
+	add	si, byte 2
+	mov	di, 0008h	; FontDataBuffer
+	mov	dx, di		; DX is used by the later font rendering code
+	mov	cx, 10h
+	xor	al, al
+gfc_chw_loop:
+	mov	ah, [cs:si]
+	add	si, byte 1
+	stosw
+	loop	gfc_chw_loop
+	mov	word [cs:textChrMode], 1	; text character mode 1 - half-width
+	jmp	loc_13A06
+
+gfc_get_jis_hwcheck:	; check for half-width JIS pages
+	cmp	al, 9
+	jb	short gfc_get_jis_p2
+	cmp	al, 12
+	jb	near get_get_ascii_loc_13971	; JIS page 9..11 -> jump to half-width code
+	;jmp	short gfc_get_jis_p2
+gfc_get_jis_p2:
+	out	0A3h, al	; character code, high byte (page)
+	mov	al, ah
+	jmp	gfc_get_jis_main
+
+	times 72A1h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 55 bytes
 
 
 ; --- patch save game code ---
@@ -404,7 +454,23 @@ txtMazeI:	db	"    Sea Maze ", 0, 0
 txtMazeJ:	db	"  Flame Maze ", 0, 0
 txtMazeK:	db	"  Earth Maze ", 0, 0
 txtMazeL:	db	"   Wind Maze ", 0, 0
-	times 787Ch-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 240 bytes
+
+CustomFont_HalfWidth:
+	dw	720Bh	; JIS 2B72: Left Single Quotation Mark (U+2018)
+	db		0x04, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	dw	730Bh	; JIS 2B73: Left Double Quotation Mark (U+201C)
+	db		0x24, 0x48, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	dw	700Bh	; JIS 2B70: Right Single Quotation Mark (U+2019)
+	db		0x20, 0x20, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	dw	220Bh	; JIS 2B22: Right Double Quotation Mark (U+201D)
+	db		0x24, 0x24, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	dw	0000h		; size: 74 bytes
+
+	times 787Ch-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 166 bytes
 
 	; adjust offsets of changed (hardcoded) "saveNamePattern" text
 	incbin "MIME.EXE", $, 7963h - ($-$$-SEG_BASE_OFS)
@@ -425,6 +491,38 @@ Print_Cancel:
 txtCancel:
 	db	"             Cancel ", 0, 0
 
+GetCharWidth:
+	cmp	al, 81h
+	jb	short gcw_halfwidth	; 00..80 -> ASCII
+	cmp	al, 0A0h
+	jb	short gcw_fw_check	; 81xx .. 9Fxx -> Shift-JIS
+	cmp	al, 0E0h
+	jb	short gcw_halfwidth	; A0..DF -> half-width Katakana
+	cmp	al, 0FDh
+	jb	short gcw_fullwidth	; E0xx .. FCxx -> Shift-JIS
+	;jnb	short gcw_halfwidth	; FD..FF -> half-width
+
+gcw_halfwidth:
+	mov	cx, 1
+	ret
+
+gcw_fw_check:
+	mov	cx, ax
+	xchg	ch, cl
+	cmp	cx, 8540h
+	jb	short gcw_fullwidth	; 8140..84FC = full-width
+	cmp	cx, 8560h
+	jb	short gcw_halfwidth	; 8540..855F = half-width
+	cmp	cx, 857Ah
+	jb	short gcw_fullwidth	; 8560..8579 = custom glyphs for ancient language -> full-width
+	cmp	cx, 869Fh
+	jb	short gcw_halfwidth	; 857A..869E = half-width
+	;jae	short gcw_fullwidth	; 869F..9FFC -> full-width
+
+gcw_fullwidth:
+	mov	cx, 2
+	ret
+
 pndel_var_width:
 	mov	dx, bx		; save end address
 	mov	bx, ScriptMemory
@@ -444,7 +542,7 @@ pndel_vw_loop:
 	mov	word [cs:ScriptMemory+6Eh], 1	; save "success" state in variable 55
 	jmp	near pndel_delete		; size: 48 bytes
 
-	times 7A94h-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 135 bytes
+	times 7A94h-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 83 bytes
 
 ; --- patch menu selection text ---
 	incbin "MIME.EXE", $, 7AD0h - ($-$$-SEG_BASE_OFS)

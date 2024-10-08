@@ -207,7 +207,10 @@ def parse_text(text: str) -> list:
 			if len(ccstr) == 2 and (ccstr[0] >= 'A' and ccstr[0] <= 'Z'):
 				chrwidth = 2	# special glyphs used for ancient language
 			elif ccstr in "\u201C\u201D\u2018\u2019":
-				chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
+				if config.quote_mode == 0:
+					chrwidth = 2	# in mode 0, they will be full-width
+				else:
+					chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
 			elif ccstr == "\u2026":
 				chrwidth = 3	# the "reinsert" script will convert this to "..."
 			else:
@@ -562,6 +565,8 @@ def main(argv):
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
 	aparse.add_argument("-n", "--text-column", type=int, help="column to use for text to insert (1 = first column)", default=6)
+	aparse.add_argument("-q", "--quote-mode", type=int, help="mode for slanted quotation marks,\n" \
+			"0 = full-width,\n1/2 = half-width", default=1)
 	aparse.add_argument("-p", "--hyphenation", action="store_true", help="apply hyphenation to words when breaking lines (saves screen space)")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")

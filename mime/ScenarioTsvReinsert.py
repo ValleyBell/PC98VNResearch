@@ -324,8 +324,14 @@ def screen_pos2addr(x: int, y: int) -> int:
 	return (y * 80) + (x // 8)
 
 def tsvdata2asmstr(text: str) -> str:
-	text = text.replace('\u201C', '"').replace('\u201D', '"')
-	text = text.replace("\u2018", "'").replace("\u2019", "'")
+	if config.quote_mode == 1:
+		# replace left/right quotation mark with ASCII quotation mark
+		text = text.replace('\u201C', '"').replace('\u201D', '"')
+		text = text.replace("\u2018", "'").replace("\u2019", "'")
+	elif config.quote_mode == 2:
+		# the default Shift-JIS code is full-width, so append the half-width postfix
+		text = text.replace('\u201C', '\u201C\uF87F').replace('\u201D', '\u201D\uF87F')
+		text = text.replace("\u2018", "\u2018\uF87F").replace("\u2019", "\u2019\uF87F")
 	text = text.replace("\u2026", "...")
 	pos = 0
 	result = ""
@@ -505,6 +511,8 @@ def main(argv):
 	aparse.add_argument("-t", "--tsv-file", required=True, help="tab-separated text table (.TSV)")
 	aparse.add_argument("-i", "--in-path", required=True, help="base path where source ASM files are located")
 	aparse.add_argument("-o", "--out-path", required=True, help="base path where patched ASM files are to be written")
+	aparse.add_argument("-q", "--quote-mode", type=int, help="mode for slanted quotation marks,\n" \
+			"0 = full-width,\n1 = convert to ASCII,\n2 = half-width", default=1)
 	
 	config = aparse.parse_args(argv[1:])
 	config.text_column -= 1	# 1st colum has ID 0.
