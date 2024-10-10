@@ -8267,10 +8267,10 @@ seg003		segment	byte public 'CODE' use16
 		;org 8
 		assume es:nothing, ss:nothing, ds:dseg,	fs:nothing, gs:nothing
 FontDataBuffer	db 20h dup(0)		; DATA XREF: PrintFontChar+2Fo
-					; PrintFontChar+93o
+					; PrintFontChar+81o ...
 textChrMode	dw 0			; DATA XREF: PrintFontChar+56w
 					; PrintFontChar:loc_139FFw ...
-byte_1329A	db 0			; DATA XREF: PrintFontChar+Cw
+fontNotBold	db 0			; DATA XREF: PrintFontChar+Cw
 					; PrintFontChar:gfc_customw ...
 CustomFontData	dw  210Dh, 0000h, 0000h, 0020h,	0070h, 00C0h, 0300h, 0608h, 181Ch, 2070h, 0180h, 0300h,	0C00h, 1000h, 0000h, 0000h, 0000h
 					; DATA XREF: PrintFontChar:gfc_jiso
@@ -8380,7 +8380,7 @@ arg_0		= word ptr  6
 		cli
 		mov	al, 0C0h
 		out	7Ch, al
-		mov	cs:byte_1329A, 0
+		mov	cs:fontNotBold,	0
 		mov	ax, [bp+arg_0]
 		or	ah, ah
 		jz	short gfc_get_ascii
@@ -8436,14 +8436,14 @@ loc_139AA:				; CODE XREF: PrintFontChar+70j
 ; ---------------------------------------------------------------------------
 
 gfc_custom:				; CODE XREF: PrintFontChar+6Bj
-		mov	cs:byte_1329A, 1
+		mov	cs:fontNotBold,	1
 		mov	bx, cs
 		mov	ds, bx
 		assume ds:seg003
 		add	si, 2
 		mov	es, bx
 		assume es:seg003
-		mov	di, 8
+		mov	di, offset FontDataBuffer
 		mov	dx, di
 		mov	cx, 10h
 		rep movsw
@@ -8508,7 +8508,7 @@ loc_13A38:				; CODE XREF: PrintFontChar+109j
 		shr	bx, 1		; make bold by duplicating all pixels 1	to the right
 		or	ax, bx
 		xchg	al, ah
-		mov	es:[di], ax
+		mov	es:[di], ax	; draw shadow line (16 pixels)
 		add	di, 50h
 		add	si, 2
 		inc	cl
@@ -8535,9 +8535,9 @@ loc_13A38:				; CODE XREF: PrintFontChar+109j
 
 loc_13A79:				; CODE XREF: PrintFontChar+158j
 		mov	ax, cs:[si]
-		test	cs:byte_1329A, 1
+		test	cs:fontNotBold,	1
 		jnz	short loc_13A90
-		mov	bx, ax
+		mov	bx, ax		; make bold by duplicating all pixels 1	to the left
 		shl	bx, 1
 		not	bx
 		and	ax, bx
@@ -8546,7 +8546,7 @@ loc_13A79:				; CODE XREF: PrintFontChar+158j
 
 loc_13A90:				; CODE XREF: PrintFontChar+13Aj
 		xchg	al, ah
-		mov	es:[di], ax
+		mov	es:[di], ax	; draw main line (16 pixels)
 		add	di, 50h
 		add	si, 2
 		inc	cl

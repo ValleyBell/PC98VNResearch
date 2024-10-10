@@ -23,6 +23,11 @@ r15 - current floor
 r42 - current hour
 r56..r61 - current money (each register contains 1 digit, ordered from highest to lowest significant digit)
 
+r298 - Eagle occupation state
+	0 = Squire
+	1 = Knight
+	Note: The game never sets this, so Eagle always stays a squire.
+
 r500..r4339 = map data (15 maps with 100h registers each)
 	Each value is a bitmask of the following:
 	bit  0 (0001h): door at east
