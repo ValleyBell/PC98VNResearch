@@ -35,6 +35,8 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
   - A prepatched version is included as [MIME-ASC.EXE](MIME-ASC.EXE).
   - I think this is the most complicated patch I made so far.
   - The patch also translates the "save game" screen into English. It is the only ingame text that is stored in the EXE file instead of the script files.
+- a [patch to support ASCII text](STSSP-ASC.asm) in `STSSP-ASC.COM`
+  - This also translates all messages to English. Thanks to saintttimmy for the translations.
 - `_patch-build.bat` is a script that compiles the MIME patch using NASM and then uses the [NDC tool](https://euee.web.fc2.com/tool/nd.html#ndc) to insert it into an HDI image
 - `data` folder: various script files that were patched with English texts
   - `.DEC` files are decompressed so that they can be hex-edited

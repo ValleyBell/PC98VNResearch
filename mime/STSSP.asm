@@ -275,8 +275,8 @@ loc_102AC:				; CODE XREF: start+1A7j
 loc_102B6:				; CODE XREF: start+1B1j
 		mov	drawColX, 27	; start	pixel X	= 27 * 8 = 216
 		mov	drawRowY, 6	; start	pixel Y	= 6 * 16 = 96
-		mov	drawWidth, 11	; box content size X = 11 * 16 = 176
-		mov	drawHeight, 3	; box content size Y = 3 * 16 =	48
+		mov	drawWidth, 11	; inner	width =	11 * 16	= 176 (excluding border	of 32 pixels)
+		mov	drawHeight, 3	; inner	height = 3 * 16	= 48 (excluding	border of 32 pixels)
 		call	DrawTextBox	; draw text box	for Sound Source Selection
 		mov	drawColX, 29	; X = 29 * 8 = 232
 		mov	drawRowY, 106	; Y = 106
@@ -387,14 +387,14 @@ loc_103A0:				; CODE XREF: start+240j start+248j ...
 ; ---------------------------------------------------------------------------
 
 loc_103B3:				; CODE XREF: start+2AEj
-		mov	drawColX, 24h
-		mov	drawRowY, 82h
+		mov	drawColX, 36
+		mov	drawRowY, 130
 		mov	txtColorMain, 1
 		mov	txtColorShdw, 8
 		mov	si, offset aSound_FM ; "ÇeÇlâπåπ"
 		call	DrawText	; "FM sound source"
-		mov	drawColX, 22h
-		mov	drawRowY, 94h
+		mov	drawColX, 34
+		mov	drawRowY, 148
 		mov	txtColorMain, 3
 		mov	txtColorShdw, 0
 		mov	si, offset aSound_MIDI ; "ÇlÇhÇcÇhâπåπ"
@@ -424,14 +424,14 @@ loc_10403:				; CODE XREF: start+252j start+25Dj ...
 ; ---------------------------------------------------------------------------
 
 loc_10416:				; CODE XREF: start+311j
-		mov	drawColX, 24h
-		mov	drawRowY, 82h
+		mov	drawColX, 36
+		mov	drawRowY, 130
 		mov	txtColorMain, 3
 		mov	txtColorShdw, 0
 		mov	si, offset aSound_FM ; "ÇeÇlâπåπ"
 		call	DrawText	; "FM sound source"
-		mov	drawColX, 22h
-		mov	drawRowY, 94h
+		mov	drawColX, 34
+		mov	drawRowY, 148
 		mov	txtColorMain, 1
 		mov	txtColorShdw, 8
 		mov	si, offset aSound_MIDI ; "ÇlÇhÇcÇhâπåπ"
@@ -473,8 +473,8 @@ loc_10466:				; CODE XREF: start+237j start+268j ...
 loc_10491:				; CODE XREF: start+19Fj start+1A9j ...
 		mov	drawColX, 23	; start	pixel X	= 23 * 8 = 184
 		mov	drawRowY, 12	; start	pixel Y	= 12 * 16 = 192
-		mov	drawWidth, 15	; box content size X = 15 * 16 = 240
-		mov	drawHeight, 3	; box content size Y = 3 * 16 =	48
+		mov	drawWidth, 15	; inner	width =	15 * 16	= 240
+		mov	drawHeight, 3	; inner	height = 3 * 16	= 48
 		call	DrawTextBox	; draw text box	for Display Mode Selection
 		mov	drawColX, 25	; X = 25 * 8 = 200
 		mov	drawRowY, 202	; Y = 202
@@ -587,14 +587,14 @@ loc_10582:				; CODE XREF: start+41Bj start+423j ...
 ; ---------------------------------------------------------------------------
 
 loc_10595:				; CODE XREF: start+490j
-		mov	drawColX, 1Eh
-		mov	drawRowY, 0E2h
+		mov	drawColX, 30
+		mov	drawRowY, 226
 		mov	txtColorMain, 1
 		mov	txtColorShdw, 8
 		mov	si, offset aDisp_Analog	; "ÉAÉiÉçÉOÉfÉBÉXÉvÉåÉC"
 		call	DrawText	; "Analog Display"
-		mov	drawColX, 20h
-		mov	drawRowY, 0F4h
+		mov	drawColX, 32
+		mov	drawRowY, 244
 		mov	txtColorMain, 3
 		mov	txtColorShdw, 0
 		mov	si, offset aDisp_LCD ; "âtèªÉfÉBÉXÉvÉåÉC"
@@ -683,8 +683,8 @@ loc_10681:				; CODE XREF: start+565j
 		jnz	short loc_106F6
 		mov	drawColX, 24	; start	pixel X	= 24 * 8 = 192
 		mov	drawRowY, 18	; start	pixel Y	= 18 * 16 = 288
-		mov	drawWidth, 14	; box content size X = 14 * 16 = 224
-		mov	drawHeight, 1	; box content size Y = 1 * 16 =	16
+		mov	drawWidth, 14	; inner	width =	14 * 16	= 224
+		mov	drawHeight, 1	; inner	height = 1 * 16	= 16
 		call	DrawTextBox	; draw text box	for "MIDI Init"	message
 		mov	drawColX, 26	; X = 26 * 8 = 208
 		mov	drawRowY, 303	; Y = 303
@@ -1338,7 +1338,7 @@ dtc_getchar:				; character code, low byte
 		out	0A1h, al
 		mov	al, ah
 		out	0A3h, al	; character code, high byte (page)
-		mov	si, offset byte_10E9E
+		mov	si, offset txtFontCache
 		mov	dx, si
 		xor	cl, cl
 
@@ -1422,7 +1422,7 @@ loc_10B52:				; CODE XREF: DrawTextChar+D5j
 		jb	short loc_10B52
 		xor	al, al
 		out	7Ch, al
-		sub	di, 4FEh
+		sub	di, 4FEh	; go back by 16	lines (500h bytes) minus 2 bytes (1x full-width)
 		mov	cs:textDrawPtr,	di
 		pop	es
 		assume es:nothing
@@ -1931,7 +1931,7 @@ drawWidth	dw 0			; DATA XREF: start+1C2w start+39Dw ...
 drawHeight	dw 0			; DATA XREF: start+1C8w start+3A3w ...
 txtColorMain	db 0			; DATA XREF: start+1DDw start+1F9w ...
 txtColorShdw	db 0			; DATA XREF: start+1E2w start+1FEw ...
-byte_10E9E	db 20h dup(0)		; DATA XREF: DrawTextChar+30o
+txtFontCache	db 20h dup(0)		; DATA XREF: DrawTextChar+30o
 word_10EBE	dw 0			; DATA XREF: LoadColour_LCD+7w
 					; LoadColour_LCD+16r
 word_10EC0	dw 0			; DATA XREF: LoadColour_LCD+Dw
