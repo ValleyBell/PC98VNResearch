@@ -7,6 +7,7 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 - `MIME.EXE` disassembly: [ASM file](MIME.asm) / [IDB database](MIME.idb) / [decompressed executable](MIME.EXE)
 - `MIME_OP.EXE` disassembly: [ASM file](MIME_OP.asm) / [IDB database](MIME_OP.idb)
   - [MIME\_OP-SKIP.EXE](MIME_OP-SKIP.EXE) - a patch to the opening executable that makes it automatically skip the opening (for easier game testing)
+- `STSSP.COM` disassembly: [ASM file](STSSP.asm) / [IDB database](STSSP.idb) ("Studio Twin'kle System Startup Program")
 - [scenario format description](SceneFormat.txt)
 - [scenario decompiler](ScenarioDecompile.py)
 - [scenario compiler](ScenarioCompile.py)
