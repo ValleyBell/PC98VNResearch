@@ -125,13 +125,13 @@ saveNamePattern:
 	incbin "MIME.EXE", $, 6F98h - ($-$$-SEG_BASE_OFS)
 	dw	'5', '6', '7', '8', '9'
 	incbin "MIME.EXE", $, 6FAEh - ($-$$-SEG_BASE_OFS)
-	dw	'A', 'B', 'C', 'D', 'E', 'F', 'G', 8140h, 'H', 'I', 'J', 'K', 'L', 'M', 'N'
+	dw	'A', 'B', 'C', 'D', 'E', 'F', 'G', ' ', 'H', 'I', 'J', 'K', 'L', 'M', 'N', ' ', ' '
 	incbin "MIME.EXE", $, 6FD0h - ($-$$-SEG_BASE_OFS)
-	dw	'O', 'P', 'Q', 'R', 'S', 'T', 'U', 8140h, 'V', 'W', 'X', 'Y', 'Z'
+	dw	'O', 'P', 'Q', 'R', 'S', 'T', 'U', ' ', 'V', 'W', 'X', 'Y', 'Z', 5B81h, 6081h, ' ', ' '
 	incbin "MIME.EXE", $, 6FF2h - ($-$$-SEG_BASE_OFS)
-	dw	'a', 'b', 'c', 'd', 'e', 'f', 'g', 8140h, 'h', 'i', 'j', 'k', 'l', 'm', 'n'
+	dw	'a', 'b', 'c', 'd', 'e', 'f', 'g', ' ', 'h', 'i', 'j', 'k', 'l', 'm', 'n', ' '
 	incbin "MIME.EXE", $, 7014h - ($-$$-SEG_BASE_OFS)
-	dw	'o', 'p', 'q', 'r', 's', 't', 'u', 8140h, 'v', 'w', 'x', 'y', 'z', 8145h, '.'
+	dw	'o', 'p', 'q', 'r', 's', 't', 'u', ' ', 'v', 'w', 'x', 'y', 'z', 4581h, '.', ' '
 
 ; --- patch scenario script commands, part 1 ---
 	incbin "MIME.EXE", $, 70D0h - ($-$$-SEG_BASE_OFS)
@@ -457,16 +457,16 @@ txtMazeL:	db	"   Wind Maze ", 0, 0
 
 CustomFont_HalfWidth:
 	dw	720Bh	; JIS 2B72: Left Single Quotation Mark (U+2018)
-	db		0x04, 0x08, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x04, 0x08, 0x08, 0x08, 0x00, 0x00, 0x00
 	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	dw	730Bh	; JIS 2B73: Left Double Quotation Mark (U+201C)
-	db		0x24, 0x48, 0x48, 0x48, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x24, 0x48, 0x48, 0x48, 0x00, 0x00, 0x00
 	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	dw	700Bh	; JIS 2B70: Right Single Quotation Mark (U+2019)
-	db		0x20, 0x20, 0x20, 0x40, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x20, 0x20, 0x20, 0x40, 0x00, 0x00, 0x00
 	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	dw	220Bh	; JIS 2B22: Right Double Quotation Mark (U+201D)
-	db		0x24, 0x24, 0x24, 0x48, 0x00, 0x00, 0x00, 0x00
+	db		0x00, 0x24, 0x24, 0x24, 0x48, 0x00, 0x00, 0x00
 	db		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	dw	0000h		; size: 74 bytes
 

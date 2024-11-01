@@ -24,6 +24,11 @@ Op1_FadeStart EQU 0466h
 	incbin "MIME_OP.EXE", $, 000Eh - ($-$$)
 	dw	(end + 0Fh - $$ - SEG_BASE_OFS) / 10h	; place stack segment right after the data
 
+; [optional patch] reduce time of Studio Twin'kle logo
+	incbin "MIME_OP.EXE", $, 01FBh - ($-$$-SEG_BASE_OFS)
+	; Note: The fade-in takes 100 frames (1.77s) and is part of the wait time below.
+	mov	[044Ah], word 200	; show it for 100 frames (~1.8s) before fading out (originally 250-100=150 frames or ~2.7s)
+
 ; modify draw positions for intro graphic text
 	incbin "MIME_OP.EXE", $, 0446h - ($-$$-SEG_BASE_OFS)
 	; draw 1st line

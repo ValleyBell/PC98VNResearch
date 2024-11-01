@@ -23,10 +23,42 @@ r15 - current floor
 r42 - current hour
 r56..r61 - current money (each register contains 1 digit, ordered from highest to lowest significant digit)
 
+r287 - Tear friendship level
+r288 - Henzou friendship level
+r289 - Eldelyca friendship level
+	The friendship level is increased at certain points in the game, mainly when you can pick between the three characters (or more).
+	It determines a part of the ending dialogue: You get the ending with character with the highest friendship level.
+	For breaking ties, Tear gets the highest preference, then Eldelyca.
+	
+	The ingame algorithm is:
+	- Tear's friendship level is >= Henzou's and Eldelyca's -> Ending 1
+	- Henzou's friendship level is > Tear's and it is > Eldelyca's -> Ending 2
+	- Eldelyca's friendship level is > Tear's and it is >= Henzou's -> Ending 3
+
 r298 - Eagle occupation state
 	0 = Squire
 	1 = Knight
 	Note: The game never sets this, so Eagle always stays a squire.
+r299 - main story state
+	Possible values: (descriptions from debug mode menu)
+	  0: Beginning
+	  5: Tirolian
+	 20: 2F
+	 25: Tear joined party
+	 30: 3F/Henzou joined party
+	 35: Met Yutika
+	 40: Defeated Chimera
+	 45: Eldelyca joined party
+	 50: Saved Drawer Girl
+	 55: Tear got voice stolen
+	 60: Defeated Siren
+	 65: Defeated Siren
+	 70: Entered Curse Maze
+	 75: Met Ranki
+	120: Entered Null Maze
+	125: Met the three star girls
+	130: Defeated Aus
+	Trivia: The 100/10 digits correspond to the highest floor you can visit.
 
 r500..r4339 = map data (15 maps with 100h registers each)
 	Each value is a bitmask of the following:

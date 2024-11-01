@@ -59,6 +59,26 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
   Among those are the JIS mirrors of capital ASCII letters (Shift-JIS codes 85 61..85 7A), making actual ASCII the only way of using capital letters.  
   The table can be found under the label `CustomFontData` in the disassembly. The first word in each line indicates the access code of the font ROM that is redirected.  
   `210Dh` (16-bit word) → ROM access code `0D 21` → JIS `2D21` → Shift-JIS `8740`
+- Special player names:
+  - There are some special player names. If those are entered as the player's name, they are changed to a different name and debug mode will be enabled. (This is done by setting a flag in script register 394. Each name sets a different flag, but all have the same effect ingame.)
+  - *Note:* You need to hold the Shift key while confirming the name. When the name is correct, it will play a special sound effect.
+  - `のぎやま` (Nogiyama) → `野木山❤` (Nogiyama❤)
+  - `おきやま` (Okiyama) → `爆音小僧` (Bakuon Kozou)
+  - `あさい` (Asai) → `レイレイ` (Lei-Lei)
+  - `マサキＤ` (MasakiD) → `三石ﾕ渠` (Mitsuishi Yuko)
+  - `むっち～` (Mucchi~) → `火野レイ` (Hino Rei)
+  - `メイロン` (MEIRONG) → `リュウ` (Ryuu)
+  - `だば` (Daba) → `天陳影久` (Tenchin Eikyuu)
+  - Thanks to saintttimmy for transcribing the names.
+  - Debug mode will:
+    - during dungeon movement:
+      - allow you to instantly quit the game by clicking in the region (0,0)..(32,32) (top left edge of the screen)
+      - open debug menu by clicking in the region (0,368)..(32,400) (bottom left edge of the screen)
+      - jump to the "Window Girl" by clicking in the region (608,0)..(640,32) (top right edge of the screen)
+      - enter test mode by clicking in the region (608,368)..(640,400) (bottom right edge of the screen)
+    - allow you to warp to any maze on the "Window Girl" screen
+    - add rune stone descriptions to the magic stone tablet screen
+    - give you extra options in the battle
 
 ## Game engine trivia
 

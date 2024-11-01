@@ -36,8 +36,9 @@ Commands
 04 - set text colour
 	2 bytes - main colour (palette index 00h..0Fh)
 	2 bytes - shadow colour (palette index 00h..0Fh)
-05 - write to port 0A6h
+05 - set GDC plane to display
 	2 bytes - value to write to I/O register 0A6h (high byte is ignored)
+	This switches between showing GDC plane 0 and 1.
 06 - delay script execution by N frames
 	2 bytes - number of frames to wait
 07 - set register = value
@@ -160,9 +161,10 @@ Commands
 	? bytes - null-terminated file name
 22 - ??
 	no parameters
-23 - write to port 0A4h
+23 - set GDC plane for reading/writing
 	2 bytes - value to write to I/O register 0A4h (high byte is ignored)
 	The game waits 1 frame and then writes to the port.
+	This selects which plane graphics are read from/written to.
 24 - read maze map
 	2 bytes - register ID for map X position
 	2 bytes - register ID for map Y position
@@ -175,7 +177,7 @@ Commands
 	The command takes the contents of the register, extracts the respective bit (see commands 10/11).
 	If the result is 0, it skips 3 additional bytes.
 	If the result is non-zero, just continues.
-	NOTE: This must be followed by a command that takes 2 parameter bytes, i.e. a "jump" command.
+	NOTE: This must be followed by a command that takes 2 parameter bytes. (usually a "jump" command)
 26 - graphics copy 3 (transparent)
 	2 bytes - screen source address
 	2 bytes - width in pixels
@@ -195,12 +197,12 @@ Commands
 	- register 26 - ?? (mode 0 only)
 	Output:
 	- register 22 - key bitmask
-		Bit  0 (0001h) - cursor up / numpad 8 / letters I/R
-		Bit  1 (0002h) - cursor down / numpad 2 / letters F/K
-		Bit  2 (0004h) - cursor left / numpad 4 / letters D/J
-		Bit  3 (0008h) - cursor right / numpad 6 / letters G/L
-		Bit  4 (0010h) - return key / control key / letter A
-		Bit  5 (0020h) - space bar / numpad 0 / letter S
+		Bit  0 (0001h) - cursor up / numpad 8 / joystick up
+		Bit  1 (0002h) - cursor down / numpad 2 / joystick down
+		Bit  2 (0004h) - cursor left / numpad 4 / joystick left
+		Bit  3 (0008h) - cursor right / numpad 6 / joystick right
+		Bit  4 (0010h) - return key / control key / joystick button 1
+		Bit  5 (0020h) - space bar / numpad 0 / joystick button 2
 		Bit  6 (0040h) - shift key (speeds up cursor movement)
 		Bit  7 (0080h) - escape
 		Bit  8 (0100h) - F1
