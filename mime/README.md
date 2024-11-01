@@ -45,6 +45,9 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 - [Z1000-fixed.DAT](Z1000-fixed.DAT) - a fix for the "new game" file of the MIME v2 update
   - When they added more passable walls for the v2 update, they broke the 1F maze map at coordinate (1,15). You can leave the map there by going south with no way to return.
   - The new file fixes the map so that it behaves (and looks) as intended.
+- tool to [dump the game's maps as images](map-dump.py) (supports BMP/PNG/... through Pillow library)
+  - The tool features various options, like including the border, showing only uncovered areas or showing secret passages.
+  - Example call: `python map-dump.py -m Z1000.DAT -t "STMED+overlay.png" -o map.png -b -e -s`
 
 ## Notes
 
