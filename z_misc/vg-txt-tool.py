@@ -11,8 +11,9 @@ ASCII_FULLWIDTH = False
 
 
 # --- decoding ---
-def sjis_mirror_to_ascii(sjis: bytes) -> str:
+def sjis_special_decode(sjis: bytes) -> str:
     if sjis[0] == 0x85:
+        # Shift-JIS ASCII mirror
         if sjis[1] == 0x7B:
             return "\u00A5"
         if sjis[1] >= 0x40 and sjis[1] <= 0x7E:
@@ -22,6 +23,9 @@ def sjis_mirror_to_ascii(sjis: bytes) -> str:
     elif sjis[0] == 0x86:
         if sjis[1] == 0x40:
             return ' '  # return "normal" space
+        elif sjis[1] >= 0xA2 and sjis[1] <= 0xED:
+            # NEC-specific line/border characters
+            return chr(0x2500 + (sjis[1] - 0xA2))
     return None
 
 def dump_as_str(data: bytes) -> str:
@@ -39,7 +43,7 @@ def dump_as_str(data: bytes) -> str:
                 result += '\\' + ch
             pos += 1
         else:
-            ch = sjis_mirror_to_ascii(data[pos : pos+2])
+            ch = sjis_special_decode(data[pos : pos+2])
             if ch is None:
                 ch = data[pos : pos+2].decode("shift-jis")
             if ASCII_FULLWIDTH:
@@ -107,6 +111,15 @@ def ascii_to_sjis_fullwidth(ch: str) -> bytes:
         return ch.encode("shift-jis")
     return None
 
+def sjis_special_encode(ch: str) -> bytes:
+    if ch == "\u00A5":
+        return "\uFFE5".encode("shift-jis")
+    if ch == ' ':
+        return '\u3000'.encode("shift-jis")
+    if ch >= '\u2500' and ch <= '\u254B':
+        return bytes([0x86, ord(ch) - 0x2500 + 0xA2])
+    return None
+
 def read_escaped_string(datastr: str) -> bytes:
     global ASCII_FULLWIDTH
 
@@ -162,6 +175,8 @@ def read_escaped_string(datastr: str) -> bytes:
                 else:
                     sjis = ascii_to_sjis_mirror(chrdata)
                 if sjis is None:
+                    sjis = sjis_special_encode(chrdata)
+                if sjis is None:
                     sjis = chrdata.encode("shift-jis")
             except UnicodeDecodeError:
                 return (-3, "unable to encode to Shift-JIS: " + text)
@@ -173,6 +188,8 @@ def encode_txt_file(filepath_in: str, filepath_out: str) -> int:
     msgList = []
     with open(filepath_in, "rt", encoding="utf-8") as f:
         for (lid, line) in enumerate(f):
+            if lid == 0 and line.startswith('\uFEFF'):
+                line = line[1:] # remove UTF-8 BOM
             line = line.rstrip()
             #if (line == "") or (line.lstrip()[0] == '#'):
             if line.lstrip()[0] == '#':
