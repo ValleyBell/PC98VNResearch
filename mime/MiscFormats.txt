@@ -21,19 +21,66 @@ r15 - current floor
 	14 = character building maze
 
 r42 - current hour
+	1 = wind
+	2 = protection
+	3 = shadow
+	4 = water
+	5 = harmony
+	6 = accuracy
+	7 = fire
+	8 = holy
+	9 = scatter
+	10 = earth
+	11 = light
+	12 = destruction
+	13 = evil
+
 r56..r61 - current money (each register contains 1 digit, ordered from highest to lowest significant digit)
 
-r287 - Tear friendship level
-r288 - Henzou friendship level
-r289 - Eldelyca friendship level
-	The friendship level is increased at certain points in the game, mainly when you can pick between the three characters (or more).
-	It determines a part of the ending dialogue: You get the ending with character with the highest friendship level.
-	For breaking ties, Tear gets the highest preference, then Eldelyca.
-	
-	The ingame algorithm is:
-	- Tear's friendship level is >= Henzou's and Eldelyca's -> Ending 1
-	- Henzou's friendship level is > Tear's and it is > Eldelyca's -> Ending 2
-	- Eldelyca's friendship level is > Tear's and it is >= Henzou's -> Ending 3
+r172 - 12F treasure chest bitmask (bits 0..9 used)
+	Each bit corresponds to a specific chest.
+	Bit set = unopened
+	Bit clear = opened
+r173 - Adult Picture Book event bitmask (bits 0..4 used)
+	Bit set = can trigger event
+	Bit clear = scene was seen
+r174 - Ninja girl event bitmask (bits 1..7 used)
+	Bit set = can trigger event
+	Bit clear = scene was seen
+r254 - B1F treasure chest bitmask (bits 0..12 used)
+r255 - 1F treasure chest bitmask (bits 0..10 used)
+r256 - 2F treasure chest bitmask (bits 0..3 used)
+r257 - 3F treasure chest bitmask (bits 0..5 used)
+r258 - miscellaneous events bitmask
+	bit 0 - Eldelyca joins party
+	bit 2 - Akko-chan/Tenko-chan (introduction)
+	bit 3 - Tenko-chan (passing to Chimera)
+	bit 4 - Akko-chan (get water)
+	bit 5 - Akko-chan (after Tenko-chan brothel scene)
+r259 - 7F treasure chest bitmask (bits 0..6 used)
+r260 - 8F treasure chest bitmask (bits 0..2 used)
+r261 - 9F treasure chest bitmask (bits 0..2 used)
+r262 - 10F treasure chest bitmask (bits 0..2 used)
+r263 - 11F treasure chest bitmask (bits 0..2 used)
+r269 - 4F treasure chest bitmask (bits 0..8 used)
+r270 - 5F treasure chest bitmask (bits 0..8 used)
+r283 - 6F treasure chest bitmask (bits 0..4 used)
+
+r284 - "Dream Author" sidequest state (0..4)
+r285 - "Broken Dolls" sidequest state (0 = open, 1 = completed)
+r286 - state for special scenes at Antonio's Inn
+r287 - Tear trust level
+r288 - Henzou trust level
+r289 - Eldelyca trust level
+
+r290 - H Scene "Dana and Donna" state (0 = available, 1 = completed)
+r291 - H Scene "Stella" state (0 = available, 1 = completed)
+r292 - H Scene "Elvira" state (0 = available, 1 = gave "Rare Skull", 2 = completed)
+r293 - H Scene "Chloture" state (0 = available, 1 = completed)
+r294 - H Scene "Tenko-chan" state (0 = available, 1 = completed)
+r295 - unused (intended for H Scene "Cass" state?)
+r296 - H Scene "Ashley" state (0 = available, 1 = completed)
+r297 - unused
 
 r298 - Eagle occupation state
 	0 = Squire
@@ -161,7 +208,7 @@ Pos	Len	Description
 			Bit 2 (0004h): fire
 			Bit 3 (0008h): wind
 20	02	??
-22	02	??
+22	02	experience points gained by defeating
 24	02	health points
 26	02	??
 28	02	??
@@ -171,7 +218,7 @@ Pos	Len	Description
 32	04	??
 36	04	??
 3A	04	??
-3E	02	??
+3E	02	money obtained by defeating
 40	02	??
 42	02	??
 44	02	??
@@ -190,9 +237,11 @@ Pos	Len	Description
 04	02	monster 2 ID
 06	02	monster 3 ID
 08	02	monster 4 ID
-0A	02	monster 1 parameter
-		The value is 42FFh when the entry is unused.
-		Else the high byte is always 23h.
-0C	02	monster 2 parameter
-0E	02	monster 3 parameter
-10	02	monster 4 parameter
+0A	02	monster 1 draw address
+		screen position X = (address % 80) * 8)
+		screen position Y = floor(address / 80)
+		Since the battle's background begins at Y=112, these values are usually 2300h or higher.
+		The value is 42FFh (X=248, Y=214) when the entry is unused.
+0C	02	monster 2 draw address
+0E	02	monster 3 draw address
+10	02	monster 4 draw address

@@ -266,7 +266,7 @@ def dump_map_data(config):
 	read_tiles(config.tiles)
 	mapData = read_map_data(config.map)
 	
-	if config.id:
+	if config.id is not None:
 		outName = pathlib.Path(config.output)
 		dump_single_map(config, mapData, config.id, outName)
 	else:

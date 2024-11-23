@@ -72,7 +72,7 @@ for (chr_idx, chrinfo) in enumerate(font_chrs):
 	next_code = chrinfo["code"] + 1
 dstHeight = (y + 1) * GRID_Y
 
-dstdata = numpy.zeros((dstHeight, dstWidth), numpy.uint8)
+dstdata = numpy.full((dstHeight, dstWidth), 0xFF, numpy.uint8)
 
 for chrinfo in font_chrs:
 	x_base = chrinfo["x"]

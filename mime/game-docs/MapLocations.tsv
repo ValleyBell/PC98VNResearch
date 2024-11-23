@@ -1,0 +1,292 @@
+#floor	coord	type	condition	scenario	description
+0F	0,2	chest	r254 bit 0	SCN\SEL_EV2.DAT	item 272: Charm of the Stars
+0F	0,14	chest	r254 bit 1	SCN\SEL_EV2.DAT	item 264: Hero's Cloak
+0F	7,6	chest	r254 bit 2	SCN\SEL_EV2.DAT	item 271: Crimson Wings
+0F	11,9	chest	r254 bit 3	SCN\SEL_EV2.DAT	item 270: Iga Scarf
+0F	14,2	chest	r254 bit 4	SCN\SEL_EV2.DAT	item 237: Phantom Tiara
+0F	11,6	chest	r254 bit 5	SCN\SEL_EV2.DAT	item 235: Crimson Helmet
+0F	0,4	chest	r254 bit 6	SCN\SEL_EV2.DAT	item 118: Ultra Shuriken (L)
+0F	9,8	chest	r254 bit 7	SCN\SEL_EV2.DAT	item 199: Hero's Armor
+0F	11,8	chest	r254 bit 8	SCN\SEL_EV2.DAT	item 195: Phantom Dress
+0F	9,6	chest	r254 bit 9	SCN\SEL_EV2.DAT	item 200: Crimson Armor
+0F	4,4	chest	r254 bit 10	SCN\SEL_EV2.DAT	item 162: Hero's Shield
+0F	14,10	chest	r254 bit 11	SCN\SEL_EV2.DAT	item 164: Crimson Shield
+0F	15,10	chest	r254 bit 12	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+1F	1,14	chest	r255 bit 0	SCN\SEL_EV2.DAT	item  77: Water Rune
+1F	3,13	chest	r255 bit 1	SCN\SEL_EV2.DAT	item 261: Ring of Dispelling
+1F	6,5	chest	r255 bit 2	SCN\SEL_EV2.DAT	item  28: Agile Berry
+1F	6,14	chest	r255 bit 3	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+1F	7,9	chest	r255 bit 4	SCN\SEL_EV2.DAT	item  83: Earth Rune
+1F	8,2	chest	r255 bit 5	SCN\SEL_EV2.DAT	item  80: Fire Rune
+1F	9,11	chest	r255 bit 6	SCN\SEL_EV2.DAT	item  38: Actress Autograph
+1F	9,12	chest	r255 bit 7	SCN\SEL_EV2.DAT	item 152: Large Shield
+1F	10,0	chest	r255 bit 8	SCN\SEL_EV2.DAT	item  36: Magic Mirror
+1F	11,15	chest	r255 bit 9	SCN\SEL_EV2.DAT	item  74: Wind Rune
+1F	13,0	chest	r255 bit 10	SCN\SEL_EV2.DAT	item  86: Evil Rune
+2F	4,9	chest	r256 bit 0	SCN\SEL_EV2.DAT	item  23: Magic Nut Alpha
+2F	14,11	chest	r256 bit 1	SCN\SEL_EV2.DAT	item  27: Sage's Toenail
+2F	10,1	chest	r256 bit 2	SCN\SEL_EV2.DAT	item  26: Arm Training Wraps
+2F	2,9	chest	r256 bit 3	SCN\SEL_EV2.DAT	item  79: Accuracy Rune
+3F	10,8	chest	r257 bit 0	SCN\SEL_EV2.DAT	item 222: Hood
+3F	9,4	chest	r257 bit 1	SCN\SEL_EV2.DAT	item  25: Life Berry
+3F	5,13	chest	r257 bit 2	SCN\SEL_EV2.DAT	item 221: Headband of Joy
+3F	14,10	chest	r257 bit 3	SCN\SEL_EV2.DAT	item  95: Mace
+3F	3,13	chest	r257 bit 4	SCN\SEL_EV2.DAT	item  28: Agile Berry
+3F	12,10	chest	r257 bit 5	SCN\SEL_EV2.DAT	item  81: Holy Rune
+4F	2,13	chest	r269 bit 0	SCN\SEL_EV2.DAT	item  96: Water Gun
+4F	4,1	chest	r269 bit 1	SCN\SEL_EV2.DAT	item  99: Iron Pipe
+4F	11,14	chest	r269 bit 2	SCN\SEL_EV2.DAT	item  94: Yosaku's Axe (L)
+4F	12,6	chest	r269 bit 3	SCN\SEL_EV2.DAT	item  87: Dull Sword (R)
+4F	10,8	chest	r269 bit 4	SCN\SEL_EV2.DAT	item 153: Arm Shield
+4F	12,9	chest	r269 bit 5	SCN\SEL_EV2.DAT	item 183: Yosaku's Coat
+4F	1,0	chest	r269 bit 6	SCN\SEL_EV2.DAT	item 223: Hard Hat
+4F	5,6	chest	r269 bit 7	SCN\SEL_EV2.DAT	item 225: Yosaku's Towel
+4F	8,12	chest	r269 bit 8	SCN\SEL_EV2.DAT	item  37: Chapa Chaps
+5F	2,10	chest	r270 bit 0	SCN\SEL_EV2.DAT	item 230: Silver Headband
+5F	13,11	chest	r270 bit 1	SCN\SEL_EV2.DAT	item  98: Evil Sword
+5F	6,10	chest	r270 bit 2	SCN\SEL_EV2.DAT	item 111: Staff of Joy
+5F	14,8	chest	r270 bit 3	SCN\SEL_EV2.DAT	item 186: Black Robes
+5F	2,1	chest	r270 bit 4	SCN\SEL_EV2.DAT	item 227: Black Hood
+5F	4,7	chest	r270 bit 5	SCN\SEL_EV2.DAT	item 108: Aqua Sword
+5F	11,15	chest	r270 bit 6	SCN\SEL_EV2.DAT	item 157: Aqua Shield
+5F	12,9	chest	r270 bit 7	SCN\SEL_EV2.DAT	item 187: Aqua Armor
+5F	1,7	chest	r270 bit 8	SCN\SEL_EV2.DAT	item 229: Aqua Helmet
+6F	5,7	chest	r283 bit 0	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+6F	13,10	chest	r283 bit 1	SCN\SEL_EV2.DAT	item 110: MC Hammer
+6F	10,14	chest	r283 bit 2	SCN\SEL_EV2.DAT	item  24: Magic Nut Beta
+6F	3,9	chest	r283 bit 3	SCN\SEL_EV2.DAT	item  29: Strength Berry
+6F	6,4	chest	r283 bit 4	SCN\SEL_EV2.DAT	item  68: Rare Skull
+7F	5,9	chest	r259 bit 0	SCN\SEL_EV2.DAT	item 105: Jitte (R)
+7F	10,2	chest	r259 bit 1	SCN\SEL_EV2.DAT	item 112: Dancing Fire Sword
+7F	1,6	chest	r259 bit 2	SCN\SEL_EV2.DAT	item 119: Moonlight Staff
+7F	12,13	chest	r259 bit 3	SCN\SEL_EV2.DAT	item 156: Angel's Bracelet
+7F	9,5	chest	r259 bit 4	SCN\SEL_EV2.DAT	item 191: Angel's Robes
+7F	5,5	chest	r259 bit 5	SCN\SEL_EV2.DAT	item 165: Shield of Justice
+7F	2,1	chest	r259 bit 6	SCN\SEL_EV2.DAT	item  69: Super Rare Skull
+8F	3,1	chest	r260 bit 0	SCN\SEL_EV2.DAT	item 242: Water Soul
+8F	11,1	chest	r260 bit 1	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+8F	4,13	chest	r260 bit 2	SCN\SEL_EV2.DAT	item  86: Evil Rune
+9F	4,0	chest	r261 bit 0	SCN\SEL_EV2.DAT	item 166: Flame Soul
+9F	10,0	chest	r261 bit 1	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+9F	8,15	chest	r261 bit 2	SCN\SEL_EV2.DAT	item  78: Harmony Rune
+10F	10,0	chest	r262 bit 0	SCN\SEL_EV2.DAT	item 163: Earth Soul
+10F	4,0	chest	r262 bit 1	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+10F	15,0	chest	r262 bit 2	SCN\SEL_EV2.DAT	item  81: Holy Rune
+11F	10,3	chest	r263 bit 0	SCN\SEL_EV2.DAT	item 240: Wind Soul
+11F	4,3	chest	r263 bit 1	SCN\SEL_EV2.DAT	item  85: Destruction Rune
+11F	0,0	chest	r263 bit 2	SCN\SEL_EV2.DAT	item  75: Protection Rune
+12F	4,4	chest	r172 bit 0	SCN\SEL_EV2.DAT	item 201: Wind Lord Armor
+12F	10,4	chest	r172 bit 1	SCN\SEL_EV2.DAT	item 197: Earth Lord Robes
+12F	4,10	chest	r172 bit 2	SCN\SEL_EV2.DAT	item 198: Water Lord Robes
+12F	10,10	chest	r172 bit 3	SCN\SEL_EV2.DAT	item 202: Fire Lord Armor
+12F	15,12	chest	r172 bit 4	SCN\SEL_EV2.DAT	item 241: Diamond Circlet
+12F	11,12	chest	r172 bit 5	SCN\SEL_EV2.DAT	item 236: Ruby Circlet
+12F	6,1	chest	r172 bit 6	SCN\SEL_EV2.DAT	item 117: Acala's Sword (L)
+12F	13,6	chest	r172 bit 7	SCN\SEL_EV2.DAT	item 255: Ring of Strength
+12F	6,13	chest	r172 bit 8	SCN\SEL_EV2.DAT	item 263: Ring of Life
+12F	1,8	chest	r172 bit 9	SCN\SEL_EV2.DAT	item 269: Ring of Agility
+0F	7,7	st-up		SCN\SEL_EV4.DAT	stairs up -> 1F 7,8 south [2]
+0F	6,15	telept		SCN\SEL_EV4.DAT	teleport -> 9,7 west [1]
+0F	7,15	telept		SCN\SEL_EV4.DAT	teleport -> 5,10 west [1]
+0F	5,10	telept		SCN\SEL_EV4.DAT	teleport -> 7,15 north [0]
+0F	8,15	telept		SCN\SEL_EV4.DAT	teleport -> 11,11 west [1]
+0F	11,11	telept		SCN\SEL_EV4.DAT	teleport -> 8,15 north [0]
+0F	5,9	telept		SCN\SEL_EV4.DAT	teleport -> 11,7 east [3]
+0F	0,10	telept		SCN\SEL_EV4.DAT	teleport -> 11,0 south [2]
+0F	11,0	telept		SCN\SEL_EV4.DAT	teleport -> 0,10 east [3]
+0F	0,9	telept		SCN\SEL_EV4.DAT	teleport -> 13,0 west [1]
+0F	13,0	telept		SCN\SEL_EV4.DAT	teleport -> 0,9 east [3]
+0F	13,12	telept		SCN\SEL_EV4.DAT	teleport -> 5,8 west [1]
+0F	5,8	telept		SCN\SEL_EV4.DAT	teleport -> 13,12 east [3]
+0F	0,8	telept		SCN\SEL_EV4.DAT	teleport -> 13,2 north [0]
+0F	13,2	telept		SCN\SEL_EV4.DAT	teleport -> 0,8 east [3]
+0F	11,2	telept		SCN\SEL_EV4.DAT	teleport -> 10,0 west [1]
+0F	10,0	telept		SCN\SEL_EV4.DAT	teleport -> 11,2 east [3]
+0F	10,9	telept		SCN\SEL_EV4.DAT	teleport -> 10,1 west [1]
+0F	10,1	telept		SCN\SEL_EV4.DAT	teleport -> 10,9 north [0]
+0F	9,9	telept		SCN\SEL_EV4.DAT	teleport -> 5,5 west [1]
+0F	5,5	telept		SCN\SEL_EV4.DAT	teleport -> 9,9 south [2]
+0F	11,5	telept		SCN\SEL_EV4.DAT	teleport -> 5,7 west [1]
+0F	5,7	telept		SCN\SEL_EV4.DAT	teleport -> 11,5 north [0]
+0F	0,7	telept		SCN\SEL_EV4.DAT	teleport -> 5,15 north [0]
+0F	5,15	telept		SCN\SEL_EV4.DAT	teleport -> 0,7 east [3]
+0F	12,10	telept		SCN\SEL_EV4.DAT	teleport -> 3,12 south [2]
+0F	3,12	telept		SCN\SEL_EV4.DAT	teleport -> 12,10 north [0]
+0F	2,13	telept		SCN\SEL_EV4.DAT	teleport -> 5,6 west [1]
+0F	5,6	telept		SCN\SEL_EV4.DAT	teleport -> 2,13 east [3]
+0F	0,5	telept		SCN\SEL_EV4.DAT	teleport -> 6,2 north [0]
+0F	0,6	telept		SCN\SEL_EV4.DAT	teleport -> 10,2 west [1]
+0F	10,2	telept		SCN\SEL_EV4.DAT	teleport -> 0,6 east [3]
+0F	10,14	telept		SCN\SEL_EV4.DAT	teleport -> 7,5 west [1]
+0F	6,4	telept		SCN\SEL_EV4.DAT	teleport -> 4,2 east [3]
+0F	4,0	telept		SCN\SEL_EV4.DAT	teleport -> 6,0 south [2]
+0F	5,4	telept		SCN\SEL_EV4.DAT	teleport -> 2,4 north [0]
+0F	2,2	telept		SCN\SEL_EV4.DAT	teleport -> 2,0 south [2]
+0F	0,3	telept		SCN\SEL_EV4.DAT	teleport -> 0,0 east [3]
+0F	6,1	telept		SCN\SEL_EV4.DAT	teleport -> 14,8 north [0]
+0F	1,0	telept		SCN\SEL_EV4.DAT	teleport -> 14,8 north [0]
+0F	3,3	telept		SCN\SEL_EV4.DAT	teleport -> 14,8 north [0]
+0F	3,0	telept		SCN\SEL_EV4.DAT	teleport -> 14,8 north [0]
+0F	5,1	telept		SCN\SEL_EV4.DAT	teleport -> 7,8 north [0]
+0F	1,3	telept		SCN\SEL_EV4.DAT	teleport -> 7,8 north [0]
+0F	2,1	telept		SCN\SEL_EV4.DAT	teleport -> 7,8 north [0]
+0F	6,3	telept		SCN\SEL_EV4.DAT	teleport -> 12,1 north [0]
+0F	5,3	telept		SCN\SEL_EV4.DAT	teleport -> 12,1 north [0]
+0F	15,0	telept		SCN\SEL_EV4.DAT	teleport -> 12,1 north [0]
+0F	5,0	telept		SCN\SEL_EV4.DAT	teleport -> 12,1 north [0]
+0F	7,1	telept		SCN\SEL_EV4.DAT	teleport -> 10,7 north [0]
+0F	3,1	telept		SCN\SEL_EV4.DAT	teleport -> 10,7 north [0]
+0F	7,0	telept		SCN\SEL_EV4.DAT	teleport -> 10,7 north [0]
+0F	5,2	telept		SCN\SEL_EV4.DAT	teleport -> 10,7 north [0]
+0F	3,4	telept		SCN\SEL_EV4.DAT	teleport -> 10,7 north [0]
+0F	13,3	trap		SCN\SEL_EV4.DAT	trap: poison a random party member
+0F	15,11	trap		SCN\SEL_EV4.DAT	trap: poison a random party member
+0F	14,14	trap		SCN\SEL_EV4.DAT	trap: poison a random party member
+0F	9,5	trap		SCN\SEL_EV4.DAT	trap: poison a random party member
+0F	3,2	telept		SCN\SEL_EV4.DAT	teleport -> 14,8 north [0]
+1F	2,2	st-up		SCN\SEL_EV3.DAT	stairs up -> 2F 1,2 west [1]
+1F	3,7	st-up		SCN\SEL_EV3.DAT	stairs up -> 2F 3,6 north [0]
+1F	5,6	st-up		SCN\SEL_EV3.DAT	stairs up -> 2F 5,5 north [0]
+1F	11,3	st-up		SCN\SEL_EV3.DAT	stairs up -> 2F 11,4 south [2]
+1F	11,14	st-up		SCN\SEL_EV3.DAT	stairs up -> 2F 11,13 north [0]
+1F	5,15	evt	r258 bit 5	SCN\SEL_EV3.DAT	event: Akko-chan (after Tenko-chan brothel scene)
+1F	6,15	evt	r174 bit 1	SCN\NINJA.DAT	event: Ninja girl #1
+2F	7,8	evt	r258 bit 0	SCN\SEL_EV3.DAT	event: Eldelyca joins party
+2F	7,15	evt	r258 bit 2	SCN\SEL_EV3.DAT	event: Akko-chan/Tenko-chan (introduction)
+2F	2,2	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 1F 1,2 west [1]
+2F	3,7	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 1F 3,6 north [0]
+2F	5,6	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 1F 5,5 north [0]
+2F	11,3	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 1F 11,3 west [1]
+2F	11,14	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 1F 11,13 north [0]
+2F	12,0	st-up		SCN\SEL_EV3.DAT	stairs up -> 3F 12,1 east [3]
+2F	12,15	evt	r174 bit 2	SCN\NINJA.DAT	event: Ninja girl #2
+3F	0,2	evt	r258 bit 3	SCN\SEL_EV3.DAT	event: Tenko-chan (before Chimera)
+3F	2,6	evt	r258 bit 4	SCN\SEL_EV3.DAT	event: Akko-chan (get water)
+3F	5,0	trap		SCN\SEL_EV3.DAT	trap -> 2F 5,0 south [2]
+3F	12,0	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 2F 12,1 south [2]
+3F	15,3	evt	r174 bit 3	SCN\NINJA.DAT	event: Ninja girl #3
+4F	8,0	evt	r174 bit 4	SCN\NINJA.DAT	event: Ninja girl #4
+5F	14,3	evt	r174 bit 5	SCN\NINJA.DAT	event: Ninja girl #5
+6F	15,15	st-up		SCN\SEL_EV3.DAT	stairs up -> 7F 15,14 north [0]
+6F	15,12	evt	r174 bit 6	SCN\NINJA.DAT	event: Ninja girl #6
+7F	15,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 6F 15,14 north [0]
+7F	13,3	evt	r174 bit 7	SCN\NINJA.DAT	event: Ninja girl #7
+8F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
+9F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
+10F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
+11F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
+12F	7,7	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
+12F	13,9	telept		SCN\SEL_EV3.DAT	teleport -> 7,0 south [2]
+12F	13,15	st-up		SCN\SEL_EV3.DAT	location: Border of Time, 2nd Arachne boss, stairs up -> 13F 7,14 north [0]
+13F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 12F 13,14 north [0]
+0F	11,10	wrt		SCN\A118_.DAT	ancient writing "MINAGOROSHI"
+0F	11,14	wrt		SCN\A118_.DAT	ancient writing "ANATANO TUMIHA, IKUTHU DESUKA"
+0F	4,12	wrt		SCN\A118_.DAT	ancient writing "SHINJIMAE"
+0F	10,4	wrt		SCN\A118_.DAT	ancient writing, teleport -> 13,9 south [2]
+1F	7,7	loc		SCN\A100_.DAT	location: Window Girl
+1F	0,15	loc		SCN\A101F.DAT	location: Noah's Bar
+1F	9,15	loc		SCN\A102B.DAT	location: The Old Tree
+1F	12,14	loc		SCN\A103B.DAT	location: Flower Field
+1F	12,0	loc		SCN\A118_.DAT	location: Vine Cross
+1F	10,10	loc		SCN\A105B.DAT	location: Flower Queen
+1F	15,0	loc		SCN\A106B.DAT	location: Black/White Lily
+1F	0,0	loc		SCN\A107B.DAT	location: Tirolian's Den
+1F	3,14	loc		SCN\A108A.DAT	location: Antonio's Inn
+1F	1,0	loc		SCN\A118_.DAT	location: Food Storage
+1F	2,12	loc		SCN\A110_.DAT	location: Sadao's Shop
+1F	2,2			SCN\A118_.DAT	[invalid/unused]
+1F	10,8	evt	r173 bits 0-4	SCN\A300_.DAT	event: Adult Picture Book #6
+1F	10,12	evt	r173 bits 0-4	SCN\A300_.DAT	event: Adult Picture Book #7
+2F	7,7	loc		SCN\A100_.DAT	location: Window Girl
+2F	15,3	loc		SCN\A200B.DAT	location: The Three Dwarfs
+2F	7,13	loc		SCN\A201D.DAT	location: Phantom Castle
+2F	7,11	evt		SCN\A300_.DAT	event: Tear joins party
+2F	14,14	st-up		SCN\A203_.DAT	location: Golden Apples", boss "Nekomata, rope up -> 3F 14,14 east [3]
+2F	2,2			SCN\A118_.DAT	[invalid/unused]
+2F	2,0	loc		SCN\A118_.DAT	location: Magic Tablet
+2F	11,9	wrt		SCN\A118_.DAT	ancient writing "FUTATABI HOROBINO"
+2F	0,1	evt	r173 bit 0	SCN\A300_.DAT	event: Adult Picture Book #1
+2F	0,3	evt	r173 bit 1	SCN\A300_.DAT	event: Adult Picture Book #2
+2F	2,4	evt	r173 bit 2	SCN\A300_.DAT	event: Adult Picture Book #3
+2F	4,1	evt	r173 bit 3	SCN\A300_.DAT	event: Adult Picture Book #4
+2F	4,3	evt	r173 bit 4	SCN\A300_.DAT	event: Adult Picture Book #5
+3F	7,7	loc		SCN\A100_.DAT	location: Window Girl
+3F	14,14	st-dwn		SCN\A300_.DAT	rope down -> 2F 15,14 east [3]
+3F	15,14	evt		SCN\A300_.DAT	event: Henzou joins party
+3F	3,12	loc		SCN\A301_.DAT	location: Divination Room
+3F	13,1	loc		SCN\A302B.DAT	location: Slug's Nest
+3F	1,3	loc		SCN\A303_.DAT	location: Unicorn Spring
+3F	0,0	loc		SCN\A304_.DAT	boss "Chimera"
+3F	3,0	loc		SCN\A305_.DAT	location: Devil's Mirror
+4F	7,7	loc		SCN\A100_.DAT	location: Window Girl
+4F	2,2	loc		SCN\A400_.DAT	location: Pierrot's Room
+4F	4,13	loc		SCN\A401B.DAT	location: Candy House
+4F	14,10	loc		SCN\A402_.DAT	location: Dollhouse
+4F	12,4	loc		SCN\A403B.DAT	location: Totem Pole
+4F	9,1	loc		SCN\A404_.DAT	location: Drawer Girl
+4F	8,13	loc		SCN\A405_.DAT	location: Music Box Girl
+4F	11,1	loc		SCN\A407_.DAT	location: Night Safe 777
+4F	0,11	loc		SCN\A110_.DAT	location: Twins Toy Shop
+5F	7,7	loc		SCN\A100_.DAT	location: Window Girl
+5F	15,14	loc		SCN\A500_.DAT	location: Sad Wall
+5F	8,2	loc		SCN\A501_.DAT	location: Fishman's Tank
+5F	3,5	loc		SCN\A503_.DAT	location: Crystal Forest
+5F	0,15	loc		SCN\A504_.DAT	location: Spring
+5F	2,15	loc		SCN\A504_.DAT	location: Spring
+5F	11,6	loc		SCN\A505_.DAT	location: Desert Spring
+5F	9,11	loc		SCN\A506_.DAT	location: Banshee's Spring
+5F	14,1	loc		SCN\A507_.DAT	location: Siren's Point
+5F	8,15	wrt		SCN\A118_.DAT	ancient writing "HITOHA ONAJI"
+6F	7,7	loc		SCN\A100_.DAT	location: Window Girl
+6F	2,2	loc		SCN\A600_.DAT	location: Dream Author
+6F	5,10	loc		SCN\A601_.DAT	location: Movie Theater
+6F	14,1	loc		SCN\A602_.DAT	location: Black Ball
+6F	10,12	loc		SCN\A603_.DAT	location: Stone Statue
+6F	5,15	loc		SCN\A110_.DAT	location: Donkey's Shop
+6F	1,14	loc		SCN\A605_.DAT	location: White Ball
+6F	9,1	loc		SCN\A606_.DAT	location: Tea Party
+6F	7,10	loc		SCN\A607_.DAT	location: Music Box Boy
+6F	10,7	loc		SCN\A608_.DAT	location: Photo Gallery
+6F	5,15	wrt		SCN\A118_.DAT	ancient writing "HITOHA FUTATHUNO"
+7F	7,7	loc		SCN\A700A.DAT	location: Spider Woman, 1st Arachne boss
+7F	15,0	wrt		SCN\A118_.DAT	ancient writing "REKISHIHA KURIKAESU"
+7F	13,4	wrt		SCN\A118_.DAT	ancient writing "OKASUMAENI"
+8F	7,1	evt		SCN\A800_.DAT	stone tablet, boss "Water Guardian"
+9F	7,0	evt		SCN\A800_.DAT	stone tablet, boss "Flame Guardian"
+10F	7,1	evt		SCN\A800_.DAT	stone tablet (no boss)
+11F	7,3	evt		SCN\A800_.DAT	stone tablet, boss "Wind Guardian"
+12F	0,7	evt		SCN\AC00_.DAT	location: Star Weaver
+12F	7,14	evt		SCN\AC02_.DAT	location: Story Teller
+12F	14,7	evt		SCN\AC01_.DAT	location: Star Gazer
+12F	7,0	telept		SCN\A118_.DAT	longer ancient writing, teleport -> 10,5 south [2]
+12F	13,15	st-up		SCN\AC06_.DAT	location: Border of Time, stairs up -> 13F 7,14 north [0]
+13F	7,0	loc		SCN\A118_.DAT	[invalid/unused]
+13F	7,2	loc		SCN\AC06_.DAT	location: Sanctuary
+14F	7,5	evt		SCN\AE00_.DAT	event: character build question N-1
+14F	6,4	evt		SCN\AE00_.DAT	event: character build question NW-2
+14F	6,2	evt		SCN\AE00_.DAT	event: character build question NW-3
+14F	6,0	evt		SCN\AE00_.DAT	event: character build question NW-4
+14F	8,4	evt		SCN\AE00_.DAT	event: character build question NE-2
+14F	8,2	evt		SCN\AE00_.DAT	event: character build question NE-3
+14F	8,0	evt		SCN\AE00_.DAT	event: character build question NE-4
+14F	9,7	evt		SCN\AE00_.DAT	event: character build question E-1
+14F	10,6	evt		SCN\AE00_.DAT	event: character build question EN-2
+14F	12,6	evt		SCN\AE00_.DAT	event: character build question EN-3
+14F	14,6	evt		SCN\AE00_.DAT	event: character build question EN-4
+14F	10,8	evt		SCN\AE00_.DAT	event: character build question ES-2
+14F	12,8	evt		SCN\AE00_.DAT	event: character build question ES-3
+14F	14,8	evt		SCN\AE00_.DAT	event: character build question ES-4
+14F	7,9	evt		SCN\AE00_.DAT	event: character build question S-1
+14F	8,10	evt		SCN\AE00_.DAT	event: character build question SE-2
+14F	8,12	evt		SCN\AE00_.DAT	event: character build question SE-3
+14F	8,14	evt		SCN\AE00_.DAT	event: character build question SE-4
+14F	6,10	evt		SCN\AE00_.DAT	event: character build question SW-2
+14F	6,12	evt		SCN\AE00_.DAT	event: character build question SW-3
+14F	6,14	evt		SCN\AE00_.DAT	event: character build question SW-4
+14F	5,7	evt		SCN\AE00_.DAT	event: character build question W-1
+14F	4,8	evt		SCN\AE00_.DAT	event: character build question WS-2
+14F	2,8	evt		SCN\AE00_.DAT	event: character build question WS-3
+14F	0,8	evt		SCN\AE00_.DAT	event: character build question WS-4
+14F	4,6	evt		SCN\AE00_.DAT	event: character build question WN-2
+14F	2,2	evt		SCN\AE00_.DAT	event: character build question WN-3
+14F	0,6	evt		SCN\AE00_.DAT	event: character build question WN-4

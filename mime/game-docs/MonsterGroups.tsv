@@ -1,0 +1,198 @@
+#floor	group	monster 1	pos 1	monster 2	pos 2	monster 3	pos 3	monster 4	pos 4
+0F	0	Alien Worker	80,112	Alien Worker	240,112	Hell Cloud	400,112
+0F	1	Armed God	0,112	Armed God	160,112	Armed God	320,112	Armed God	480,112
+0F	2	Armed God	0,112	Alien Worker	160,112	Alien Dweller	320,112	Armed God	480,112
+0F	3	God Eater	0,112
+0F	4	Alien Worker	0,112	Alien Worker	160,112	Alien Dweller	320,112	Alien Worker	480,112
+0F	5	Plant Worm	0,112	Hell Cloud	160,112	Hell Cloud	320,112	Vampire Jellyfish	480,112
+0F	6	Armed God	80,112	Alien Dweller	240,112	Armed God	400,112
+0F	7	Blue Demon	0,112	Armed God	320,112	Vampire Jellyfish	480,112
+0F	8	Hell Cloud	0,112	Hell Cloud	160,112	Hell Cloud	320,112	Hell Cloud	480,112
+0F	9	Plant Worm	80,112	Plant Worm	240,112	Plant Worm	400,112
+0F	10	Alien Dweller	0,112	Alien Dweller	160,112	Blue Demon	320,112
+0F	11	Blue Demon	0,112	Plant Worm	320,112	Vampire Jellyfish	480,112
+0F	12	Blue Demon	0,112	Blue Demon	320,112
+0F	13	Chimera Master	0,112	Demon Spider	320,112
+0F	14	Alien Worker	0,112	Blue Demon	160,112	Alien Worker	480,112
+1F	0	Green Slime	240,112
+1F	1	Small Plant	240,112
+1F	2	Bunny Warrior	240,112
+1F	3	Nosonoso.	160,112	Nosonoso.	320,112
+1F	4	Puu	240,112
+1F	5	Puu	160,112	Nosonoso.	320,112
+1F	6	BC-98	160,112	BC-98	320,112
+1F	7	B68000	240,112
+1F	8	Green Slime	160,112	Trent Jr.	320,112
+1F	9	Trent Jr.	240,112
+1F	10	Puu	160,112	Bunny Warrior	320,112
+1F	11	Nosonoso.	240,112
+1F	12	BC-98	240,112
+1F	13	Bunny Warrior	160,112	Bunny Warrior	320,112
+1F	14	Small Plant	160,112	Small Plant	320,112
+2F	0	2-headed Caterpillar	240,112
+2F	1	Mantis Mage	240,112
+2F	2	Mohican Pig	160,112	Nosonoso.	320,112
+2F	3	Mohican Pig	160,112	Mohican Pig	320,112
+2F	4	Mohican Pig	240,112
+2F	5	Mantis Mage	160,112	2-headed Caterpillar	320,112
+2F	6	Mandrake Man	160,112	Mandrake Girl	320,112
+2F	7	Lizard Worm	240,112
+2F	8	Mantis Mage	160,112	Chibi Knight	320,112
+2F	9	2-headed Caterpillar	160,112	Lizard Worm	320,112
+2F	10	Lizard Worm	160,112	Lizard Worm	320,112
+2F	11	Mandrake Man	240,112
+2F	12	Mohican Pig	160,112	Chibi Knight	320,112
+2F	13	Chibi Knight	240,112
+2F	14	Nekomata	160,112
+3F	0	Winded Spirit	160,112	Winded Spirit	320,112
+3F	1	Wyvern	80,112	Wyvern	240,112	Winded Spirit	400,112
+3F	2	Puu	80,112	Puu Puu	240,112	Puu Puu	400,112
+3F	3	Puu Puu	160,112	Puu Puu	320,112
+3F	4	March Hare	80,112	Slaymaster	240,112	March Hare	400,112
+3F	5	Slaymaster	80,112	Wyvern	240,112	Puu Puu	400,112
+3F	6	Ouchie Turtle	160,112	Winded Spirit	320,112
+3F	7	Wyvern	80,112	Winded Spirit	240,112	Ouchie Turtle	400,112
+3F	8	Puu Puu	80,112	Puu Puu	240,112	Ouchie Turtle	400,112
+3F	9	Slaymaster	160,112	Slaymaster	320,112
+3F	10	Ouchie Turtle	160,112	March Hare	320,112
+3F	11	March Hare	160,112	March Hare	320,112
+3F	12	DeepC98	240,112
+3F	13	Nekomata	160,112
+3F	14	Chimera	160,112
+4F	0	Trojan Horse	160,112	Marionette	320,112
+4F	1	Trojan Horse	80,112	Trojan Horse	240,112	Cursed Doll	400,112
+4F	2	Toy Soldier	0,112	Toy Soldier	160,112	Toy Soldier	320,112	Toy Soldier	480,112
+4F	3	Marionette	160,112	Marionette	320,112
+4F	4	Teddy Bear	80,112	Teddy Bear	240,112	Teddy Bear	400,112
+4F	5	Cursed Doll	0,112	Cursed Doll	160,112	Cursed Doll	320,112	Trojan Horse	480,112
+4F	6	Mandrake Beauty	160,112	Mandrake Beauty	320,112
+4F	7	Teddy Bear	80,112	Teddy Bear	240,112	Humpty Dumpty	400,112
+4F	8	Trojan Horse	0,112	Teddy Bear	160,112	Cursed Doll	320,112	Toy Soldier	480,112
+4F	9	Humpty Dumpty	160,112	Cursed Doll	320,112
+4F	10	Toy Soldier	80,112	Toy Soldier	240,112	Toy Soldier	400,112
+4F	11	Marionette	0,112	Marionette	160,112	Trojan Horse	320,112	Marionette	480,112
+4F	12	Coins	240,112
+4F	13	Mandrake-nosuke	240,112
+4F	14	Plate Man	240,112
+5F	0	Mermaid	160,112	Extra Fin	320,112
+5F	1	Extra Fin	80,112	Extra Fin	240,112	Extra Fin	400,112
+5F	2	Extra Fin	0,112	Mermaid	160,112	Extra Fin	320,112	Extra Fin	480,112
+5F	3	Gel Golem	160,112	Gel Golem	320,112
+5F	4	Mermaid	80,112	Extra Fin	240,112	Gel Golem	400,112
+5F	5	Dizzy Jellyfish	0,112	Extra Fin	160,112	Mermaid	320,112	Gel Golem	480,112
+5F	6	Happy Clam	160,112	Happy Clam	320,112
+5F	7	Dizzy Jellyfish	80,112	Dizzy Jellyfish	240,112	Dizzy Jellyfish	400,112
+5F	8	Happy Clam	0,112	Happy Clam	160,112	Happy Clam	320,112	Crazy Clam	480,112
+5F	9	Dizzy Jellyfish	160,112	Mermaid	320,112
+5F	10	Mermaid	80,112	Mermaid	240,112	Happy Clam	400,112
+5F	11	Water Flea	0,112	Water Flea	160,112	Water Flea	320,112	Plankton	480,112
+5F	12	Water Flea	160,112	Plankton	320,112
+5F	13	Twins	240,112
+5F	14	Siren	80,112
+6F	0	Stone Golem	160,112	Shadow	320,112
+6F	1	Silent Knight	80,112	Stone Golem	240,112	Stone Golem	400,112
+6F	2	Silent Knight	0,112	White King	160,112	Black Queen	320,112	Silent Knight	480,112
+6F	3	Sleep Horse	160,112	Sleep Horse	320,112
+6F	4	Black Queen	80,112	White King	240,112	Black Queen	400,112
+6F	5	Stone Golem	0,112	Mono Clam	160,112	Silent Knight	320,112	Sleep Horse	480,112
+6F	6	Silent Knight	160,112	Sleep Horse	320,112
+6F	7	Sleep Horse	80,112	Black Queen	240,112	Sleep Horse	400,112
+6F	8	Shadow	0,112	Stone Golem	160,112	Mono Clam	320,112	Mono Clam	480,112
+6F	9	Mono Clam	160,112	Shadow	320,112
+6F	10	Mono Clam	80,112	Silent Knight	240,112	Black Queen	400,112
+6F	11	Stone Golem	0,112	White King	160,112	Sleep Horse	320,112	Stone Golem	480,112
+6F	12	Shadow Egg	160,112	Shadow Chick	320,112
+6F	13	Shadow	80,112	Shadow	240,112	Shadow	400,112
+6F	14	Shadow Egg	0,112	Shadow Egg	160,112	Shadow Chick	320,112	Shadow Egg	480,112
+7F	0	Gargoyle	240,112
+7F	1	Gargoyle	80,112	Salamander	240,112
+7F	2	Salamander	0,112	Salamander	320,112
+7F	3	Skull Collector	240,112
+7F	4	Skull Collector	160,112	Skull Collector	320,112
+7F	5	Skull Collector	80,112	Skull Collector	240,112	Soul Hunter	400,112
+7F	6	Soul Hunter	240,112
+7F	7	Hobgoblin	160,112	Hobgoblin	320,112
+7F	8	Gargoyle	80,112	Soul Hunter	240,112	Hobgoblin	400,112
+7F	9	Salamander	160,112
+7F	10	Soul Hunter	80,112	Salamander	240,112
+7F	11	Gargoyle	80,112	Gargoyle	240,112	Gargoyle	400,112
+7F	12	Hobgoblin	240,112
+7F	13	Gargoyle	160,112	Hobgoblin	320,112
+7F	14	Arachne	160,112
+8F	0	Male Water Spirit	160,112	Male Water Spirit	320,112
+8F	1	Male Water Spirit	80,112	Male Water Spirit	240,112	Male Water Spirit	400,112
+8F	2	Male Water Spirit	0,112	Male Water Spirit	160,112	Male Water Spirit	320,112	Male Water Spirit	480,112
+8F	3	Female Water Spirit	160,112	Female Water Spirit	320,112
+8F	4	Female Water Spirit	80,112	Female Water Spirit	240,112	Female Water Spirit	400,112
+8F	5	Female Water Spirit	0,112	Female Water Spirit	160,112	Female Water Spirit	320,112	Female Water Spirit	480,112
+8F	6	Male Water Spirit	160,112	Female Water Spirit	320,112
+8F	7	Female Water Spirit	80,112	Male Water Spirit	240,112	Female Water Spirit	400,112
+8F	8	Male Water Spirit	0,112	Male Water Spirit	160,112	Female Water Spirit	320,112	Male Water Spirit	480,112
+8F	9	Female Water Spirit	80,112	Female Water Spirit	240,112	Male Water Spirit	400,112
+8F	10	Female Water Spirit	80,112	Male Water Spirit	240,112	Male Water Spirit	400,112
+8F	11	Female Water Spirit	0,112	Male Water Spirit	160,112	Male Water Spirit	320,112	Female Water Spirit	480,112
+8F	12	Male Water Spirit	240,112
+8F	13	Female Water Spirit	240,112
+8F	14	Water Guardian	0,112
+9F	0	Male Fire Spirit	160,112	Male Fire Spirit	320,112
+9F	1	Male Fire Spirit	80,112	Male Fire Spirit	240,112	Male Fire Spirit	400,112
+9F	2	Male Fire Spirit	0,112	Male Fire Spirit	160,112	Male Fire Spirit	320,112	Male Fire Spirit	480,112
+9F	3	Female Fire Spirit	160,112	Female Fire Spirit	320,112
+9F	4	Female Fire Spirit	80,112	Female Fire Spirit	240,112	Female Fire Spirit	400,112
+9F	5	Female Fire Spirit	0,112	Female Fire Spirit	160,112	Female Fire Spirit	320,112	Female Fire Spirit	480,112
+9F	6	Male Fire Spirit	160,112	Female Fire Spirit	320,112
+9F	7	Female Fire Spirit	80,112	Male Fire Spirit	240,112	Female Fire Spirit	400,112
+9F	8	Male Fire Spirit	0,112	Male Fire Spirit	160,112	Female Fire Spirit	320,112	Male Fire Spirit	480,112
+9F	9	Female Fire Spirit	80,112	Female Fire Spirit	240,112	Male Fire Spirit	400,112
+9F	10	Female Fire Spirit	80,112	Male Fire Spirit	240,112	Male Fire Spirit	400,112
+9F	11	Female Fire Spirit	0,112	Male Fire Spirit	160,112	Male Fire Spirit	320,112	Female Fire Spirit	480,112
+9F	12	Male Fire Spirit	240,112
+9F	13	Female Fire Spirit	240,112
+9F	14	Flame Guardian	0,112
+10F	0	Male Earth Spirit	160,112	Male Earth Spirit	320,112
+10F	1	Male Earth Spirit	80,112	Male Earth Spirit	240,112	Male Earth Spirit	400,112
+10F	2	Male Earth Spirit	0,112	Male Earth Spirit	160,112	Male Earth Spirit	320,112	Male Earth Spirit	480,112
+10F	3	Female Earth Spirit	160,112	Female Earth Spirit	320,112
+10F	4	Female Earth Spirit	80,112	Female Earth Spirit	240,112	Female Earth Spirit	400,112
+10F	5	Female Earth Spirit	0,112	Female Earth Spirit	160,112	Female Earth Spirit	320,112	Female Earth Spirit	480,112
+10F	6	Male Earth Spirit	160,112	Female Earth Spirit	320,112
+10F	7	Female Earth Spirit	80,112	Male Earth Spirit	240,112	Female Earth Spirit	400,112
+10F	8	Male Earth Spirit	0,112	Male Earth Spirit	160,112	Female Earth Spirit	320,112	Male Earth Spirit	480,112
+10F	9	Female Earth Spirit	80,112	Female Earth Spirit	240,112	Male Earth Spirit	400,112
+10F	10	Female Earth Spirit	80,112	Male Earth Spirit	240,112	Male Earth Spirit	400,112
+10F	11	Female Earth Spirit	0,112	Male Earth Spirit	160,112	Male Earth Spirit	320,112	Female Earth Spirit	480,112
+10F	12	Male Earth Spirit	240,112
+10F	13	Female Earth Spirit	240,112
+10F	14	Female Earth Spirit	0,112	Female Earth Spirit	160,112	Male Earth Spirit	320,112	Female Earth Spirit	480,112
+11F	0	Male Wind Spirit	160,112	Male Wind Spirit	320,112
+11F	1	Male Wind Spirit	80,112	Male Wind Spirit	240,112	Male Wind Spirit	400,112
+11F	2	Male Wind Spirit	0,112	Male Wind Spirit	160,112	Male Wind Spirit	320,112	Male Wind Spirit	480,112
+11F	3	Female Wind Spirit	160,112	Female Wind Spirit	320,112
+11F	4	Female Wind Spirit	80,112	Female Wind Spirit	240,112	Female Wind Spirit	400,112
+11F	5	Female Wind Spirit	0,112	Female Wind Spirit	160,112	Female Wind Spirit	320,112	Female Wind Spirit	480,112
+11F	6	Male Wind Spirit	160,112	Female Wind Spirit	320,112
+11F	7	Female Wind Spirit	80,112	Male Wind Spirit	240,112	Female Wind Spirit	400,112
+11F	8	Male Wind Spirit	0,112	Male Wind Spirit	160,112	Female Wind Spirit	320,112	Male Wind Spirit	480,112
+11F	9	Female Wind Spirit	80,112	Female Wind Spirit	240,112	Male Wind Spirit	400,112
+11F	10	Female Wind Spirit	80,112	Male Wind Spirit	240,112	Male Wind Spirit	400,112
+11F	11	Female Wind Spirit	0,112	Male Wind Spirit	160,112	Male Wind Spirit	320,112	Female Wind Spirit	480,112
+11F	12	Male Wind Spirit	240,112
+11F	13	Female Wind Spirit	240,112
+11F	14	Wind Guardian	0,112
+12F	0	Virus	160,112	Mercury	320,112
+12F	1	Dark Magician	80,112	Dark Magician	240,112	Dark Magician	400,112
+12F	2	Devil's Servant	0,112	Devil's Servant	160,112	Devil's Servant	320,112	Devil's Servant	480,112
+12F	3	Death Knight	160,112	Dark Magician	320,112
+12F	4	Mercury	80,112	Mercury	240,112	Virus	400,112
+12F	5	Man Eater	0,112	Death Knight	160,112	Ｓ・Ｂ・Ｓ	320,112	Dark Magician	480,112
+12F	6	Blood Axe	160,112	Devil's Servant	320,112
+12F	7	Man Eater	80,112	Blood Axe	240,112	Ｓ・Ｂ・Ｓ	400,112
+12F	8	Death Knight	0,112	Death Knight	160,112	Death Knight	320,112	Death Knight	480,112
+12F	9	Man Eater	160,112	Ｓ・Ｂ・Ｓ	320,112
+12F	10	Dark Magician	80,112	Blood Axe	240,112	Blood Axe	400,112
+12F	11	Virus	0,112	Mercury	160,112	Mercury	320,112	Virus	480,112
+12F	12	Devil's Servant	160,112	Devil's Servant	320,112
+12F	13	Death Knight	80,112	Death Knight	240,112	Man Eater	400,112
+12F	14	Arachne	160,112
+13F	0	Goddess	0,112
+13F	1	Great God Aus	0,112

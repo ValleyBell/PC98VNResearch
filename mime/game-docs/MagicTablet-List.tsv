@@ -1,0 +1,56 @@
+#rune1	rune2	rune3	rune4	rune5	rune6	spell/item
+wind	wind	wind	wind	wind	wind	[Eagle spell 1] Gardas
+wind	wind	wind	wind	light	light	[Eagle spell 2] Silas
+wind	wind	wind	accuracy	light	light	[Eagle spell 3] Liger
+wind	wind	wind	holy	scatter	light	[Eagle spell 4] Baugs
+wind	wind	wind	scatter	destruction	evil	[Eagle spell 5] Lydess
+earth	earth	earth	earth	earth	earth	[Tear spell 1] Shem
+earth	earth	earth	earth	light	light	[Tear spell 2] Shelt
+accuracy	earth	earth	earth	light	light	[Tear spell 3] Shayoh
+accuracy	holy	earth	earth	earth	light	[Tear spell 4] Racela
+protection	harmony	holy	earth	earth	earth	[Tear spell 5] Tesna
+protection	holy	earth	earth	earth	destruction	[Tear spell 6] Welhee
+water	water	water	water	water	water	[Henzou spell 1] Suiheki Kyoushu
+shadow	shadow	water	water	water	water	[Henzou spell 2] Kousui Kouhi
+shadow	shadow	water	water	water	accuracy	[Henzou spell 3] Insui Shourai
+shadow	water	water	water	accuracy	evil	[Henzou spell 4] Shuuha Shijin
+protection	water	water	water	harmony	evil	[Henzou spell 5] Sanpa Shikou
+water	water	water	harmony	destruction	evil	[Henzou spell 6] Inryuu Meppa
+fire	fire	fire	fire	fire	fire	[Eldelyca spell 1] Terrias
+shadow	shadow	fire	fire	fire	fire	[Eldelyca spell 2] Frena
+shadow	shadow	accuracy	fire	fire	fire	[Eldelyca spell 3] Fraid
+shadow	accuracy	fire	fire	fire	holy	[Eldelyca spell 4] Shelks
+accuracy	fire	fire	fire	holy	destruction	[Eldelyca spell 5] Flamer
+water	water	water	earth	earth	earth	[item 17] Yosaku's Rice Ball
+wind	wind	wind	fire	fire	fire	[item 18] Fake Mabo-chin
+wind	wind	water	water	scatter	scatter	[item 30] Wallet of Doom
+destruction	evil	evil	evil	evil	evil	[item 31] Devil's Breath
+harmony	harmony	harmony	harmony	harmony	harmony	[item 32] Sage's Scroll
+holy	holy	holy	holy	holy	holy	[item 33] Hero's Emblem
+wind	wind	wind	earth	earth	earth	[item 34] Hunger Drum
+evil	evil	evil	evil	evil	evil	[item 35] Nightmare Whispers
+shadow	holy	light	destruction	destruction	evil	[item 39] Dice of Darkness
+shadow	shadow	shadow	shadow	shadow	shadow	[item 40] Cursed Harmonica
+wind	shadow	water	fire	earth	light	[item 41] Spirit's Blessing
+shadow	shadow	fire	fire	destruction	evil	[item 115] Blazing Sword
+protection	protection	light	light	light	destruction	[item 116] Knight Sword
+shadow	holy	holy	light	destruction	destruction	[item 123] Phantom Staff
+destruction	destruction	destruction	destruction	destruction	destruction	[item 122] Tsukimaru (L)
+shadow	accuracy	earth	destruction	destruction	evil	[item 120] Zantetsuken (L)
+protection	protection	holy	holy	destruction	destruction	[item 127] Hero's Sword
+protection	protection	protection	holy	light	light	[item 159] Knight Shield
+protection	fire	fire	fire	fire	evil	[item 160] Magic Flame Shield
+protection	protection	shadow	shadow	light	light	[item 161] Phantom Bracelet
+protection	harmony	light	light	light	light	[item 193] Maid Outfit
+protection	shadow	shadow	shadow	shadow	light	[item 194] Illusory Robes
+wind	protection	protection	protection	shadow	shadow	[item 196] Iga Robes
+protection	fire	fire	fire	fire	light	[item 228] Searing Helmet
+protection	protection	holy	holy	light	light	[item 239] Hero's Helmet
+protection	protection	shadow	accuracy	holy	holy	[item 253] Expert Briefs
+protection	protection	harmony	light	evil	evil	[item 254] Expert Panties
+protection	shadow	harmony	accuracy	holy	light	[item 256] Hero's Briefs
+protection	accuracy	holy	light	destruction	evil	[item 261] Ring of Dispelling
+protection	water	water	harmony	holy	light	[item 262] Marine Crystal
+protection	protection	shadow	light	evil	evil	[item 265] Phantom High Heels
+protection	shadow	harmony	scatter	light	evil	[item 266] Bewitching Bikini
+wind	protection	protection	shadow	scatter	evil	[item 267] Iga Fundoshi
