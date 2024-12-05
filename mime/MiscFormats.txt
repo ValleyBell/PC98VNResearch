@@ -105,7 +105,10 @@ r299 - main story state
 	120: Entered Null Maze
 	125: Met the three star girls
 	130: Defeated Aus
-	Trivia: The 100/10 digits correspond to the highest floor you can visit.
+	Trivia: The 100/10 digits correspond to the highest floor you visited.
+
+r394 - Debug Mode enable (bits 0..6 used)
+	When entering a "special" player name, one of the bits 0..6 is set, depending on the name.
 
 r500..r4339 = map data (15 maps with 100h registers each)
 	Each value is a bitmask of the following:

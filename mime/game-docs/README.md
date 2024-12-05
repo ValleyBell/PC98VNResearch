@@ -6,6 +6,7 @@
 - [Battle](#battle)
 - [Black Rose](#black-rose)
 - [Character Building](CharacterBuilding.md) (separate file)
+- [Debug Mode](#debug-mode)
 - [Food and Drinks](#food-and-drinks)
 - [Magic Tablet](#magic-tablet)
 - [Maps and locations](Maps.md) (separate file)
@@ -67,6 +68,8 @@ Example for the ancient language from floor 2F, map location 11,9:
     - 1/20: "\[Player\] tripped on a pebble!!" "While also scattering # RING across the floor!" (failure, lose 10..100 RING)
     - 1/20: "\[Player\] fell on their back!!" "While also scattering # RING across the floor!" (failure, lose 10..100 RING)
     - 16/20: "The monsters also backed away until they couldn't be seen again!!" (success)
+    - *Possible bug:* The RNG is probably supposed to be in the range of only `[1..10]` here.  
+      This would double the chance for each of the "failure" actions and decrease the success rate to 40%, which is similar to the probabilities of the other choices.
   - Turn Away:
     - summary: 40% success, 60% failure, 20% chance of gaining RING
     - 5/20: "The monsters watched and got dizzy!!" (success)
@@ -83,7 +86,7 @@ Example for the ancient language from floor 2F, map location 11,9:
     - 1/10: "The monsters tried to imitate the act!" "But they couldn't seem to get it down!!" "The monsters get angry at \[Player\]!" (failure)
     - 3/10: "\[Player\] couldn't avoid the monsters catching up to them!!" (failure)
   - Recommendations:
-    - "Back Away" has the highest chance of success (60%).
+    - "Back Away" has the highest chance of success (80%).
     - "Turn Away" is the least risky choice, if you care about your money, as you can not lose RING there.
 - [List of monsters](Monsters.tsv) - list of all monsters and their attributes
 - [List of monster groups](MonsterGroups.tsv) - list of all groups of monsters that can be encountered on each floor
@@ -97,9 +100,39 @@ Each of the girls in the Black Rose brothel has its own requirement before servi
 - The Relaxed Girl "Stella": pay 999 RING
 - The Little Devil "Elvira": have item "Rare Skull", then item "Super Rare Skull"
 - The Sadist "Chloture": be level 30 or higher
-- The Warrior "Ashley" have item "Evil Sword"
-- The Elf Girl "Cass" pay 999 RING
+- The Warrior "Ashley": have item "Evil Sword"
+- The Elf Girl "Cass": pay 999 RING
 - ??????? "Tenko-chan": defeat the Chimera boss
+
+## Debug Mode
+
+There is a debug mode left in the game's release version. It has the following features:
+
+- during dungeon movement:
+  - allow you to instantly quit the game by clicking in the region (0,0)..(32,32) (top left edge of the screen)
+  - open a debug menu by clicking in the region (0,368)..(32,400) (bottom left edge of the screen)
+  - jump to the "Window Girl" by clicking in the region (608,0)..(640,32) (top right edge of the screen)
+  - enter test mode by clicking in the region (608,368)..(640,400) (bottom right edge of the screen)
+- allow you to warp to any maze on the "Window Girl" screen
+- add rune stone descriptions to the magic stone tablet screen
+- give you extra options in the battle:
+  - "I love Morrigan" - restores all HP and MP to all characters
+  - "End" - instantly ends the battle
+
+In order to enable debug mode, you have to enter one of the following 7 names as your player's name and hold the Shift key while confirming the name.
+The game will play a special sound effect to confirm the cheat code and change the player's name to another name as shown below.
+
+- `のぎやま` (Nogiyama) → `野木山❤` (Nogiyama❤)
+- `おきやま` (Okiyama) → `爆音小僧` (Bakuon Kozou)
+- `あさい` (Asai) → `レイレイ` (Lei-Lei)
+- `マサキＤ` (MasakiD) → `三石ﾕ渠` (Mitsuishi Yuko)
+- `むっち～` (Mucchi~) → `火野レイ` (Hino Rei)
+- `メイロン` (MEIRONG) → `リュウ` (Ryuu)
+- `だば` (Daba) → `天陳影久` (Tenchin Eikyuu)
+- Thanks to saintttimmy for transcribing the names.
+
+Internally, debug mode is enabled by setting a flag in script register 394. (offset 0x314 in the saved game)
+There is a separate bit set for each name, but the game generally only checks whether or not the register is set to 0, so all of the names have the same effect.
 
 ## Food and Drinks
 
@@ -236,9 +269,9 @@ For breaking ties, Tear gets the highest preference, then Eldelyca.
 
 The ingame algorithm is:
 
-- Tear's trust level is >= Henzou's and Eldelyca's -> Ending 1
-- Henzou's trust level is > Tear's and it is > Eldelyca's -> Ending 2
-- Eldelyca's trust level is > Tear's and it is >= Henzou's -> Ending 3
+- Tear's trust level is >= Henzou's and Eldelyca's → Ending 1 (Tear Ending)
+- Henzou's trust level is > Tear's and it is > Eldelyca's → Ending 2 (Henzou Ending)
+- Eldelyca's trust level is > Tear's and it is >= Henzou's → Ending 3 (Eldelyca Ending)
 
 The trust level is increased during the following scenes:
 
@@ -268,11 +301,11 @@ The trust level is increased during the following scenes:
   - The chosen person's trust level is increased by 2. Agreeing without conditions does not increase any trust level.
   - Later, when everybody is sleeping and you wake up, you can:
     - Go back to sleep
-    - Look for Tear -> increases Tear's trust level by 1
+    - Look for Tear → increases Tear's trust level by 1
 - A602 "Black Ball" / A605 "White Ball"
   - You can do various tasks with your party members here.
-    - dance -> increase trust level by 1
-    - eat -> increase trust level by 1
+    - dance → increase trust level by 1
+    - eat → increase trust level by 1
 - A607 "Music Box Boy":
   - When get asked, who takes the doll, the first choice ("Take the doll") increases the trust level for all 3 parters by 1.
   - All other choices (i.e. not taking the doll or wanting a kiss) have no effect.
