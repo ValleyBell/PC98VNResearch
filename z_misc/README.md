@@ -15,11 +15,6 @@
 - [visitte_packer.py](visitte_packer.py) - archive (un-)packer for `DISK#.LBX` archives used by the game "Visitte", published by Mischief [^1]
 - [valkyrie_save-decoder.py](valkyrie_save-decoder.py) - de-/encryption tool for story save games (`DATA#.SAV`) of "Valkyrie: The Power Beauties", published by DISCOVERY
 - Valkyrie `GSIC.EXE` disassembly: [ASM file](valkyrie_GSIC.asm) / [IDB database](valkyrie_GSIC.idb)
-- [vg-txt-tool.py](vg-txt-tool.py) - tool for decoding/reencoding the `TXT` message files in "V.G.: Variable Geo"
-  - The game uses the ASCII letter `n` to indicate line breaks, which the tool converts to `\n`.
-  - ASCII letters can be converted to the JIS ASCII mirror page (default) or to full-width characters.
-  - The `TXT` message format consists of a list of 2-byte pointers (each pointing to a message), followed by the actual message data.
-    Messages are encoded in Shift-JIS and are terminated with a 00 byte.
 - NEC PC-9801 JIS ↔ Unicode mapping: [NEC-C-6226-visual3.txt](NEC-C-6226-visual3.txt) (downloaded from [HarJIT's Website](https://harjit.moe/jismappings.html))
 - Python tool to read the text file and create look-up tables: [NEC-C-6226-reader.py](NEC-C-6226-reader.py)
 - Python tools dealing with the NEC PC-9801 font:
@@ -56,3 +51,22 @@ So here is what I've got:
 - [MAINCON.SCE format documentation](rekiai_sce_format.txt)
 - [rekiai_sce_decode.py](rekiai_sce_decode.py) - converts `MAINCON.SCE` into two text files, one with text strings and one with the script code (mostly a hex dump with labels, but with optional text strings as comments)
 - [rekiai_dat_unpack.py](rekiai_dat_unpack.py) - archive unpacker for `REKIAI.DAT` ([format documentation](rekiai_dat.txt))
+
+## V.G.: Variable Geo
+
+- `VG.EXE` disassembly: [ASM file](VG.asm) / [IDB database](VG.idb)
+- [VG.EXE ASCII patch](VG-ASC.asm)
+  - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
+  - The newline character can be defined using the variable `NL_CHR`.  
+    The default value is `\n` (byte 0Ah), which is compatible with `vg-txt-tool.py --true-ascii`.  
+    The original game uses `n` (byte 6Eh).
+  - There are 2 additional opcodes (bytes 01h and 02h) that allow enabling/disabling use of the 8x8 font for ASCII characters.
+  - In order to get additional space for texts when translating the Japanese messages, the variable `SEG026_SPACE` can be increased. It will insert additional space before the main data segment.
+  - There is a total of 172 separate "MOV AX, text_ptr" instructions that are patched to allow for easier relocating of the text.
+  - A prepatched version with example text: [VG-ASC.EXE](VG-ASC.EXE).
+- [vg-txt-tool.py](vg-txt-tool.py) - tool for decoding/reencoding the `TXT` message files in "V.G.: Variable Geo"
+  - The game uses the ASCII letter `n` to indicate line breaks, which the tool converts to `\n`.
+  - ASCII letters can be converted to the JIS ASCII mirror page (default) or to full-width characters.
+  - The `TXT` message format consists of a list of 2-byte pointers (each pointing to a message), followed by the actual message data.
+    Messages are encoded in Shift-JIS and are terminated with a 00 byte.
+- [vg-txt2asm.py](vg-txt2asm.py) - a small helper tool that I used to extract all the texts and text references from the EXE file

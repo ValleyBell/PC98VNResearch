@@ -8,6 +8,8 @@ import typing
 import argparse
 
 ASCII_FULLWIDTH = False
+ASCII_MIRROR = False
+NEWLINE_BYTE = ord('n')
 
 
 # --- decoding ---
@@ -30,17 +32,28 @@ def sjis_special_decode(sjis: bytes) -> str:
 
 def dump_as_str(data: bytes) -> str:
     global ASCII_FULLWIDTH
+    global ASCII_MIRROR
+    global NEWLINE_BYTE
 
     result = ""
     pos = 0
     while pos < len(data):
         ch = None
-        if data[pos] < 0x80:
+        if data[pos] == NEWLINE_BYTE:
+            result += "\\n"
+            pos += 1
+        elif data[pos] < 0x80:
             ch = chr(data[pos])
-            if (ch in "xuU0123456789") or (not ch.isprintable()):
-                result += f"\\x{data[pos]:02X}"
+            if ASCII_MIRROR:
+                if (ch in "xuU0123456789") or (not ch.isprintable()):
+                    result += f"\\x{data[pos]:02X}"
+                else:
+                    result += '\\' + ch
             else:
-                result += '\\' + ch
+                if not ch.isprintable():
+                    result += f"\\x{data[pos]:02X}"
+                else:
+                    result += ch
             pos += 1
         else:
             ch = sjis_special_decode(data[pos : pos+2])
@@ -112,16 +125,14 @@ def ascii_to_sjis_fullwidth(ch: str) -> bytes:
     return None
 
 def sjis_special_encode(ch: str) -> bytes:
-    if ch == "\u00A5":
-        return "\uFFE5".encode("shift-jis")
-    if ch == ' ':
-        return '\u3000'.encode("shift-jis")
     if ch >= '\u2500' and ch <= '\u254B':
         return bytes([0x86, ord(ch) - 0x2500 + 0xA2])
     return None
 
 def read_escaped_string(datastr: str) -> bytes:
     global ASCII_FULLWIDTH
+    global ASCII_MIRROR
+    global NEWLINE_BYTE
 
     pos = 0
     result = bytearray()
@@ -159,6 +170,9 @@ def read_escaped_string(datastr: str) -> bytes:
                     return None
                 chrdata = chr(int(datastr[pos : pos2], 0o10))
                 pos = pos2
+            elif esc_chr == 'n':	# newline
+                chrdata = chr(NEWLINE_BYTE)
+                use_jis = False
             else:
                 # else just take as normal ASCII character (those are used for control codes)
                 chrdata = esc_chr
@@ -172,8 +186,10 @@ def read_escaped_string(datastr: str) -> bytes:
             try:
                 if ASCII_FULLWIDTH:
                     sjis = ascii_to_sjis_fullwidth(chrdata)
-                else:
+                elif ASCII_MIRROR or ord(chrdata) == NEWLINE_BYTE:
                     sjis = ascii_to_sjis_mirror(chrdata)
+                else:
+                    sjis = None
                 if sjis is None:
                     sjis = sjis_special_encode(chrdata)
                 if sjis is None:
@@ -216,11 +232,14 @@ def encode_txt_file(filepath_in: str, filepath_out: str) -> int:
 
 def main(argv):
     global ASCII_FULLWIDTH
+    global ASCII_MIRROR
+    global NEWLINE_BYTE
 
     print("Variable Geo 1 TXT Tool")
     aparse = argparse.ArgumentParser()
     ap_mode = aparse.add_subparsers(dest="mode", help="conversion mode", required=True)
-    #aparse.add_argument("-M", "--no-ascii-mirror", action="store_true", help="do NOT convert text strings from/to ASCII mirror page (Shift JIS 85xx)")
+    aparse.add_argument("-A", "--true-ascii", action="store_true", help="assumes actual ASCII text and \\n for newlines")
+    aparse.add_argument("-M", "--no-ascii-mirror", action="store_true", help="do NOT convert text strings from/to ASCII mirror page (Shift JIS 85xx)")
     aparse.add_argument("-f", "--fullwidth-ascii", action="store_true", help="convert ASCII to full-width characters")
 
     pm_decode = ap_mode.add_parser("d", help="decode binary .TXT to text file")
@@ -230,13 +249,18 @@ def main(argv):
     pm_encode.add_argument("in_file", help="input text file")
     pm_encode.add_argument("out_file", help="output file .TXT")
 
-    ap_args = aparse.parse_args(argv[1:])
+    config = aparse.parse_args(argv[1:])
 
-    ASCII_FULLWIDTH = ap_args.fullwidth_ascii
-    if ap_args.mode == "d":
-        return decode_txt_file(ap_args.in_file, ap_args.out_file)
-    elif ap_args.mode == "e":
-        return encode_txt_file(ap_args.in_file, ap_args.out_file)
+    ASCII_FULLWIDTH = config.fullwidth_ascii
+    ASCII_MIRROR = not config.no_ascii_mirror
+    if config.true_ascii:
+        ASCII_MIRROR = False
+        NEWLINE_BYTE = ord('\n')
+
+    if config.mode == "d":
+        return decode_txt_file(config.in_file, config.out_file)
+    elif config.mode == "e":
+        return encode_txt_file(config.in_file, config.out_file)
     else:
         print("Invalid mode!")
         return 1
