@@ -511,6 +511,11 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		cmd_pos = curpos
 		cmd_id = scene_read_int(scenedata, file_usage, cmd_pos, 0x11)
 		curpos += 0x02
+		if cmd_id == 0xFFFF:
+			# This is commonly used to just quit the game.
+			cmd_list += [(cmd_pos, -2, [cmd_id])]
+			curpos = None	# stop processing here
+			continue
 		if cmd_id >= 0x100:
 			# The game engine treats this as command 0x00. (return to DOS)
 			print(f"Found invalid command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
@@ -582,6 +587,21 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				curpos = None	# stop processing here
 			elif cmd_info[2] == SC_EXEC_SPC:
 				if cmd_id == 0x13:	# jump table
+					# check for previous instruction being "ADDI var, NNN" and set skip_vals to NNN
+					skip_vals = 0
+					if len(cmd_list) > 1:
+						params = cmd_list[-1][2]
+						reg_val = params[0][1]	# register ID = value of param[0]
+						#print(f"0x{curpos:04X}: {cmd_info} / {cmd_list[-1]}, Register i{reg_val}")
+						prev_cmd = cmd_list[-2]
+						if prev_cmd[1] == 0x24:	# ADDI command
+							params = prev_cmd[2]
+							preg_val = params[0][1]	# register ID = value of param[0]
+							padd_val = params[1][1]
+							#print(f"Previous: {prev_cmd}, Register i{preg_val}, add {padd_val}")
+							if reg_val == preg_val and padd_val == +1:
+								skip_vals = padd_val
+
 					cmd_pos = curpos
 					endpos = len(scenedata)
 					params = []
@@ -594,17 +614,13 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 						# (Most files in Canaan use 0x80..0x8F, but there are also 0x70..0x7F used in a few files.
 						#  In Gaogao 2, the value seems to be random offsets inside the file.)
 						# This is the case, when there is an "ADDI var, 1" value right before the "JTBL var" command.
-						# In this case, we have to just accept the pointer.
-						# In all other cases, we probably want to exit, so that we don't accidentally interpret code as a pointer.
+						# In this case, we have to just read the value and not dereference it.
+						# In all other cases, we probably check the pointer for validity.
+						# If the pointer is bad, we want to exit, so that we don't accidentally interpret code as a pointer.
 						dst_cmd = 0xFFFF
-						if curpos <= cmd_pos:
-							# handle 1st value
-							if ptrval < start_ofs:
-								if not (ptrval == 0 or (ptrval >= 0x70 and ptrval <= 0x8F)):
-									print(f"Warning: Jump table dummy value 0x{ptrval:04X} at offset 0x{cmd_pos:04X}!")
-							elif ptrval + 0x01 < len(scenedata):
-								dst_cmd = struct.unpack_from("<H", scenedata, ptrval)[0]
-						else:	# if curpos > cmd_pos:
+						if skip_vals > 0:
+							skip_vals -= 1
+						else:
 							# 2nd and later values
 							if ptrval < start_ofs:
 								ptrval = 0xFFFF	# probably code, finish reading
