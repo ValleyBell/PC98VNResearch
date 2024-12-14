@@ -9,7 +9,7 @@ MIME Scene Format
 
 Commands
 --------
-00 - print dungeon talk
+00 TALKDGN - print dungeon talk
 	? bytes - Shift-JIS string, terminated with two backslashes (5C5Ch)
 	Special handling:
 	- "##" (hex code 2323h) will be replaced with the player name
@@ -17,12 +17,12 @@ Commands
 	This is used to show player/NPC talk during dungeon crawling.
 	It writes to the text box in the lower middle of the screen.
 	Automatic line breaks happen after 16 full-width characters.
-01 - load music
+01 BGMLOAD - load music
 	? bytes - null-terminated file name
 	The file should have a ".M" file extension.
 	In MIDI mode, the ".M" is replaced with ".N" to generate the file name of the MIDI song.
 	This only loads music data into the sound driver. It does not start playback.
-02 - print full-screen talk
+02 TALKFS - print full-screen talk
 	? bytes - Shift-JIS string, see command 00 for details
 	Special handling:
 	- "##" (hex code 2323h) will be replaced with the player name
@@ -30,36 +30,36 @@ Commands
 	This is used to show player/NPC talk during full-screen cutscenes.
 	It writes to the text box in the lower part of the screen.
 	Automatic line breaks happen after 37 full-width characters.
-03 - load next scenario
+03 SCNLOAD - load next scenario
 	This command is usually placed after command 1C and will terminate the script execution.
 	The game returns to the main loop, which will load a new script file from the file name set by command 1C and execute it.
-04 - set text colour
+04 TXTCOL - set text colour
 	2 bytes - main colour (palette index 00h..0Fh)
 	2 bytes - shadow colour (palette index 00h..0Fh)
-05 - set GDC plane to display
+05 PORTA6 - set GDC plane to display
 	2 bytes - value to write to I/O register 0A6h (high byte is ignored)
 	This switches between showing GDC plane 0 and 1.
-06 - delay script execution by N frames
+06 WAIT - delay script execution by N frames
 	2 bytes - number of frames to wait
-07 - set register = value
+07 MOVI - set register = value
 	2 bytes - destination register ID (0..4675)
 	2 bytes - value
-08 - set register = other register
+08 MOVR - set register = other register
 	2 bytes - source register ID
 	2 bytes - destination register ID
-09 - add value to register
+09 ADDI - add value to register
 	2 bytes - source/destination register ID
 	2 bytes - value to be added
-0A - add source to destination register
+0A ADDR - add source to destination register
 	2 bytes - register ID of value to be added
 	2 bytes - source/destination register ID
-0B - subtract value from register
+0B SUBI - subtract value from register
 	2 bytes - source/destination register ID
 	2 bytes - value to be subtracted
-0C - subtract source from destination register
+0C SUBR - subtract source from destination register
 	2 bytes - register ID of value to be subtracted
 	2 bytes - source/destination register ID
-0D - graphics copy 1 (opqaue)
+0D BLIT1 - graphics copy 1 (opqaue)
 	2 bytes - screen source address
 	2 bytes - width in pixels
 	2 bytes - height in pixels
@@ -68,55 +68,55 @@ Commands
 		Bit 0 (01h): ??
 		Bit 1 (02h): ??
 	-> 0Ah bytes
-0E - graphics copy 2 (background to screen)
+0E BLIT2 - graphics copy 2 (background to screen)
 	2 bytes - screen source address
 	2 bytes - width in pixels
 	2 bytes - height in pixels
 	2 bytes - screen destination address
 	-> 08h bytes
 	Same as command 0D, except that the "mode" is fixed to 02 and it waits 1 frame before executing it.
-0F - ??
+0F CMD0F - ??
 	2 bytes - ??
-10 - clear bit from register
+10 BCLR - clear bit from register
 	2 bytes - register ID
 	2 bytes - bit to be cleared
 	"Bit 0" -> (reg AND 0FFFEh), "Bit 15" -> (reg AND 7FFFh)
-11 - set bit in register
+11 BSET - set bit in register
 	2 bytes - register ID
 	2 bytes - bit to be set
 	"Bit 0" -> (reg AND 0001h), "Bit 15" -> (reg AND 8000h)
-12 - set registers to value
+12 MOVM - set multiple registers to value
 	2 bytes - register ID 1
 	2 bytes - register ID 2
 	2 bytes - value
 	Sets all registers from reg1 to reg2 (inclusive) to the value.
-13 - subroutine call
+13 CALL - subroutine call
 	2 bytes - file offset of the subroutine to execute
 	The file offset of the next command is pushed to an internal stack for use with the return command.
 	The stack allows for 8 levels of nesting.
-14 - subroutine return
+14 RET - subroutine return
 	The return address is popped from an internal stack.
-15 - jump to offset
+15 JP - jump to offset
 	2 bytes - destination file offset to continue execution at
-16 - conditional jump: equal
+16 JEQ - conditional jump: equal
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
 	Jumps when: [register] == value
-17 - conditional jump: greater than
+17 JGT - conditional jump: greater than
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
 	Jumps when: [register] > value
-18 - conditional jump: less than
+18 JLT - conditional jump: less than
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
 	Jumps when: [register] < value
-19 - same as 1A
+19 IMGLD2 - same as 1A
 	-> 9 bytes
-	Note: The scripts all use command 1A.
-1A - load GTA graphics file
+	Note: The scripts all use command 1A, so this is command probably got its code removed and thus is invalid.
+1A IMGLD - load GTA graphics file
 	2 bytes - ??
 		Bits 0-1   (0003h): ?? (ignored when bit 4 is clear)
 		Bit   4    (0010h): ??
@@ -125,7 +125,7 @@ Commands
 	2 bytes - screen destination address
 	5 bytes - file title of the .GTA file (no terminator byte)
 	-> 9 bytes
-1B - graphics effect
+1B IMGFX - graphics effect
 	2 bytes - screen source address
 	2 bytes - width in pixels
 	2 bytes - height in pixels
@@ -133,12 +133,12 @@ Commands
 	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
 	TODO: What is the actual effect? It does a partial copy once every 3 frames for multiple iterations.
-1C - set next script
+1C SCNSET - set next script
 	? bytes - null-terminated file name of a script file
 	The script will NOT be loaded by the command.
 	Instead, it is usually followed by command 03, which ends script execution.
 	After that, the game will load the script from the file set by this command and execute it.
-1D - show menu
+1D MENUSEL - show menu
 	2 bytes - draw address
 	2 bytes - number of text strings (N)
 	? bytes - series of N Shift-JIS strings, each is terminated with two backslashes (5C5Ch)
@@ -151,34 +151,34 @@ Commands
 	- register 53 - set to 0
 	The number of the selected entry is stored in register 8. The first entry has number 1.
 	The text is drawn using the colours stored in register 9 (main colour) and 10 (shadow colour).
-1E - end script and quit
+1E QUIT - end script and quit
 	This will terminate the script and quit the game then.
-1F - ??
+1F CMD1F - ??
 	2 bytes - ??
-20 - ??
+20 CMD20 - ??
 	2 bytes - ??
-21 - read save game file
+21 SAVREAD - read save game file
 	? bytes - null-terminated file name
-22 - ??
+22 CMD22 - ??
 	no parameters
-23 - set GDC plane for reading/writing
+23 PORTA4 - set GDC plane for reading/writing
 	2 bytes - value to write to I/O register 0A4h (high byte is ignored)
 	The game waits 1 frame and then writes to the port.
 	This selects which plane graphics are read from/written to.
-24 - read maze map
+24 MAPREAD - read maze map
 	2 bytes - register ID for map X position
 	2 bytes - register ID for map Y position
 	Register 15 contains the "floor ID".
 	This calculates an index: [map X] + [map Y] * 0x10
 	It then reads [register (500 + [floor ID] * 0x100 + index)] and writes the result to [register 7].
-25 - test bit in register and jump conditionally
+25 BTST - test bit in register and jump conditionally
 	2 bytes - register ID
 	2 bytes - bit to be tested
 	The command takes the contents of the register, extracts the respective bit (see commands 10/11).
 	If the result is 0, it skips 3 additional bytes.
 	If the result is non-zero, just continues.
-	NOTE: This must be followed by a command that takes 2 parameter bytes. (usually a "jump" command)
-26 - graphics copy 3 (transparent)
+	NOTE: This must be followed by a command that takes 2 parameter bytes. (usually a "JP" command)
+26 BLIT3 - graphics copy 3 (transparent)
 	2 bytes - screen source address
 	2 bytes - width in pixels
 	2 bytes - height in pixels
@@ -186,7 +186,7 @@ Commands
 	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
 	This seems to allow for transparent copies. (colour 0 is transparent)
-27 - wait for user input
+27 CMD27 - wait for user input
 	no parameters
 	This calls INT 68h, routine AH=5.
 	The function returns as soon as either a key is pressed or the mouse gets moved.
@@ -212,50 +212,50 @@ Commands
 	- register 23 - mouse X position
 	- register 24 - mouse Y position
 	- register 26 - ?? (mode 0 only)
-28 - ??
+28 CMD28 - ??
 	no parameters
 	This calls INT 68h, routine AH=3.
-29 - ??
+29 CMD29 - ??
 	no parameters
 	This calls INT 68h, routine AH=4.
-2A - ??
+2A CMD2A - ??
 	no parameters
 	This calls INT 68h, routine AH=0Bh with parameter AL = [register 26]
-2B - play music
+2B BGMPLAY - play music
 	no parameters
 	This calls INT 60h or 61h, routine AH=0.
-2C - fade music out
+2C BGMFADE - fade music out
 	2 bytes - fade speed
 	This calls INT 60h or 61h, routine AH=2 with parameter AL = (fade speed).
 	It then waits for the fade out to complete (checking song volume with routine AH=8).
 	Finally, it enforces the music to stop. (routine AH=1)
-2D - ??
+2D CMD2D - ??
 	2 bytes - register ID 1
 	2 bytes - register ID 2
 	This calls INT 68h, routine AH=6 with parameters BX = [register 1], DX = [register 2].
-2E - write map data
+2E MAPWRT - write map data
 	2 bytes - register ID for map X position
 	2 bytes - register ID for map Y position
 	Register 15 contains the "floor ID".
 	This calculates an index: [map X] + [map Y] * 0x10
 	It then reads [register 7] and copies the value to [register (500 + [floor ID] * 0x100 + index)].
 	The function is used  for auto-mapping (i.e. set the "has visited this square" bit) and marking certain spots as "event location".
-2F - draw map to screen
+2F MAPDRAW - draw map to screen
 	no parameters
 	Notes:
 	- uses registers 19/20 as work memory
 	- reads registers 12/13/14 for drawing the player's position
 	- only used by Z0003.DAT
-30 - print text (full-width characters)
+30 PRINT2 - print text (full-width characters)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	? bytes - Shift-JIS string, terminated with two backslashes (5C5Ch)
-31 - ?? (related to map drawing?)
+31 CMD31 - ?? (related to map drawing?)
 	no parameters
 	Note: reads from registers 17/18
-32 - ??
+32 CMD32 - ??
 	no parameters
 	Note: reads from registers 17/18
-33 - player naming: add character
+33 PNAMADD - player naming: add character
 	no parameters
 	The function adds a character to the player's name by:
 	1. setting the register with index [contents of register 7] to a value from the "name letter table" (hardcoded into the EXE file)
@@ -267,7 +267,7 @@ Commands
 	- register 18 - name letter table, row (Y) (0..15)
 	Output:
 	- register 0..3 - sets [register (reg_7)] to a value from the "name letter table"
-34 - player naming: remove character
+34 PNAMDEL - player naming: remove character
 	no parameters
 	The function removes the last character of the player's name by:
 	It does *not* decrease the value in register 7. That is something that the script itself must do.
@@ -277,76 +277,76 @@ Commands
 	- register 7 - position in character name (0..3)
 	Output:
 	- register 0..3 - sets [register (reg_7)] to 0
-35 - ??
+35 CMD35 - ??
 	2 bytes - ?? (some routine ID, can be 0 or 1, other values will crash the game)
 	This seems to install some interrupt handler for INT 08h.
-36 - ??
+36 CMD36 - ??
 	no parameters
 	This reverts command 35.
-37 - ??
+37 CMD37 - ??
 	no parameters
 	This calls INT 68h, routine AH=9 and then waits for a key press.
-38 - write save game file
+38 SAVWRT - write save game file
 	? bytes - null-terminated file name
 	This writes all script memory (2488h bytes) to a file.
-39 - get random number
+39 RNDI - get random number
 	2 bytes - register ID
 	2 bytes - range
 	This calculates a random number using a pseudo-random number generator.
 	The result is divided by (range) and the remainder is saved to the register.
 	Thus, the result is effectively 0..(range-1).
-3A - print text (half-width characters)
+3A PRINT1 - print text (half-width characters)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	? bytes - Shift-JIS string, terminated with a single backslash (5Ch)
 	Note: Bytes 00h..7Fh will draw ASCII (font ROM, page 09h), bytes 80h..0FFh will draw half-width Katakana (font ROM, page 0Ah)
-3B - print register text
+3B DSPS - print/display string from registers
 	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	The game will read text, starting with the memory location of the register data, until it reaches a register of either 0000h or 5C5Ch.
 	All characters are assumed to be 2-byte Shift-JIS.
 	This is used to print the protagonist's name in various places.
-3C - print register value (half-width, 5 digits)
+3C DSPI10 - print/display integer register value (half-width, 5 digits)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	The register's contents are read and the resulting number drawn on the screen, right-aligned, padded with spaces to 5 characters.
 	It uses half-width characters to show the number.
-3D - ??
+3D CMD3D - ??
 	2 bytes - ??
 	8*0Ah bytes - ?? (8 groups of 5x 2-byte integers)
 	8*0Ah bytes - ??
 	-> 0A2h bytes
 	It copies 0A2h bytes from the script to some global location.
-3E - ??
+3E CMD3E - ??
 	2 bytes - value (high byte is ignored)
 	This calls INT 68h, routine AH=0Fh with parameter AL = value
-3F - play FM sound effect
+3F SFXFM - play FM sound effect
 	2 bytes - ID of the sound effect (high byte is ignored)
 	ID 0 is special and will stop all currently playing sound effects.
-40 - wait for disk
+40 DSKWAIT - wait for disk
 	0Ah bytes - file name of "DISK_ID" file
 	2 bytes - requested disk ID (0 = disk "A", 1 = disk "B", etc.)
 	-> 0Ch bytes
-41 - graphics copy 4 (?)
+41 BLIT4 - graphics copy 4 (?)
 	2 bytes - screen source address
 	2 bytes - width in pixels
 	2 bytes - height in pixels
 	2 bytes - screen destination address
 	2 bytes - mode (bit mask, can be 00..03) [same as mode in command 0D]
 	-> 0Ah bytes
-42 - print register value (full-width, 5 digits)
+42 DSPI20 - print/display integer register value (full-width, 5 digits)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	This command is the full-width version of command 3C.
 	The register's contents are read and the resulting number drawn on the screen, right-aligned, padded with spaces to 5 characters.
 	It uses full-width characters to show the number.
-43 - register percentage multiply
+43 MULCI - register percentage multiply
 	2 bytes - register ID
 	2 bytes - value
 	[register] = [register] * value / 100
 	The result it stored in register 55.
-44 - ??
+44 CMD44 - ??
 	no parameters
-45 - print register digits
+45 DIGDSP - print/display register digits
 	2 bytes - draw address
 		Note: Unlike other print functions, there is NO "reuse old position" option here. The value must be valid in any case.
 	2 bytes - register ID
@@ -354,7 +354,7 @@ Commands
 	Each of the 6 registers must contain a value in the range of 0..9.
 	Leading zeroes are replaced with spaces.
 	Full-width characters are used to show the digits.
-46 - add value to register digits
+46 DIGADDI - add value to register digits
 	2 bytes - register ID
 	2 bytes - value to be added
 	The command adds the value to a 6-digit number, which is spread across multiple registers.
@@ -362,64 +362,64 @@ Commands
 	Register [reg_ID + 0] contains the most significant digit.
 	Register [reg_ID + 5] contains the least significant digit.
 	On overflow, the number is clamped to 999999.
-47 - subtract value from register digits
+47 DIGSUBI - subtract value from register digits
 	2 bytes - register ID
 	2 bytes - value to be subtracted
 	The command subtracts the value from a 6-digit number, which is spread across multiple registers.
 	See command 46 for details.
 	On underflow, register 55 is set to 0FFFFh and [reg_ID + 0] will end up negative.
-48 - get "run from floppy disk" state
+48 DSKMODE - get "run from floppy disk" state
 	no parameters
 	This checks whether or not the game runs from floppy disks or hard disk and sets register 55 according to the result.
 		0 - running from hard disk
 		1 - running from floppy disks (and thus requires disk swapping)
-49 - add register value to register digits
+49 DIGADDR - add register value to register digits
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	The command adds the value from [source register] to a 6-digit number, which is spread across multiple registers starting with [destination register].
 	See command 46 for details.
-4A - subtract register value from register digits
+4A DIGSUBR - subtract register value from register digits
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	The command subtracts the value from [source register] from a 6-digit number, which is spread across multiple registers starting with [destination register].
 	See command 47 for details.
-4B - wait until reaching a specific music measure
+4B BGMWAIT - wait until reaching a specific music measure
 	2 bytes - measure to reach in FM mode
 	2 bytes - measure to reach in MIDI mode
-4C - ?? (screen transition related?)
+4C CMD4C - ?? (screen transition related?)
 	no parameters
-4D - ?? (screen transition related?)
+4D CMD4D - ?? (screen transition related?)
 	no parameters
-4E - compare registers
+4E CMPR - compare registers
 	2 bytes - register ID of reg1
 	2 bytes - register ID of reg2
 	reg2 == reg1 -> result = 0
 	reg2 > reg1 -> result = 1
 	reg2 < reg1 -> result = -1
 	The result is saved in register 55.
-4F - multiply register with value
+4F MULI - multiply register with value
 	2 bytes - source/destination register ID
 	2 bytes - value to multiply
 	The register receives the low 16 bits of the result. Register 55 receives the high 16 bits.
-50 - multiply register with register
+50 MULR - multiply register with register
 	2 bytes - register ID of value to multiply
 	2 bytes - source/destination register ID
 	The destination register receives the low 16 bits of the result. Register 55 receives the high 16 bits.
-51 - divide register by value
+51 DIVI - divide register by value
 	2 bytes - source/destination register ID
 	2 bytes - value to divide with
 	The register receives the quotient. Register 55 receives the remainder.
-52 - divide register by register
+52 DIVR - divide register by register
 	2 bytes - register ID of value to multiply
 	2 bytes - source/destination register ID
 	The destination register receives the quotient. Register 55 receives the remainder.
-53 - get item data
+53 GETITM - get item data
 	2 bytes - register ID for item ID
 	This copies the data for the specified item (24h bytes/18 registers) to registers 4550..4567.
-54 - get monster data
+54 GETMNST - get monster data
 	2 bytes - register ID for monster ID
 	This copies the data for the specified monster (48h bytes/36 registers) to register 10103..10138.
-55 - graphics copy 1 (opqaue)
+55 BLIT1R - graphics copy 1 (opqaue)
 	2 bytes - register ID for screen source address
 	2 bytes - register ID for width in pixels
 	2 bytes - register ID for height in pixels
@@ -427,14 +427,14 @@ Commands
 	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 0D, except that all values are read from registers.
-56 - graphics copy 2 (background to screen)
+56 BLIT2R - graphics copy 2 (background to screen)
 	2 bytes - register ID for screen source address
 	2 bytes - register ID for width in pixels
 	2 bytes - register ID for height in pixels
 	2 bytes - register ID for screen destination address
 	-> 8 bytes
 	Same as command 0E, except that all values are read from registers.
-57 - graphics effect
+57 IMGFXR - graphics effect
 	2 bytes - register ID for screen source address
 	2 bytes - register ID for width in pixels
 	2 bytes - register ID for height in pixels
@@ -442,7 +442,7 @@ Commands
 	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 1B, except that all values are read from registers.
-58 - graphics copy 3 (transparent)
+58 BLIT3R - graphics copy 3 (transparent)
 	2 bytes - register ID for screen source address
 	2 bytes - register ID for width in pixels
 	2 bytes - register ID for height in pixels
@@ -450,52 +450,52 @@ Commands
 	2 bytes - register ID for mode
 	-> 0Ah bytes
 	Same as command 26, except that all values are read from registers.
-59 - load GTA graphics file
+59 IMGLDR - load GTA graphics file
 	2 bytes - register ID 1 - starting register for file name
 	2 bytes - register ID 2
 	2 bytes - register ID 3
 	-> 6 bytes
 	Same as command 19, except that all values are read from registers.
-5A - get random number with range from register
+5A RNDR - get random number with range from register
 	2 bytes - register ID of range value
 	2 bytes - destination register ID
 	Same as command 39, except that the range is read from a register.
-5B - get disk ID
+5B DSKGET - get disk ID
 	0Ah bytes - file name of "DISK_ID" file
 	The game will keep trying to the disk ID file until it succeeds.
 	The result is saved in register 55.
 	disk A - value 0, disk B - value 1, etc.
-5C - ??
+5C CMD5C - ??
 	2 bytes - register ID
-5D - print text (full-width characters)
+5D PRINT2R - print text (full-width characters)
 	2 bytes - register ID for draw address (register data 0FFFFh - continue at current position)
 	? bytes - Shift-JIS string, terminated with two backslashes (5C5Ch)
 	Same as command 30, except that the draw address is read from a register.
-5E - print register text
+5E DSPSR - print/display string from registers
 	2 bytes - register ID for draw address (register data 0FFFFh - continue at current position)
 	2 bytes - register ID
 	Same as command 3B, except that the draw address is read from a register.
-5F - ??
+5F CMD5F - ??
 	2 bytes - ?? (-> 8086 register BX)
 	2 bytes - ?? (-> 8086 register DX)
 	2 bytes - ?? (-> 8086 register SI)
 	2 bytes - ?? (-> 8086 register DI)
 	-> 8 bytes
 	This calls INT 68h, routine AH=8.
-60 - ??
+60 CMD60 - ??
 	no parameters
-61 - print register value (half-width, up to 5 digits)
+61 DSPI1N - print/display integer register value (half-width, up to 5 digits)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	The register's contents are read and the resulting number drawn on the screen. There is no alignment or padding.
 	It uses half-width characters to show the number.
-62 - print register value (full-width, up to 5 digits)
+62 DSPI2N - print/display integer register value (full-width, up to 5 digits)
 	2 bytes - draw address (0FFFFh - continue at current position)
 	2 bytes - register ID
 	This command is the full-width version of command 61.
 	The register's contents are read and the resulting number drawn on the screen. There is no alignment or padding.
 	It uses full-width characters to show the number.
-63 - set file path disk letter
+63 DSKPSET - set file path disk letter
 	no parameters
 	This command is used to patch the drive letter of a file name in a following command.
 	In order to do that, the command starts a search for a colon (:) at the position after the command.
@@ -542,6 +542,6 @@ Text strings
 General notes
 -------------
 - The operator order for register operations differs depending on the operand type.
-  - For operations with "register and value", the order is: [destination register] [value]
+  - For operations with "register and value", the order is: [destination register] [operand value]
   - For operations with "register and register", the order is: [operand register] [destination register]
 - The conditional jump command 25 requires a 3-byte command following it, which is skipped if the condition is not met.

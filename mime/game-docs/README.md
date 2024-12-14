@@ -16,7 +16,7 @@
 
 ## General
 
-**Note:** The documents here use texts from sainttimmy's English translation of MIME.
+**Note:** The documents here use texts from saintttimmy's English translation of MIME.
 
 ## Ancient Language
 
