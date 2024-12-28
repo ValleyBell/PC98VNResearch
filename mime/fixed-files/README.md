@@ -25,3 +25,4 @@ This folder contains a bunch of fixed files for the game.
     ![L130B original](L130B-org.png)
   - L130B after:  
     ![L130B fixed](L130B.png)
+- [STMED.GTA](STMED.GTA) - fixed missing white pixels in the first row

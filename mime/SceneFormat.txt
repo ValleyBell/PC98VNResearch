@@ -36,9 +36,9 @@ Commands
 04 TXTCOL - set text colour
 	2 bytes - main colour (palette index 00h..0Fh)
 	2 bytes - shadow colour (palette index 00h..0Fh)
-05 PORTA6 - set GDC plane to display
+05 PORTA6 - set GDC plane for reading/writing
 	2 bytes - value to write to I/O register 0A6h (high byte is ignored)
-	This switches between showing GDC plane 0 and 1.
+	This selects which plane graphics are read from/written to.
 06 WAIT - delay script execution by N frames
 	2 bytes - number of frames to wait
 07 MOVI - set register = value
@@ -161,10 +161,10 @@ Commands
 	? bytes - null-terminated file name
 22 CMD22 - ??
 	no parameters
-23 PORTA4 - set GDC plane for reading/writing
+23 PORTA4 - set GDC plane to display
 	2 bytes - value to write to I/O register 0A4h (high byte is ignored)
 	The game waits 1 frame and then writes to the port.
-	This selects which plane graphics are read from/written to.
+	This switches between showing GDC plane 0 and 1.
 24 MAPREAD - read maze map
 	2 bytes - register ID for map X position
 	2 bytes - register ID for map Y position

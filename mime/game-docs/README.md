@@ -42,9 +42,11 @@ Example for the ancient language from floor 2F, map location 11,9:
 
 ## Battle
 
-- There are no encounters for 3 steps after returning to the dungeon screen after an event or battle.  
+- There are no encounters for 3 actions\* after returning to the dungeon screen after an event or battle.  
   After that, the enemy encounter rate is 1/16 for each step.
   The internal formula is: `(random() % 16) == 7` (see Z0001.DAT/loc\_227F)
+  - *\ One "action" can be making a step or turning around. So if you turn 3 times and then make a step, you may encounter another enemy after just 1 step.
+  - The "action counter" gets reset as soon as the dungeon script is reloaded - which is not only after events, but also after viewing the map or inventory screens.
 - When defeating a monster, the characters gain:
   - exactly the amount of experience points defined by the monster table (register 10120)
   - the amount of RING defined by the monster table (register 10134) + an additional random 0..5 RING
@@ -109,10 +111,10 @@ Each of the girls in the Black Rose brothel has its own requirement before servi
 There is a debug mode left in the game's release version. It has the following features:
 
 - during dungeon movement:
-  - allow you to instantly quit the game by clicking in the region (0,0)..(32,32) (top left edge of the screen)
-  - open a debug menu by clicking in the region (0,368)..(32,400) (bottom left edge of the screen)
-  - jump to the "Window Girl" by clicking in the region (608,0)..(640,32) (top right edge of the screen)
-  - enter test mode by clicking in the region (608,368)..(640,400) (bottom right edge of the screen)
+  - allow you to instantly quit the game by holding Shift + clicking in the region (0,0)..(32,32) (top left edge of the screen)
+  - open a debug menu by holding Shift + clicking in the region (0,368)..(32,400) (bottom left edge of the screen)
+  - jump to the "Window Girl" by holding Shift + clicking in the region (608,0)..(640,32) (top right edge of the screen)
+  - enter test mode by holding Shift + clicking in the region (608,368)..(640,400) (bottom right edge of the screen)
 - allow you to warp to any maze on the "Window Girl" screen
 - add rune stone descriptions to the magic stone tablet screen
 - give you extra options in the battle:
@@ -312,3 +314,4 @@ The trust level is increased during the following scenes:
 
 Due to the story event of Tear's awakening, she effectively starts with a trust level of 10 while Henzou and Eldelyca start at 0.
 This means that in order to get the alternate ending scenes, you have to repeat the dance/eat tasks during the black and white ball a few times in order to increase the respective member's trust level.
+Right after freeing Eldelyca, you can also repeat the dwarf dialogue multiple times to increase the trust level.

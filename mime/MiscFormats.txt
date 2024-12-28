@@ -180,17 +180,31 @@ Pos	Len	Description
 			1 - consumable (HP/MP/... restoration)
 			2 - single-use item (magic stones and other)
 			3 - weapon (right hand)
-			4 - weapon (left hand)
+			4 - weapon/shield (left hand)
 			5 - armor
 			6 - helmet
 			7 - amulet
 1A	02	price
 			This is the price for buying an item.
 			Items can be sold for half of their price. (result is rounded down)
-1C	02	sub-category?
-1E	02	?? (some limit, often 9999, signed value)
-20	02	?? (some limit, often 9999, signed value)
-22	02	?? (some limit, often 9999, signed value)
+1C	02	sub-type
+		category 3..7: This is a bitmask of which character can equip the item.
+			Bit 0 (0001h): Eldelyca
+			Bit 1 (0002h): Henzou
+			Bit 2 (0004h): Tear
+			Bit 3 (0008h): Eagle
+1E	02	parameter 1
+		category 1/2: status increment value (HP/MP/... depends on sub-type)
+		category 3/7: attack increase
+		category 4/5/6: unused
+20	02	parameter 2
+		category 1/2: ??
+		category 3: unused
+		category 4..7: defense increase
+22	02	parameter 3
+		category 1/2: ??
+		category 3..6: unused
+		category 7: agility increase
 
 
 Z1020.DAT - monster data
