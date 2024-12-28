@@ -1,4 +1,4 @@
-﻿# Images with text
+# Images with text
 
 This folder contains various images that contain text.
 The PNGs keep the original palette indices.
@@ -17,7 +17,7 @@ The PNGs keep the original palette indices.
 - [Epilogue](CHAEPI.PNG)
 
 **Note:** I modified the palette in all chapter title images to make everything visible.  
-The actually loads it as a simple image and uses palette effects to fade some of the graphics in.
+The game actually loads it as a simple image and uses palette effects to fade some of the graphics in.
 For reference, you can view [Chapter 1 with original palette](CHAP1_ORG-PAL.PNG).
 
 ## Staff

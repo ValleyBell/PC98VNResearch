@@ -81,7 +81,7 @@ cloc_108D:
 	STRCAT	s3, s2
 	STRCPYI	s3, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1833
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -94,7 +94,7 @@ cloc_10C5:
 	STRCAT	s4, s2
 	STRCPYI	s4, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1840
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -107,7 +107,7 @@ cloc_10FD:
 	STRCAT	s5, s2
 	STRCPYI	s5, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_184D
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -120,7 +120,7 @@ cloc_1135:
 	STRCAT	s6, s2
 	STRCPYI	s6, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_185A
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -133,7 +133,7 @@ cloc_116D:
 	STRCAT	s7, s2
 	STRCPYI	s7, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1867
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -146,7 +146,7 @@ cloc_11A5:
 	STRCAT	s8, s2
 	STRCPYI	s8, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1874
 	PRINT	9, cstr_1821
 	JP	cloc_1211
@@ -159,7 +159,7 @@ cloc_11DD:
 	STRCAT	s9, s2
 	STRCPYI	s9, cstr_17DF
 	CALL	cloc_0838
-	CMD2F	2, 18, 280, 14, 128, 0, 0, 280
+	BLIT1I	2, 18, 280, 14, 128, 0, 0, 280
 	PRINT	9, cstr_1881
 	PRINT	9, cstr_1821
 cloc_1211:
@@ -298,15 +298,15 @@ cloc_13F1:
 	DW	cloc_1449	; 3
 
 cloc_141D:
-	GFX3A	i16, i673, i674, i17, i18, i19, i673, i674
+	BLIT1R	i16, i673, i674, i17, i18, i19, i673, i674
 	JP	cloc_145B
 
 cloc_1433:
-	GFX3A	i16, i675, i676, i17, i18, i19, i675, i676
+	BLIT1R	i16, i675, i676, i17, i18, i19, i675, i676
 	JP	cloc_145B
 
 cloc_1449:
-	GFX3A	i16, i677, i678, i17, i18, i19, i677, i678
+	BLIT1R	i16, i677, i678, i17, i18, i19, i677, i678
 cloc_145B:
 	SUBI	i679, 1
 cloc_1461:
@@ -321,15 +321,15 @@ cloc_1461:
 	DW	cloc_14B1	; 3
 
 cloc_1485:
-	GFX3A	i16, i673, i674, i17, i18, i19, i673, i674
+	BLIT1R	i16, i673, i674, i17, i18, i19, i673, i674
 	JP	cloc_14C3
 
 cloc_149B:
-	GFX3A	i16, i675, i676, i17, i18, i19, i675, i676
+	BLIT1R	i16, i675, i676, i17, i18, i19, i675, i676
 	JP	cloc_14C3
 
 cloc_14B1:
-	GFX3A	i16, i677, i678, i17, i18, i19, i677, i678
+	BLIT1R	i16, i677, i678, i17, i18, i19, i677, i678
 cloc_14C3:
 	SUBI	i679, 1
 cloc_14C9:
@@ -344,15 +344,15 @@ cloc_14C9:
 	DW	cloc_1519	; 3
 
 cloc_14ED:
-	GFX3A	i16, i673, i674, i17, i18, i19, i673, i674
+	BLIT1R	i16, i673, i674, i17, i18, i19, i673, i674
 	JP	cloc_152B
 
 cloc_1503:
-	GFX3A	i16, i675, i676, i17, i18, i19, i675, i676
+	BLIT1R	i16, i675, i676, i17, i18, i19, i675, i676
 	JP	cloc_152B
 
 cloc_1519:
-	GFX3A	i16, i677, i678, i17, i18, i19, i677, i678
+	BLIT1R	i16, i677, i678, i17, i18, i19, i677, i678
 cloc_152B:
 	SUBI	i679, 1
 cloc_1531:

@@ -9,7 +9,7 @@ cloc_07EA:	; entry point (unused)
 	MOVI	i119, 16
 	MOVI	i120, 144
 cloc_0820:
-	GFX3A	i112, i113, i114, i115, i116, i117, i118, i119
+	BLIT1R	i112, i113, i114, i115, i116, i117, i118, i119
 	ADDI	i114, 2
 	ADDI	i119, 2
 	SUBI	i120, 1
@@ -19,7 +19,7 @@ cloc_0820:
 	MOVI	i119, 303
 	MOVI	i120, 144
 cloc_0860:
-	GFX3A	i112, i113, i114, i115, i116, i117, i118, i119
+	BLIT1R	i112, i113, i114, i115, i116, i117, i118, i119
 	SUBI	i114, 2
 	SUBI	i119, 2
 	SUBI	i120, 1

@@ -5,7 +5,7 @@ cloc_22D1:
 	PRINT	15, cstr_2E54
 cloc_22E5:
 	TBOPEN	9, 31, 9, 9, 6, 1
-	CMD2F	2, 16, 385, 16, 14, 0, 63, 145
+	BLIT1I	2, 16, 385, 16, 14, 0, 63, 145
 	CHRDLY	i1000
 	PRINT	9, cstr_2988
 	CHRDLY	i352
@@ -40,7 +40,7 @@ cloc_235F:
 	JEQ	cloc_2391
 	MOVI	i503, 0
 	GFX84
-	CMD2F	0, 43, 156, 2, 9, 0, 31, 156
+	BLIT1I	0, 43, 156, 2, 9, 0, 31, 156
 cloc_2391:
 	PRINT	15, cstr_2E57
 	CMD79	cdata_2BC6

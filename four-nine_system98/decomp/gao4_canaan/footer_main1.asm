@@ -18,7 +18,7 @@ cloc_093C:
 	JEQ	cloc_0962
 	TBCLOSE	9
 	MOVI	i563, 0
-	CMD2F	2, 36, 280, 16, 128, 0, 0, 280
+	BLIT1I	2, 36, 280, 16, 128, 0, 0, 280
 cloc_0962:
 	RET
 
@@ -46,18 +46,18 @@ cloc_097E:
 	MOVI	i53, 0
 	MOVI	i56, 398
 	MOVI	i57, 0
-	LOOPSTI	0
+	FRMSTI	0
 cloc_09B6:
-	LOOPJPR	i57, cloc_09B6
+	FRMJPR	i57, cloc_09B6
 	ADDI	i57, 1
-	GFX3A	i48, i49, i50, i51, i52, i53, i49, i50
-	GFX3A	i48, i49, i56, i51, i52, i53, i49, i56
+	BLIT1R	i48, i49, i50, i51, i52, i53, i49, i50
+	BLIT1R	i48, i49, i56, i51, i52, i53, i49, i56
 	CMPI	i56, 2
 	JEQ	cloc_0A3A
 	ADDI	i50, 4
 	SUBI	i56, 4
-	GFX3A	i48, i49, i50, i51, i52, i53, i49, i50
-	GFX3A	i48, i49, i56, i51, i52, i53, i49, i56
+	BLIT1R	i48, i49, i50, i51, i52, i53, i49, i50
+	BLIT1R	i48, i49, i56, i51, i52, i53, i49, i56
 	CMPI	i56, 2
 	JEQ	cloc_0A3A
 	ADDI	i50, 4
@@ -66,16 +66,16 @@ cloc_09B6:
 
 cloc_0A3A:
 	MOVI	i0, 1
-	PA4GET	i0
+	GPDGET	i0
 	TBOPEN	8, 0, 18, 7, 7, 1
-	CMD2F	0, 0, 280, 16, 128, 2, 0, 280
+	BLIT1I	0, 0, 280, 16, 128, 2, 0, 280
 	TBCLOSE	8
 	TBOPEN	9, 6, 18, 33, 7, 3
-	CMD2F	0, 0, 280, 16, 128, 2, 18, 280
+	BLIT1I	0, 0, 280, 16, 128, 2, 18, 280
 	TBCLOSE	9
-	CMD2F	0, 0, 280, 16, 128, 2, 36, 280
+	BLIT1I	0, 0, 280, 16, 128, 2, 36, 280
 	MOVI	i0, 0
-	PA4GET	i0
+	GPDGET	i0
 	RET
 
 cloc_0AAA:
@@ -189,7 +189,7 @@ cloc_0BC6:	; entry point
 cloc_0C08:
 	CALL	cloc_0B94
 	IMGLOAD	2, 16, 0, 1, cfile_0C32, 0	; Black.lsp
-	CMD2F	1, 2, 16, 60, 320, 2, 2, 16
+	BLIT1I	1, 2, 16, 60, 320, 2, 2, 16
 	CALL	cloc_0CAD
 	RET
 
@@ -204,13 +204,13 @@ cloc_0C49:	; entry point
 	CMPI	i672, 0
 	JEQ	cloc_0C7D
 	IMGLOAD	2, 16, 0, 1, cfile_0C3D, 0	; BlackE.lsp
-	CMD2F	1, 2, 16, 60, 320, 2, 2, 16
+	BLIT1I	1, 2, 16, 60, 320, 2, 2, 16
 	RET
 
 cloc_0C7D:
 	CALL	cloc_0C08
 	IMGLOAD	2, 16, 0, 1, cfile_0C3D, 0	; BlackE.lsp
-	CMD2F	1, 2, 16, 60, 320, 2, 2, 16
+	BLIT1I	1, 2, 16, 60, 320, 2, 2, 16
 	RET
 
 cloc_0CA3:	; entry point
@@ -227,13 +227,13 @@ cloc_0CAD:
 	MOVI	i53, 0
 	MOVI	i54, 61
 	MOVI	i55, 1
-	LOOPSTI	0
+	FRMSTI	0
 cloc_0CE1:
-	LOOPJPR	i55, cloc_0CE1
+	FRMJPR	i55, cloc_0CE1
 	CMPI	i54, 1
 	JEQ	cloc_0D2B
-	GFX3A	i48, i49, i50, i51, i52, i53, i49, i50
-	GFX3A	i48, i54, i50, i51, i52, i53, i54, i50
+	BLIT1R	i48, i49, i50, i51, i52, i53, i49, i50
+	BLIT1R	i48, i54, i50, i51, i52, i53, i54, i50
 	ADDI	i49, 2
 	SUBI	i54, 2
 	ADDI	i55, 1

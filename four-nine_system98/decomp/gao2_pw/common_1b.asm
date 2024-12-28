@@ -1,6 +1,6 @@
 cloc_2E8A:	; unused
 	CALL	cloc_2EA8
-	CMD2F	1, 0, 0, 60, 288, 0, 2, 16
+	BLIT1I	1, 0, 0, 60, 288, 0, 2, 16
 	PALAPL
 	CALL	cloc_2FC6
 	RET

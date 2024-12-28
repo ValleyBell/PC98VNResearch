@@ -1,4 +1,4 @@
-﻿# Images with text
+# Images with text
 
 This folder contains various images that contain text.
 The PNGs were exported using "ViX" and keep the original palette indices.

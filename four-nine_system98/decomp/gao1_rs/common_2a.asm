@@ -3,7 +3,7 @@ cloc_03BA:	; entry point
 	MOVR	i501, i354
 cloc_03C6:
 	TBOPEN	9, 31, 9, 9, 6, 1
-	CMD2F	2, 12, 385, 12, 14, 0, 65, 145
+	BLIT1I	2, 12, 385, 12, 14, 0, 65, 145
 	CHRDLY	i1000
 	PRINT	9, cstr_0961
 	CHRDLY	i352

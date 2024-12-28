@@ -292,15 +292,15 @@ cloc_13F1:
 	DW	cloc_1449	; 3
 
 cloc_141D:
-	GFX3A	i16, i673, i674, i17, i18, i19, i673, i674
+	BLIT1R	i16, i673, i674, i17, i18, i19, i673, i674
 	JP	cloc_145B
 
 cloc_1433:
-	GFX3A	i16, i675, i676, i17, i18, i19, i675, i676
+	BLIT1R	i16, i675, i676, i17, i18, i19, i675, i676
 	JP	cloc_145B
 
 cloc_1449:
-	GFX3A	i16, i677, i678, i17, i18, i19, i677, i678
+	BLIT1R	i16, i677, i678, i17, i18, i19, i677, i678
 cloc_145B:
 	SUBI	i679, 1
 cloc_1461:
@@ -315,15 +315,15 @@ cloc_1461:
 	DW	cloc_14B1	; 3
 
 cloc_1485:
-	GFX3A	i16, i673, i674, i17, i18, i19, i673, i674
+	BLIT1R	i16, i673, i674, i17, i18, i19, i673, i674
 	JP	cloc_14C3
 
 cloc_149B:
-	GFX3A	i16, i675, i676, i17, i18, i19, i675, i676
+	BLIT1R	i16, i675, i676, i17, i18, i19, i675, i676
 	JP	cloc_14C3
 
 cloc_14B1:
-	GFX3A	i16, i677, i678, i17, i18, i19, i677, i678
+	BLIT1R	i16, i677, i678, i17, i18, i19, i677, i678
 cloc_14C3:
 	SUBI	i679, 1
 cloc_14C9:
@@ -338,15 +338,15 @@ cloc_14C9:
 	DW	cloc_1519	; 3
 
 cloc_14ED:
-	GFX3A	i16, i673, i674, i17, i18, i19, i673, i674
+	BLIT1R	i16, i673, i674, i17, i18, i19, i673, i674
 	JP	cloc_152B
 
 cloc_1503:
-	GFX3A	i16, i675, i676, i17, i18, i19, i675, i676
+	BLIT1R	i16, i675, i676, i17, i18, i19, i675, i676
 	JP	cloc_152B
 
 cloc_1519:
-	GFX3A	i16, i677, i678, i17, i18, i19, i677, i678
+	BLIT1R	i16, i677, i678, i17, i18, i19, i677, i678
 cloc_152B:
 	SUBI	i679, 1
 cloc_1531:

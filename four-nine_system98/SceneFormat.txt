@@ -13,7 +13,7 @@ The actual script data begins at offset 100h and is encrypted with a simple "XOR
 
 Commands
 --------
-00 - exit to DOS, return code 0
+00 DOSEXIT - exit to DOS, return code 0
 	no parameters
 01 - [v1.xx] text box related
 	2 bytes - text box ID (00h..0Fh)
@@ -23,15 +23,15 @@ Commands
 	2 bytes - file offset of image file name to load
 	-> 0Ah bytes total
 01 - [v3.10] undefined
-02 - load image
+02 IMGLOAD - load image
 	2 bytes - destination column (X/8)
 	2 bytes - destination row (Y)
 	2 bytes - [HB-pad] update palette (01..FF)
-	2 bytes - [HB-pad] write vv to I/O register 0A6h (00..01, ignored for others)
+	2 bytes - [HB-pad] GDC plane (write vv to I/O register 0A6h for vv = 00/01, ignored for others)
 	2 bytes - file offset of image file name to load
 	2 bytes - [HB-pad] draw mode (0 = opaque, 1 = transparent)
 	-> 0Ch bytes total
-03 - open text box
+03 TBOPEN - open text box
 	2 bytes - text box ID (00h..0Fh)
 		Text boxes 00h..07h have no borders and simple opaque backgrounds.
 		Text boxes 08h..0Fh can have transparent borders and backgrounds.
@@ -42,138 +42,138 @@ Commands
 	2 bytes - height (sizeY/16)
 	2 bytes - text box style (0 = transparent, 1+ = border/background type)
 	-> 0Ch bytes total
-04 - close text box
+04 TBCLOSE - close text box
 	2 bytes - text box ID (00h..0Fh)
-05 - clear text box
+05 TBCLEAR - clear text box
 	2 bytes - text box ID (00h..0Fh)
-06 - apply palette
+06 PALAPL - apply palette
 	no parameters
-07 - palette fade: black/white
+07 PALBW - palette fade: black/white
 	2 bytes - direction: 0 = fade black -> white, 1 = fade white -> black
 	2 bytes - frames per step
 	The current palette is set to black or white at the beginning.
 	In each step, all colours are incremented/decremented by 1 until the target colour (black/white) is reached.
-08 - palette fade out/in
+08 PALFADE - palette fade out/in
 	2 bytes - direction: 0 = fade black -> white, 1 = fade white -> black
 	2 bytes - frames per step
 	In each step, all colours are incremented/decremented by 1 until the target colour (black/white) is reached.
-09 - toggle Palette Colour Lock Mask
+09 PALLCKT - toggle Palette Colour Lock Mask
 	2 bytes - [HB-pad] colour ID to lock/unlock (can be 00h to 0Fh)
-0A - jump to offset
+0A JP - jump to offset
 	2 bytes - destination file offset to continue execution at
-0B - compare registers
+0B CMPR - compare registers
 	2 bytes - register ID of reg1
 	2 bytes - register ID of reg2
 	reg1 == reg2 -> byte_1D1D5 = 0
 	reg1 < reg2 -> byte_1D1D5 = 1
 	reg1 > reg2 -> byte_1D1D5 = 2
-0C - compare register and value
+0C CMPI - compare register and value
 	2 bytes - register ID of "reg"
 	2 bytes - value val
 	reg == val -> byte_1D1D5 = 0
 	reg < val -> byte_1D1D5 = 1
 	reg > val -> byte_1D1D5 = 2
-0D - conditional jump: equal (checks byte_1D1D5 == 0)
+0D JEQ - conditional jump: equal (checks byte_1D1D5 == 0)
 	2 bytes - destination file offset to continue execution at
-0E - conditional jump: less than (checks byte_1D1D5 == 1)
+0E JLT - conditional jump: less than (checks byte_1D1D5 == 1)
 	2 bytes - destination file offset to continue execution at
-0F - conditional jump: greater than (checks byte_1D1D5 == 2)
+0F JGT - conditional jump: greater than (checks byte_1D1D5 == 2)
 	2 bytes - destination file offset to continue execution at
-10 - conditional jump: greater or equal (checks byte_1D1D5 != 1)
+10 JGE - conditional jump: greater or equal (checks byte_1D1D5 != 1)
 	2 bytes - destination file offset to continue execution at
-11 - conditional jump: less or equal (checks byte_1D1D5 != 2)
+11 JLE - conditional jump: less or equal (checks byte_1D1D5 != 2)
 	2 bytes - destination file offset to continue execution at
-12 - conditional jump: not equal (checks byte_1D1D5 != 0)
+12 JNE - conditional jump: not equal (checks byte_1D1D5 != 0)
 	2 bytes - destination file offset to continue execution at
-13 - execute jump table
+13 JTBL - execute jump table
 	2 bytes - register ID
 	There is a table of absolute file offsets (2 bytes each) following the command.
 	It takes the Nth entry (based on the content from the register) of the table and jumps there.
 	dest. offset = *([table offset] + [register content] * 2)
-14 - set palette colour
+14 PALCSET - set palette colour
 	2 bytes - register ID: palette colour ID (00h..0Fh)
 	2 bytes - register ID: red component (00h..0Fh)
 	2 bytes - register ID: green component (00h..0Fh)
 	2 bytes - register ID: blue component (00h..0Fh)
 	-> 08h bytes total
-15 - show text in text box
+15 PRINT - show text in text box
 	2 bytes - [HB-pad] text box ID
 	2 bytes - file offset of text to be printed
-16 - show text at screen position
+16 PRINTXY - show text at screen position
 	2 bytes - X position
 	2 bytes - Y position
 	2 bytes - file offset of text to be printed
 17 - undefined
-18 - set register = value
+18 MOVI - set register = value
 	2 bytes - register ID
 	regID == 000h..3FFh
 		2 bytes - value
 	regID >= 400h
 		4 bytes - value
-19 - set register = other register
+19 MOVR - set register = other register
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	Note: This works with 2-byte (ID 000h..3FFh) and 4-byte (ID 400h+) registers. However, the source and destination MUST be from the same type.
-1A - play music
+1A BGMPLAY - play music
 	2 bytes - file offset of file name
-1B - fade music out
+1B BGMFADE - fade music out
 	no parameters
-1C - stop music
+1C BGMSTOP - stop music
 	no parameters
-1D - get music mode
+1D BGMMODE - get music mode
 	2 bytes - register ID where the music mode will be stored in
-1E - wait for key press
+1E WAITKEY - wait for key press
 	2 bytes - register ID where the key code of the pressed key is written to
-1F - load new scene file
+1F LDSCENE - load new scene file
 	2 bytes - file offset of file name
 	Note: This terminates execution of the current scene.
-20 - fill GVRAM
+20 GV02 - fill GVRAM
 	no parameters
 	writes a pattern of "00 02" to 64 KB from offset 0A8000 on (GVRAM Plane 0)
-21 - delay script execution by N frames
+21 WAIT - delay script execution by N frames
 	2 bytes - register ID that contains number of frames to wait
-22 - set character print delay
+22 CHRDLY - set character print delay
 	2 bytes - register ID
 	Setting the character print delay causes the game to wait for N frames between drawing each character.
 23 - undefined
-24 - add value to register
+24 ADDI - add value to register
 	2 bytes - register ID
 	regID == 000h..3FFh
 		2 bytes - value to be added
 	regID >= 400h
 		4 bytes - value to be added
-25 - subtract value from register
+25 SUBI - subtract value from register
 	2 bytes - register ID
 	regID == 000h..3FFh
 		2 bytes - value to be subtracted
 	regID >= 400h
 		4 bytes - value to be subtracted
-26 - text buffer clear 1
-	2 bytes - destination column (X)
-	2 bytes - destination row (Y)
-	2 bytes - columns to fill (width)
-	2 bytes - rows to fill (height)
-	2 bytes - [HB-pad] copy mode (00 = mode "E1 20", 01..FF = mode "E1 87")
+26 TXCLR1 - text buffer clear 1
+	2 bytes - destination column (X/32)
+	2 bytes - destination row (Y/16)
+	2 bytes - columns to fill (width/32)
+	2 bytes - rows to fill (height/16)
+	2 bytes - [HB-pad] text flags (00 = mode "E1 20", 01..FF = mode "E1 87")
 	-> 0Ah bytes total
-27 - add source to destination with differing register types
+27 ADDR - add source to destination with differing register types
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	dst [long], src [long]: add src to dst
 	dst [short], src [short]: add src to dst
 	dst [short], src [long]: add src to dst while using 2-byte addressing src's register (short ID 400h = long 400h low word, 401 = long 400h high word, etc.)
 	dst [long], src [short]: add src (with high word set to 0) to dst
-28 - subtract source from destination with differing register types
+28 SUBR - subtract source from destination with differing register types
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	dst [long], src [long]: add src to dst
 	dst [short], src [short]: add src to dst
 	dst [short], src [long]: add src to dst while using 2-byte addressing src's register (short ID 400h = long 400h low word, 401 = long 400h high word, etc.)
 	dst [long], src [short]: add src (with high word set to 0) to dst
-29 - read value from XY buffer to register
+29 XYREAD - read value from XY buffer to register
 	2 bytes - destination register ID
 	2 bytes - register ID with X position
 	2 bytes - register ID with Y position
-2A - write value from register into XY buffer
+2A XYWRT - write value from register into XY buffer
 	2 bytes - source register ID
 	2 bytes - register ID with X position
 	2 bytes - register ID with Y position
@@ -183,114 +183,114 @@ Commands
 2C - [v1.xx] load register buffer from file (2048 bytes)
 	2 bytes - file offset of file name
 2C - [v3.10] undefined
-2D - clear registers
+2D REGCLR - clear registers
 	2 bytes - register ID 1
 	2 bytes - register ID 2
 	Sets all registers from reg1 to reg2 (inclusive) to 0.
 2E - undefined
-2F - ?? (GFX related)
-	2 bytes - [HB-pad] ?? -> byte_1D0F6
-	2 bytes - ?? -> word_1D0F8
-	2 bytes - ?? -> word_1D0FA
-	2 bytes - ?? -> word_1D0FE
-	2 bytes - ?? -> word_1D100
+2F BLIT1I - image copy
+	2 bytes - [HB-pad] source GDC plane (0/1/2) -> byte_1D0F6
+	2 bytes - source column (X/8) -> word_1D0F8
+	2 bytes - source row (Y) -> word_1D0FA
+	2 bytes - columns to copy (width/8) -> word_1D0FE
+	2 bytes - rows to copy (height) -> word_1D100
 	
-	2 bytes - [HB-pad] ?? -> byte_1D110
-	2 bytes - ?? -> word_1D10A
-	2 bytes - ?? -> word_1D10C
+	2 bytes - [HB-pad] destination GDC plane -> byte_1D110
+	2 bytes - destination column (X/8) -> word_1D10A
+	2 bytes - destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 30 - undefined
 31 - undefined
-32 - print register as text
+32 PRINTR - print register as text
 	2 bytes - [HB-pad] text box ID
 	2 bytes - ID of register to be printed
-33 - set Port A4 state
+33 GPDGET - set graphics plane to display
 	2 bytes - register ID
-	Reads value from the register and writes the lowest bit to I/O port A4h.
+	Reads value from the register and writes the lowest bit to I/O port 0A4h.
 	Stores the written value in a separate register.
-34 - get Port A4 state
+34 GPDSET - get graphics plane to display
 	2 bytes - register ID
-	Puts the last value that was written to I/O port A4h into the register.
-35 - text buffer fill
-	2 bytes - destination column (X)
-	2 bytes - destination row (Y)
-	2 bytes - columns to fill (width)
-	2 bytes - rows to fill (height)
-	2 bytes - text mode?
+	Puts the last value that was written to I/O port 0A4h into the register.
+35 TXFILL - text buffer fill
+	2 bytes - destination column (X/32)
+	2 bytes - destination row (Y/16)
+	2 bytes - columns to fill (width/32)
+	2 bytes - rows to fill (height/16)
+	2 bytes - [HB-pad] text flags (00 = mode "E1 20", 01..FF = mode "01 87")
 	2 bytes - Shift-JIS character
 	-> 0Ch bytes total
-36 - ?? (some GFX clear)
+36 GFX36 - ?? (some GFX clear)
 	no parameters
-37 - load XY buffer from file
+37 XYFLOAD - load XY buffer from file
 	2 bytes - file offset of file name
-38 - "AND" source with destination register
+38 ANDR - "AND" source with destination register
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	Note: assumes 2-byte addressing mode.
-39 - "OR" source with destination register
+39 ORR - "OR" source with destination register
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	Note: assumes 2-byte addressing mode.
-3A - ?? (GFX related)
+3A BLIT1R - image copy
 	2 bytes - register ID -> byte_1D0F6
-	2 bytes - register ID -> word_1D0F8
-	2 bytes - register ID -> word_1D0FA
-	2 bytes - register ID -> word_1D0FE
-	2 bytes - register ID -> word_1D100
+	2 bytes - register ID for source column (X/8) -> word_1D0F8
+	2 bytes - register ID for source row (Y) -> word_1D0FA
+	2 bytes - register ID for columns to copy (width/8) -> word_1D0FE
+	2 bytes - register ID for rows to copy (height) -> word_1D100
 	
 	2 bytes - register ID -> byte_1D110
-	2 bytes - register ID -> word_1D10A
-	2 bytes - register ID -> word_1D10C
+	2 bytes - register ID for destination column (X/8) -> word_1D10A
+	2 bytes - register ID for destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 	Note: Same as 2F, except that parameters are read from registers.
-3B - ?? (GFX related)
+3B BLIT1RL - image copy
 	2 bytes - register ID -> byte_1D0F6
-	2 bytes - register ID -> word_1D0F8
-	2 bytes - register ID -> word_1D0FA
-	2 bytes - register ID -> multiplied with 4, then written to word_1D0FE
-	2 bytes - register ID -> word_1D100
+	2 bytes - register ID for source column (X/8) -> word_1D0F8
+	2 bytes - register ID for source row (Y) -> word_1D0FA
+	2 bytes - register ID for long columns to copy (width/32) -> multiplied with 4, then written to word_1D0FE
+	2 bytes - register ID for rows to copy (height) -> word_1D100
 	
 	2 bytes - register ID -> byte_1D110
-	2 bytes - register ID -> word_1D10A
-	2 bytes - register ID -> word_1D10C
+	2 bytes - register ID for destination column (X/8) -> word_1D10A
+	2 bytes - register ID for destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 	Note: Same as 2F, except that parameters are read from registers.
-3C - text buffer clear 2
-	2 bytes - destination column (X)
+3C TXCLR2 - text buffer clear 2
+	2 bytes - destination column (X/8)
 	2 bytes - destination row (Y)
-	2 bytes - columns to fill (width)
+	2 bytes - columns to fill (width/8)
 	2 bytes - rows to fill (height)
 	2 bytes - [HB-pad] copy mode (00 = mode "01 20", 01..FF = mode "01 87")
 	-> 0Ah bytes total
-3D - multiply source with destination register
+3D MULR - multiply source with destination register
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	Note: This works with 2-byte (ID 000h..3FFh) and 4-byte (ID 400h+) registers. However, the source and destination MUST be from the same type.
-3E - divide destination by source register
+3E DIVR - divide destination by source register
 	2 bytes - destination register ID
 	2 bytes - source register ID
 	Note: This works with 2-byte (ID 000h..3FFh) and 4-byte (ID 400h+) registers. However, the source and destination MUST be from the same type.
-3F - ?? (screen resolution related?)
+3F CMD3F - ?? (screen resolution related?)
 	2 bytes - register ID -> word_1D202
 	2 bytes - register ID -> word_1D204
-40 - run menu selection
+40 MENUSEL - run menu selection
 	2 bytes - register ID, receives selected menu entry
 	2 bytes - register ID, receives user action
 	2 bytes - file offset of menu data
 	2 bytes - destination file offset to continue execution at
-41 - ??
+41 CMD41 - ??
 	2 bytes - register ID -> address to word_1D1E9
 	2 bytes - register ID -> address to word_1D1EB
 	2 bytes - register ID, receives user action
 	2 bytes - destination file offset to continue execution at
-42 - ??
+42 CMD42 - ??
 	2 bytes - [HB-pad] ?? -> byte_1D1F4
-43 - ?? (screen resolution related?)
+43 CMD43 - ?? (screen resolution related?)
 	2 bytes - register ID <- word_1D202
 	2 bytes - register ID <- word_1D204
 44 - [v1.xx] dummy (does nothing)
 44 - [v3.10] undefined
-45 - [v1.xx] some GFX effect
+45 CMD45 - [v1.xx] some GFX effect
 	2 bytes - ??
 45 - [v3.10] undefined
 46 - [v1.xx] same as command 56
@@ -301,146 +301,147 @@ Commands
 48 - [v3.10] undefined
 49 - [v1.xx] same as command 56
 49 - [v3.10] undefined
-4A - save register buffer to file
+4A REGFSAV - save register buffer to file
 	2 bytes - [HB-pad] buffer (00 = buffer 1, 1000 bytes, 01..FF = buffer 2, 1048 bytes)
 	2 bytes - file offset of file name
-4B - load register buffer from file
+4B REGFLD - load register buffer from file
 	2 bytes - [HB-pad] buffer (00 = buffer 1, 1000 bytes, 01..FF = buffer 2, 1048 bytes)
 	2 bytes - file offset of file name
-4C - ?? (screen resolution related?)
+4C CMD4C - ?? (screen resolution related?)
 	2 bytes - ?? -> written to word_1D202
 	2 bytes - ?? -> written to word_1D204
-4D - get current music measure
+4D BGMMEAS - get current music measure
 	2 bytes - register ID that will receive the value
-4E - play SSG sound effect
+4E SFXSSG - play SSG sound effect
 	2 bytes - [HB-pad] SSG sound effect number
-4F - play FM sound effect
+4F SFXFM - play FM sound effect
 	2 bytes - [HB-pad] FM sound effect number
-50 - get BGM status
+50 BGMSTAT - get BGM status
 	2 bytes - register ID that will receive the value
-51 - "AND" value with destination register
+51 ANDI - "AND" value with destination register
 	2 bytes - destination register ID
 	2 bytes - value
 	Note: assumes 2-byte addressing mode.
-52 - "OR" value with destination register
+52 ORI - "OR" value with destination register
 	2 bytes - destination register ID
 	2 bytes - value
 	Note: assumes 2-byte addressing mode.
-53 - concatenate source to the destination string
+53 STRCAT - concatenate source to the destination string
 	2 bytes - destination string ID
 	2 bytes - source string ID
 	Appends the source string (from register) to the destination register. The terminator byte is included.
-54 - subroutine call
+54 CALL - subroutine call
 	2 bytes - file offset of the subroutine to execute
 	The file offset of the next command is pushed to an internal stack for use with the return command.
 	The stack allows for 8 levels of nesting.
-55 - subroutine return
+55 RET - subroutine return
 	The return address is popped from an internal stack.
-56 - compare strings
+56 STRCMPR - compare strings
 	2 bytes - destination string ID
 	2 bytes - source string ID
 	Returns 3 (no match) or 0 (match).
-57 - copy N bytes from source to destination string
+57 STRNCPY - copy N bytes from source to destination string
 	2 bytes - destination string ID
 	2 bytes - source string ID
 	2 bytes - number of characters to copy
 	Note: A terminator-byte (00) is appended.
-58 - append character N from source to the destination string
+58 STRCPYC - append character N from source to the destination string
 	2 bytes - destination string ID
 	2 bytes - source string ID
 	2 bytes - index of character to be copied
 	Note: A terminator-byte (00) is appended.
-59 - concatenate scenario string to the destination string
+59 STRCPYI - concatenate scenario string to the destination string
 	2 bytes - destination string ID
 	2 bytes - file offset of source string data
 	Appends a string from the scene file to the destination register, including the terminator byte.
-5A - clear string
+5A STRCLR - clear string
 	2 bytes - destination string ID
 	Clears the string by setting the register's buffer (80 bytes) to all 00s.
-5B - copy string
+5B STRCPY - copy string
 	2 bytes - destination string ID
 	2 bytes - source string ID
 	Copies a string from source to destination register, including the terminator byte.
 5C - undefined
 5D - undefined
-5E - ??
-	2 bytes - [HB-pad] ??
-	2 bytes - destination column (X)
+5E CMD5E - clear GVRAM rectangle
+	2 bytes - [HB-pad] GDC plane
+	2 bytes - destination column (X/8)
 	2 bytes - destination row (Y)
-	2 bytes - columns to fill (width)
+	2 bytes - columns to fill (width/8)
 	2 bytes - rows to fill (height)
 	-> 0Ah bytes total
 	Clears some lines in GVRAM Plane 0 (offset 0A8000) by writing 00s to it.
-5F - set string to current date/time
+5F STRTIME - set string to current date/time
 	2 bytes - destination string ID
 	Gets the current date/time via DOS calls 2Ah/2Ch and prints it as "YYYY-MM-DD HH:MM:SS" into the destination string.
-60 - get file date/time
+60 FILETM - get file date/time
 	2 bytes - register ID, will get return code (0 = success, 1 = failure)
 	2 bytes - destination string ID
 	2 bytes - file offset of file name
 	Gets the date/time of a file and prints it to the destination string. (format as in command 5F)
 	The register is set to 0/1 to indicate failure/success.
-61 - save XY buffer to file
+61 XYFSAVE - save XY buffer to file
 	2 bytes - file offset of file name
-62 - ?? (writes to I/O port 0A2h and 0A0h)
+62 CMD62 - ?? (writes to I/O port 0A2h and 0A0h)
 	2 bytes - register ID
 	2 bytes - register ID
-	write to scroll register?
-63 - ?? (GFX related)
-	2 bytes - [HB-pad] ?? -> byte_1D0F6
-	2 bytes - ?? -> word_1D0F8
-	2 bytes - ?? -> word_1D0FA
-	2 bytes - ?? -> word_1D0FE
-	2 bytes - ?? -> word_1D100
+	write to scroll register? (TODO)
+	Executes GDC command 70h with 8 parameter bytes.
+63 BLIT2I - image copy?
+	2 bytes - [HB-pad] source GDC plane -> byte_1D0F6
+	2 bytes - source column (X/8) -> word_1D0F8
+	2 bytes - source row (Y) -> word_1D0FA
+	2 bytes - columns to copy (width/8) -> word_1D0FE
+	2 bytes - rows to copy (height) -> word_1D100
 	
-	2 bytes - [HB-pad] ?? -> byte_1D110
-	2 bytes - ?? -> word_1D10A
-	2 bytes - ?? -> word_1D10C
+	2 bytes - [HB-pad] destination GDC plane -> byte_1D110
+	2 bytes - destination column (X/8) -> word_1D10A
+	2 bytes - destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 	Note: Same as 2F, but executes different GFX code
-64 - ?? (GFX related)
+64 BLIT2R - image copy?
 	2 bytes - register ID -> byte_1D0F6
-	2 bytes - register ID -> word_1D0F8
-	2 bytes - register ID -> word_1D0FA
-	2 bytes - register ID -> word_1D0FE
-	2 bytes - register ID -> word_1D100
+	2 bytes - register ID for source column (X/8) -> word_1D0F8
+	2 bytes - register ID for source row (Y) -> word_1D0FA
+	2 bytes - register ID for columns to copy (width/8) -> word_1D0FE
+	2 bytes - register ID for rows to copy (height) -> word_1D100
 	
 	2 bytes - register ID -> byte_1D110
-	2 bytes - register ID -> word_1D10A
-	2 bytes - register ID -> word_1D10C
+	2 bytes - register ID for destination column (X/8) -> word_1D10A
+	2 bytes - register ID for destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 	Note: Same as 63, except that parameters are read from registers.
 65 - undefined
 66 - undefined
-67 - ?? (GFX related)
+67 GFX67 - ?? (GFX related)
 	2 bytes - [HB-pad] ??
 	2 bytes - [HB-pad] ??
 	2 bytes - [HB-pad] ??
 	2 bytes - [HB-pad] ??
 	-> 08h bytes total
-68 - ?? (GFX related)
+68 GFX68 - ?? (GFX related)
 	2 bytes - register ID
 	2 bytes - register ID
 69 - [v1.xx] undefined
-69 - [v3.10] ?? (GFX related)
+69 GFX69 - [v3.10] ?? (GFX related)
 	2 bytes - register ID reg1, content description:
 		Bits 0..2 (0007): bit mask index (0 = 80h, 1 = 40h, ..., 7 = 01h)
 		Bits 3..15 (FFF8): value
 	2 bytes - register ID, reg2
 	2 bytes - destination register ID
-6A - ??
+6A CMD6A - ??
 	2 bytes - value -> word_1D206
 	2 bytes - value -> word_1D208
 	2 bytes - value -> word_1D20A
 	2 bytes - value -> word_1D20C
-6B - ??
+6B CMD6B - ??
 	2 bytes - register ID -> word_1D206
 	2 bytes - register ID -> word_1D208
 	2 bytes - register ID -> word_1D20A
 	2 bytes - register ID -> word_1D20C
 6C - undefined
 6D - undefined
-6E - get string length
+6E STRLEN - get string length
 	2 bytes - destination register ID
 	2 bytes - source string ID
 	Puts the length of the source string (without terminator character) into the destination register.
@@ -460,32 +461,32 @@ Commands
 	Same as command 0C, except that two long registers are compared with their full 4-byte longwords.
 	Additionally, the result is saved in register 0. (unlike command 0C)
 71 - [v3.10] undefined
-72 - set script loop counter
-	2 bytes - value for script loop counter
-73 - get script loop counter
+72 FRMSTI - set script frame counter
+	2 bytes - value for script frame counter
+73 FRMGTR - get script frame counter
 	2 bytes - register ID
-	The script loop counter is put into the specified register.
-74 - conditional jump based on script loop counter
+	The script frame counter is put into the specified register.
+74 FRMJPI - conditional jump based on script frame counter
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
-	The conditional jump is taken when (loop counter < value).
-75 - load custom font character
-	2 bytes - font character code
+	The conditional jump is taken when (frame counter < value).
+75 FONTCHR - load custom font character
+	2 bytes - JIS character code
 		port 0A1h = [1st byte]
-		port A3h = [2nd byte]-20h
+		port 0A3h = [2nd byte]-20h
 	2 bytes - file offset of character data (data is 20h bytes long)
-76 - set "idle animation" character IDs
+76 IDLECHR - set "idle animation" character IDs
 	10h bytes - 8 words (2 bytes each)
 	The game cycles through up to 8 characters (and then loops back) when asking the user to press a key to continue.
-77 - set "idle animation" delay times
+77 IDLEDLY - set "idle animation" delay times
 	10h bytes - 8 words (2 bytes each)
 	This specifies the number of frames each character set by command 76 is shown.
 	A delay value of 0 marks an early animation end and will cause the game to loop back to frame 0.
-78 - set "idle animation" X/Y position
+78 IDLEXY - set "idle animation" X/Y position
 	2 bytes - X position
 	2 bytes - Y position
 79 - [v1.00] undefined
-79 - [v1.10+] ?? (copies data to some buffer at the end of the script data)
+79 CMD79 - [v1.10+] ?? (copies data to some buffer at the end of the script data)
 	2 bytes - file offset of data
 		Data format:
 			[loop start]
@@ -495,41 +496,41 @@ Commands
 			[loop end]
 			2 bytes - bit mask with value 0000h
 7A - [v1.00] undefined
-7A - [v1.10+] set script loop counter from register
+7A FRMSTR - [v1.10+] set script frame counter from register
 	2 bytes - register ID
 7B - [v1.00] undefined
-7B - [v1.10+] conditional jump based on script loop counter
+7B FRMJPR - [v1.10+] conditional jump based on script frame counter
 	2 bytes - register ID
 	2 bytes - destination file offset to continue execution at
-	The conditional jump is taken when (loop counter < register contents).
+	The conditional jump is taken when (frame counter < register contents).
 7C - undefined
 7D - undefined
 7E - undefined
-7F - exit to DOS, return code based on register content
+7F DOSRETR - exit to DOS, return code based on register content
 	2 bytes - register ID, contains the return code
-80 - load strings from file
+80 STRFLD - load strings from file
 	2 bytes - string ID
 	2 bytes - file offset of file name
 	Opens the file and reads two (!) lines (separated by 0Dh 0Ah (CRLF)) into [string ID+0] and [string ID+1].
-81 - write strings to file
+81 STRFSAV - write strings to file
 	2 bytes - string ID
 	2 bytes - file offset of file name
 	Opens the file and writes the two (!) strings [string ID+0] and [string ID+1] as two lines, separated by 0Dh 0Ah (CRLF). Also adds an 1Ah (EOF) character.
-82 - ?? (writes to GVRAM Plane 0/1/2/3)
+82 GFX82 - ?? (writes to GVRAM Plane 0/1/2/3)
 	no parameters
-83 - ?? (GFX related)
+83 GFX83 - ?? (GFX related)
 	2 bytes - register ID
-84 - ?? (some GFX transition effect)
+84 GFX84 - ?? (some GFX transition effect)
 	no parameters
-85 - ?? (some GFX transition effect)
+85 GFX85 - ?? (some GFX transition effect)
 	no parameters
-86 - set all Portrait Data (v1)
+86 PTDATA - set all Portrait Data
 	2 bytes - file offset of portrait data (coordinates / palette)
 	The data is 30h portrait * 12h bytes/portrait = 360h bytes long. All data values are 2-byte words.
 	The 12h data per items equals the same as the parameters to command 87 after the index.
-87 - set single Portrait Data (v1)
-	2 bytes - Portrait Index (00..3F)
-	2 bytes - [HB-pad] ?? (some mask)
+87 PTDAT1 - set single Portrait Data
+	2 bytes - Portrait index (00..3F)
+	2 bytes - [HB-pad] source GDC plane (0..2) (for I/O port 0A6h when reading the image)
 	2 bytes - portrait start column (X/8) in portrait collection image
 	2 bytes - portrait start row (Y) in portrait collection image
 	2 bytes - [HB-pad] palette 0D: red
@@ -539,36 +540,35 @@ Commands
 	2 bytes - [HB-pad] palette 0E: green
 	2 bytes - [HB-pad] palette 0E: blue
 	-> 14h bytes total
-88 - ?? (GFX related)
-	2 bytes - [HB-pad] GCD plane ID (0..3)
-	2 bytes - ?? (some X position)
-	2 bytes - ?? (some Y position)
-89 - [v1.10+] set all Portrait Data (size-optimized data)
+	This defines the properties of one portrait image.
+88 PTDSTI - set Portrait destination
+	2 bytes - [HB-pad] destination GDC plane (0..2)
+	2 bytes - destination start column (X/8)
+	2 bytes - destination start row (Y)
+	This sets the destination plane and coordinates for when portraits are drawn.
+89 PTPOSA - [v1.10+] set all Portrait start positions
 	2 bytes - file offset of portrait data
 	The data is 30h items * 06h bytes/item = 120h bytes long. All data values are 2-byte words.
 	The data contains the same information as the data in for command 86. However this command stores it in the same way as the engine's internal storage.
 	Data format per line:
-		1 byte - mask (for I/O port 0A6h)
-		2 bytes - start offset in portrait collection image (= start_row * 50h + start_column)
-		2 bytes - palette data
-		1 byte - high nibble = palette 0Dh green, low nibble = palette 0Dh red
-		1 byte - high nibble = palette 0Dh blue, low nibble = palette 0Eh green
-		1 byte - high nibble = palette 0Eh red, low nibble = palette 0Eh blue
-8A - [v1.10+] set Portrait start position
-	2 bytes - register ID: portrait Index
-	2 bytes - register ID: ?? mask
+		2 bytes - [HB-pad] source GDC plane (0..2)
+		2 bytes - portrait start column (X/8) in portrait collection image
+		2 bytes - portrait start row (Y) in portrait collection image
+8A PTPOS1R - [v1.10+] set Portrait start position
+	2 bytes - register ID: portrait index
+	2 bytes - register ID: source GDC plane (0..2)
 	2 bytes - register ID: start column (X/8)
 	2 bytes - register ID: start row (Y)
-8B - [v1.10+] ?? (GFX related)
-	2 bytes - register ID (contains GDC plane ID)
-	2 bytes - ?? (some X position)
-	2 bytes - ?? (some Y position)
+8B PTDSTR - [v1.10+] set Portrait destination
+	2 bytes - register ID: destination GDC plane (0..2)
+	2 bytes - register ID: start column (X/8)
+	2 bytes - register ID: start row (Y)
 	Note: Same as 88, except that parameters are read from registers.
-8C - [v1.10+] ?? (GFX related)
+8C GFX8C - [v1.10+] ?? (GFX related)
 	no parameters
-8D - [v3.10] ?? (GFX related)
+8D GFX8D - [v3.10] ?? (GFX related)
 	no parameters
-8E - [v3.10] ?? (GFX related)
+8E GFX8E - [v3.10] ?? (GFX related)
 	no parameters
 
 "Undefined" commands will print the message "Executed undefined system reserved instruction" and then exit to DOS with return code 1.

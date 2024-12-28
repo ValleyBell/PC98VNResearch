@@ -1,6 +1,6 @@
 cloc_0D2D:	; entry point
 	CALL	cloc_0B94
-	CMD2F	2, 2, 16, 60, 320, 1, 2, 16
+	BLIT1I	2, 2, 16, 60, 320, 1, 2, 16
 	RET
 
 cloc_0D45:	; entry point
@@ -24,9 +24,9 @@ cloc_0D65:
 	MOVI	i53, 0
 	MOVI	i54, 319
 	MOVI	i55, 1
-	LOOPSTI	0
+	FRMSTI	0
 cloc_0D99:
-	LOOPJPR	i55, cloc_0D99
+	FRMJPR	i55, cloc_0D99
 	CMPI	i54, 15
 	JEQ	cloc_0DE1
 	CALL	cloc_0DE3
@@ -48,21 +48,21 @@ cloc_0DE1:
 cloc_0DE3:
 	CMPI	i64, 1
 	JEQ	cloc_0E1F
-	GFX3A	i48, i49, i50, i51, i52, i53, i49, i50
-	GFX3A	i48, i49, i54, i51, i52, i53, i49, i54
+	BLIT1R	i48, i49, i50, i51, i52, i53, i49, i50
+	BLIT1R	i48, i49, i54, i51, i52, i53, i49, i54
 	ADDI	i50, 2
 	SUBI	i54, 2
 	RET
 
 cloc_0E1F:
-	GFX64	i48, i49, i50, i51, i52, i53, i49, i50
-	GFX64	i48, i49, i54, i51, i52, i53, i49, i54
+	BLIT2R	i48, i49, i50, i51, i52, i53, i49, i50
+	BLIT2R	i48, i49, i54, i51, i52, i53, i49, i54
 	ADDI	i50, 2
 	SUBI	i54, 2
 	RET
 
 cloc_0E51:	; entry point
 	CALL	cloc_0B94
-	CMD2F	2, 2, 16, 60, 320, 1, 2, 16
+	BLIT1I	2, 2, 16, 60, 320, 1, 2, 16
 	CALL	cloc_0D65
 	RET
