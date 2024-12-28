@@ -308,7 +308,13 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 		if (flags & TXTFLAG_LINE_BREAK):
 			ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)
 			lines[-1] += ptinfo["data"]
-			lines.append("")	# start new line
+			xpos += chrwidth
+			max_xpos = max([xpos, max_xpos])
+			
+			# Instead of actually starting a new line by adding a new string to the "lines" variable,
+			# we just "simulate" starting a new line by modifying tbox_ybase.
+			# This way we don't need to care about moving trailing '\n' characters.
+			tbox_ybase -= 1
 			xpos = line_xbase
 			continue
 		
@@ -436,7 +442,9 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 				# stay on the same line
 	do_textsize_check((tb_width, tb_height), line_cols, line_id, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 	
-	lines = [line.rstrip() for line in lines]
+	# strip trailing spaces on all lines but the last one
+	for lid in range(len(lines) - 1):
+		lines[lid] = lines[lid].rstrip()
 	return '\\n'.join(lines)
 
 def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
