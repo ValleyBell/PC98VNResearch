@@ -62,6 +62,7 @@ KEYWORDS = {
 DATA_KEYWORDS = ["DB", "DW", "DS", "DSJ"]
 
 config = {}
+MISMATCH_WARN_CMDS = 50
 
 
 def find_next_token(line: str, startpos: int) -> int:
@@ -272,34 +273,56 @@ def write_asm(asm_lines: typing.List[str], fn_out: str) -> None:
 		f.write("".join(asm_lines))
 	return
 
+def cmdname_normalize(cmdName: str) -> str:
+	# treat "DB" and "DS" as equal, because they both are for "bytes"
+	# and the decompiler may put one or another depending on auto-detection
+	if cmdName == "DS":
+		return "DB"
+	return cmdName
+
+def is_data_equal(a: ParamToken, b: ParamToken) -> bool:
+	if a.type != b.type:
+		return False
+	if a.type == TKTP_INT:
+		return a.data == b.data
+	elif a.type == TKTP_STR:
+		return a.data == b.data
+	else:
+		return a.data.upper() == b.data.upper()
+
 def check_for_cmd_match(src_cmds: tuple, src_cmd: int, inc_cmds: tuple) -> tuple:
 	for cid in range(len(inc_cmds)):
 		ic = inc_cmds[cid]
 		sc = src_cmds[src_cmd + cid]
-		if ic.cmdName != sc.cmdName:
-			if cid >= 50:
+		if cmdname_normalize(ic.cmdName) != cmdname_normalize(sc.cmdName):
+			if cid >= MISMATCH_WARN_CMDS:
 				print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to command mismatch!")
 			return False
 		
+		if len(ic.params) != len(sc.params):
+			if cid >= MISMATCH_WARN_CMDS:
+				print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to different number of parameters")
+			return False	# mismatching types
 		for (pid, ip) in enumerate(ic.params):
 			sp = sc.params[pid]
 			if ip.type != sp.type:
 				if ip.type == TKTP_NAME or sp.type == TKTP_NAME:
 					# unresolved name (-> unreferenced label)
 					continue # just assume it matches
-				if cid >= 50:
+				if cid >= MISMATCH_WARN_CMDS:
 					print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to data type mismatch!")
 				return False	# mismatching types
 			if ip.type == TKTP_LBL:
 				if (ip.cmdOfs is not None) and (ip.cmdOfs != sp.cmdOfs):
-					if cid >= 50:
+					if cid >= MISMATCH_WARN_CMDS:
 						print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to pointer mismatch!")
 					return False	# label references to different (relative) offset
 				continue	# assume that labels
-			if ip.data != sp.data:
-				if cid >= 50:
+			if not is_data_equal(ip, sp):
+				if cid >= MISMATCH_WARN_CMDS:
 					print(f"Possible match broken at inc:{1+ic.lineID} / src:{1+sc.lineID} due to data mismatch!")
 				return False	# non-matching data
+		#print(f"Match at inc:{1+ic.lineID} / src:{1+sc.lineID}")
 	return True
 
 def search_for_match(src_data: tuple, inc_data: tuple) -> tuple:
@@ -335,8 +358,9 @@ def build_label_replacement_table(src_data: tuple, inc_data: tuple, match_start_
 	for cid in range(len(inc_cmds)):
 		ic = inc_cmds[cid]
 		sc = src_cmds[match_start_cmd + cid]
-		if ic.cmdName != sc.cmdName:
+		if cmdname_normalize(ic.cmdName) != cmdname_normalize(sc.cmdName):
 			print("Unexpected command mismatch when building include->source label reference list!")
+			print(f'  Source: line {sc.lineID}: "{sc.cmdName}", Include: line {ic.lineID}: "{ic.cmdName}"')
 			break
 		
 		for (pid, ip) in enumerate(ic.params):
