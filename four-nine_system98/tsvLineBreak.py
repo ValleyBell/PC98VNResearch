@@ -92,17 +92,45 @@ def tsv2textitems(tsv_data: list) -> list:
 	
 	return textitem_list
 
-def get_last_tbox_size(tsv_data: list, line: int) -> str:
+def get_last_tbox_info(tsv_data: list, line: int) -> str:
 	while line >= 0:
 		if "x" in tsv_data[line][4]:
 			return tsv_data[line][4]
 		line -= 1
 	return "999x999"
 
-def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, lines, text_size, xpos):
+def special_split(text: str, separators: list) -> list:
+	# Example for separators ['*', '@']
+	#	"ab*cd@e" -> ["ab", "cd", "e"]
+	#	"ab@e*cd" -> ["ab", "cd", "e"]
+	#	"ab*cd" -> ["ab", "cd", ""]
+	#	"ab@e" -> ["ab", "", "e"]
+	sepTxts = [text] + [""] * len(separators)
+	for (sIdx, sep) in enumerate(separators):
+		for (stIdx, sTxt) in enumerate(sepTxts):
+			tparts = sTxt.partition(sep)
+			if len(tparts[2]) > 0:
+				sepTxts[stIdx] = tparts[0]
+				sepTxts[1 + sIdx] = tparts[2]
+	return sepTxts
+
+def parse_tbox_info(tbinfo: str) -> tuple:
+	tb_data = special_split(tbinfo, ['*', '@'])
+	tb_size = [int(x) for x in tb_data[0].split("x")]
+	if tb_data[1] != "":
+		tb_init = [int(x) if x != "" else 0 for x in tb_data[1].split(",")]
+	else:
+		tb_init = [0, 0]
+	if tb_data[2] != "":
+		tb_ofs = [int(x) if x != "" else None for x in tb_data[2].split(",")]
+	else:
+		tb_ofs = [None, None]
+	return (tb_size, tb_init, tb_ofs)
+
+def do_textsize_check(old_linecount, tb_size, tsv_data, txitm, lines, text_size, xpos):
 	global config
 	
-	(tb_width, tb_height) = tb_size_int
+	(tb_width, tb_height) = tb_size
 	if config.textsize_check == 1:
 		(xsize, ysize) = text_size
 		if len(lines) > 0 and xpos <= 0:
@@ -110,12 +138,12 @@ def do_textsize_check(old_linecount, tb_size_str, tb_size_int, tsv_data, txitm, 
 		if xsize <= tb_width and ysize <= tb_height:
 			return
 		print(f"TSV line {1+txitm['line_st']}: New text ({xsize}x{ysize}) " \
-				f"exceeds text box! (text box: {tb_size_str})")
+				f"exceeds text box! (text box: {tb_width}x{tb_height})")
 	#elif config.textsize_check == 2:
 	#	if len(lines) == line_count:
 	#		return
 	#	print(f"TSV line {1+txitm['line_st']}: New text has {len(lines)} line(s) " \
-	#			f"when original one had {line_count}! (text box: {tb_size_str})")
+	#			f"when original one had {line_count}! (text box: {tb_width}x{tb_height})")
 	else:
 		return
 	
@@ -143,8 +171,9 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 				continue	# don't count comment lines
 			line_count += 1
 		
-		tbox_size = get_last_tbox_size(tsv_data, txitm["line_st"])
-		(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
+		tbox_infostr = get_last_tbox_info(tsv_data, txitm["line_st"])
+		(tb_size, tb_init, tb_ofs) = parse_tbox_info(tbox_infostr)
+		(tb_width, tb_height) = tb_size
 		
 		can_add_linebreaks = False
 		if txitm["mode"] != "sel":	# allow "txt" and "UNREF"
@@ -189,7 +218,10 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			elif (text[pos] == '\\') and (pos + 1 < len(text)):
 				if can_add_linebreaks and (text[pos + 1] == 'r') and (len(lines) - tbox_ybase >= tb_height):
 					if config.extend_mode == 1:
-						text = text[:pos+1] + 'e' + text[pos+2:]	# change \r to \e
+						newline_code = "e"
+						if tb_init[1] > 0:
+							newline_code += ("\\r" * tb_init[1])	# insert new-lines to re-reach the respective initalization Y offset
+						text = text[:pos+1] + newline_code + text[pos+2:]	# change \r to \e
 					elif config.extend_mode == 2:
 						text = text[:pos+1] + 'n' + text[pos+2:]	# change \r to \n
 				ctrl_chr = text[pos + 1]
@@ -264,7 +296,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					lines[-1] += text[pos : pos+chrlen]
 					pos += chrlen
 					if not keep_lines:
-						do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
+						do_textsize_check(line_count, tb_size, tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 					lines[-1] += "\\"
 					lines.append("")	# start new line
 					#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
@@ -272,6 +304,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					
 					# reset all coordinate data
 					tbox_ybase = len(lines) - 1	# index of current line
+					tbox_ybase += tb_init[1]	# add "initial offset", because we omit that from other calculations
 					max_xpos = xpos
 					last_word_lpos = pos
 					last_word_xpos = xpos
@@ -306,6 +339,9 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 					if config.extend_mode == 1:
 						# clear text box
 						newline_code = "\\e"
+						if tb_init[1] > 0:
+							# handle "initial offset"
+							newline_code += ("\\r" * tb_init[1])	# insert new-lines to re-reach the respective initalization Y offset
 						# reset all coordinate data
 						tbox_ybase = len(lines) + 1
 						max_xpos = 0
@@ -346,7 +382,7 @@ def textitems2tsv(textitem_list: list, tsv_data: list, keep_lines: bool) -> list
 			if not chrdata.isspace():
 				max_xpos = max([xpos, max_xpos])
 		if not keep_lines:
-			do_textsize_check(line_count, tbox_size, (tb_width, tb_height), tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
+			do_textsize_check(line_count, tb_size, tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 		
 		# make sure that we can replace the lines exactly
 		while len(lines) < line_count:

@@ -267,11 +267,19 @@ def apply_textbox_settings(tb_state: list, tb_settings: list) -> None:
 		return
 	for tb in tb_settings:
 		tb_id = tb["box_id"]
-		if ("width" in tb) and ("width" in tb):
-			tb_state[tb_id] = (
+		if ("width" in tb) and ("height" in tb):
+			tbox_size = (
 				int(tb["width"]) * 2,
 				int(tb["height"]),
 			)
+			if ("init_x" in tb) or ("init_y" in tb):
+				tbox_ofs = (
+					int(tb.get("init_x", 0)) * 2,
+					int(tb.get("init_y", 0)),
+				)
+			else:
+				tbox_ofs = None
+			tb_state[tb_id] = (tbox_size, tbox_ofs)
 		else:
 			tb_state[tb_id] = None	# close text box
 	return
@@ -305,7 +313,7 @@ def generate_message_table(cmd_list: list, label_list: list) -> list:
 			add_ref_label(ref_labels, lname, 0x01, cid)	# referenced by "print" -> good
 			if textbox_info[tb_id] is not None:
 				label_tboxes[lname] = textbox_info[tb_id]
-				if textbox_info[tb_id][0] <= 16:	# small text box (<=16 wide) -> assume selection
+				if textbox_info[tb_id][0][0] <= 16:	# small text box (<=16 wide) -> assume selection
 					ref_labels[lname][0] |= 0x02
 			print_before_label = lname
 		elif cmdName == "PRINTXY":
@@ -321,10 +329,11 @@ def generate_message_table(cmd_list: list, label_list: list) -> list:
 			tb_id = citem.params[0].data
 			tb_width = citem.params[3].data
 			tb_height = citem.params[4].data
-			textbox_info[tb_id] = (
+			tbox_size = (
 				(tb_width - 2) * 2,	# -2 for border, in full-width CJK, *2 for ASCII width
 				tb_height - 2,	# -2 for top and bottom border
 			)
+			textbox_info[tb_id] = (tbox_size, None)
 		elif cmdName == "TBCLOSE":
 			tb_id = citem.params[0].data
 			textbox_info[tb_id] = None
@@ -580,11 +589,15 @@ def asm2tsv(in_fns: str, fn_out: str) -> int:
 						line_str += f"+{lcount}"
 					if msg[2] >= 0:
 						line_str += f" ({msg[2]})"
-					tbox = msg[4]
-					if tbox is None:
+					tbinf = msg[4]
+					if tbinf is None:
 						tbstr = "-"
 					else:
+						(tbox, tbofs) = tbinf
 						tbstr = f"{tbox[0]}x{tbox[1]}"
+						if tbofs is not None:
+							tbostr = [f"{val}" if val != 0 else "" for val in tbofs]
+							tbstr += f"*{tbostr[0]},{tbostr[1]}"
 					f.write(f"{fname}\t{line_str}\t{msg[1]}\t{msg[3]}\t{tbstr}\t{msg[5]}\n")
 	except IOError:
 		print(f"Error writing {fn_out}")

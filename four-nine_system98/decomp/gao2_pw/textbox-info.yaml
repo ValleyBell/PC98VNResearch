@@ -19,10 +19,11 @@ calls:
     - box_id: 11
       # TBOPEN  11, 13, 15, 21, 8, 3
       # box size 21x8 according to script, but the background graphic occupies only 20x6
-      # The effective height would be 4 lines, BUT - the code assumes a height of 6 and automatically prints an empty line when opening the box.
-      # So I think a height of 5 is a good compromise.
+      # The scripts automatically prints a "\r" (empty line) when opening the text box.
+      # A size of 18x4 keeps the margin even on all sides.
       width: 18
-      height: 5
+      height: 4 # lines to draw
+      init_y: 1 # initial Y offset
   cloc_2E80:    # see common_1a.asm
     - box_id: 10
       # close
@@ -38,7 +39,8 @@ calls:
     - box_id: 11
       # TBOPEN  11, 13, 15, 21, 8, 3
       width: 18
-      height: 5
+      height: 4 # lines to draw
+      init_y: 1 # initial Y offset
   cloc_16DE:    # see common_2c.asm
     - box_id: 10
       # close
