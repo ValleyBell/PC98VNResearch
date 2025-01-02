@@ -197,7 +197,8 @@ def parse_text(text: str) -> list:
 				flags |= TXTFLAG_LINE_BREAK
 				state_space |= 0x20	# enforce LWORD_END
 			elif ctrl_chr == '\n':	# new TSV line
-				continue		# just ignore
+				chrwidth = 0
+				state_space |= 0x20	# enforce LWORD_END
 		elif ord(text[pos]) >= 0x20:
 			ccstr = text[pos]
 			if (pos + 1 < len(text)) and (text[pos + 1] == '\uF87F'):
@@ -371,7 +372,7 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 						hyp_w1pos = ptext[hyp_w1idx]["linepos"][1]
 			
 			if break_mode is None:
-				# fallback when no hypenation was used
+				# fallback when no hyphenation was used
 				if (lw_lpos <= 0) or lines[-1][:lw_lpos].isspace():
 					# (a) there were no spaces OR
 					# (b) the only spaces were indentation
@@ -465,7 +466,7 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 				cur_chr = chr(ccode)
 				chrlen += 2
 			elif ctrl_chr == 'j':
-				cur_chr = '\0x00'
+				cur_chr = '\x00'
 				chrlen += 4
 			elif ctrl_chr == 'u':
 				ccode = int(text[pos+chrlen : pos+chrlen+4], 0x10)
