@@ -99,6 +99,7 @@ def process_data(tsv_data: list) -> list:
 	# Extract "unique" lines and set references in the original list.
 	trans_data = []
 	unique_texts = []
+	unique_tkeys = []
 	for (tid, txitm) in enumerate(textitem_list):
 		trdat = text2transdata(txitm["text"])
 		# Store text strings in a separate "unique texts" table.
@@ -111,6 +112,7 @@ def process_data(tsv_data: list) -> list:
 		except ValueError:
 			ut_idx = len(unique_texts)
 			unique_texts.append(trdat["data"])
+			unique_tkeys.append(trdat["keys"].keys())
 		trdat.pop("data")
 		trdat["tidx"] = ut_idx	# save only a text reference ID
 		trans_data.append({"text_item": tid, **trdat})
@@ -121,7 +123,7 @@ def process_data(tsv_data: list) -> list:
 				f.write(str({**trdat, "text": text}) + "\n")
 	
 	# Translate the unique text strings.
-	translated_texts = translate_items_grouped(unique_texts)
+	translated_texts = translate_items_grouped(unique_texts, unique_tkeys)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "05_translated_texts.log", "wt") as f:
 			for trdat in trans_data:
@@ -269,14 +271,30 @@ def text2transdata(text: str) -> dict:
 def transdata2txt(tdata: dict) -> str:
 	tnew = tdata["data"]
 	for (key, val) in tdata["keys"].items():
+		#if key.startswith('['):
+		#	# Recently, Google Translate inserts additional spaces before/after the replacement codes.
+		#	# This is bad for sentence-splits. We make sure to remove them here.
+		#	klen = len(key)
+		#	pos = tnew.find(key)
+		#	while pos >= 0:
+		#		tnew = tnew[:pos].rstrip() + val + tnew[pos+klen:].lstrip()
+		#		pos += klen
+		#		pos = tnew.find(key, pos)
+		#	# results were unfortunately less ideal than I expected them to be
 		tnew = tnew.replace(key, val)
 	return tdata["start"] + tnew + tdata["end"]
 
-def translate_items_single(texts: list) -> list:
+def check_keys_in_text(text: str, keys: set) -> bool:
+	for k in keys:
+		if text.find(k) < 0:
+			return False
+	return True
+
+def translate_items_single(texts: list, tkeys: list, line_base: int) -> list:
 	# translate each line separately
 	trans_texts = []
 	for (tid, txt) in enumerate(texts):
-		print(f"Translating line {1+tid} / {len(texts)} ({len(txt)} characters) ...", end="", flush=True)
+		print(f"Translating line {1+line_base+tid} / {line_base+len(texts)} ({len(txt)} characters) ...", end="", flush=True)
 		t_start = time.time()
 		trans_text = translate_text(txt)
 		t_end = time.time()
@@ -285,26 +303,32 @@ def translate_items_single(texts: list) -> list:
 		if trans_text is None:
 			print("Failed to call web service")
 			return None
+		if not check_keys_in_text(txt, tkeys[tid]):
+			print("Placeholders got missing - ignoring translation.")
+			trans_text = text
 		trans_texts.append(trans_text)
 	return trans_texts
 
-def translate_items_grouped(texts: list) -> list:
+def translate_items_grouped(texts: list, keys: list) -> list:
 	# translate text in groups
 	TEXT_SEP = '\n'
 	
 	text_groups = [[]]
+	text_gks = [[]]
 	tgrp_size = -len(TEXT_SEP)	# un-count separator for last line
-	for text in texts:
+	for (tid, text) in enumerate(texts):
 		if tgrp_size + len(text) > TRANSLATE_MAX_CHARS:
 			if tgrp_size > 0:
 				text_groups.append([])
+				text_gks.append([])
 				tgrp_size = -len(TEXT_SEP)
 		text_groups[-1].append(text)
+		text_gks[-1].append(keys[tid])
 		tgrp_size += len(text) + len(TEXT_SEP)
 	
 	line_base = 0
 	for (gid, grp) in enumerate(text_groups):
-		grptrans = translate_item_group(grp, TEXT_SEP, line_base, len(texts))
+		grptrans = translate_item_group(grp, text_gks[gid], TEXT_SEP, line_base, len(texts))
 		if type(grptrans) is list:
 			text_groups[gid] = grptrans
 			line_base += len(grp)
@@ -314,7 +338,7 @@ def translate_items_grouped(texts: list) -> list:
 	
 	return [txt for grp in text_groups for txt in grp]
 
-def translate_item_group(text_group: list, line_sep: str, line_base: int, lines_total: int) -> typing.Optional[list]:
+def translate_item_group(text_group: list, text_keys: list, line_sep: str, line_base: int, lines_total: int) -> typing.Optional[list]:
 	RETRY_ATTEMPS = 2
 	
 	grptxt_count = len(text_group)
@@ -336,22 +360,29 @@ def translate_item_group(text_group: list, line_sep: str, line_base: int, lines_
 		
 		grptrans = grp_translated.split(try_sep)
 		if len(grptrans) == grptxt_count:
-			return grptrans
-		
-		print(f"Warning: Translation returned {len(grptrans)} lines when {grptxt_count} were expected - ", end='')
+			all_ok = True
+			for (tid, txt) in enumerate(grptrans):
+				if not check_keys_in_text(txt, text_keys[tid]):
+					print(f"Placeholders got missing in line {1+line_base+tid} - ignoring translation.")
+					all_ok = False
+					break
+			if all_ok:
+				return grptrans
+		else:
+			print(f"Warning: Translation returned {len(grptrans)} lines when {grptxt_count} were expected - ", end='')
 		if retry < (RETRY_ATTEMPS - 1):
 			print("trying again.")
 	
 	if len(text_group) < 8:
 		print("translating lines separately.")
-		return translate_items_single(text_group)
+		return translate_items_single(text_group, text_keys, line_base)
 	else:
 		print("splitting into smaller groups.")
 		split_idx = len(text_group) // 2
-		tg1 = translate_item_group(text_group[:split_idx], line_sep, line_base + 0, lines_total)
+		tg1 = translate_item_group(text_group[:split_idx], text_keys[:split_idx], line_sep, line_base + 0, lines_total)
 		if tg1 is None:
 			tg1 = text_group[:split_idx]
-		tg2 = translate_item_group(text_group[split_idx:], line_sep, line_base + split_idx, lines_total)
+		tg2 = translate_item_group(text_group[split_idx:], text_keys[split_idx:], line_sep, line_base + split_idx, lines_total)
 		if tg2 is None:
 			tg2 = text_group[split_idx:]
 		return tg1 + tg2
