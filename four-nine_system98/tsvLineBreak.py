@@ -305,11 +305,11 @@ def parse_text(text: str) -> list:
 					ccstr += text[pos + 1]
 					chrlen += 1
 					chrwidth = 1
-				#elif ccstr in "\u201C\u201D\u2018\u2019":
-				#	if config.quote_mode == 0:
-				#		chrwidth = 2	# in mode 0, they will be full-width
-				#	else:
-				#		chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
+				elif ccstr in "\u201C\u201D\u2018\u2019":
+					if config.quote_mode == 0:
+						chrwidth = 2	# in mode 0, they will be full-width
+					else:
+						chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
 				#elif ccstr == "\u2026":
 				#	chrwidth = 3	# the "reinsert" script will convert this to "..."
 				else:
@@ -745,6 +745,8 @@ def main(argv):
 	apgrp.add_argument("-r", "--remove", action="store_true", help="remove line breaks")
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
 	aparse.add_argument("-I", "--indenting", action="store_true", help="remove/insert indents after left parenthesis (remove is very recommended)")
+	aparse.add_argument("-q", "--quote-mode", type=int, help="mode for slanted quotation marks,\n" \
+			"0 = full-width,\n1/2 = half-width", default=1)
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
 	aparse.add_argument("-x", "--extend-mode", type=int, help="how to extend small text boxes. 0 = none, 1 = clear, 2 = scroll", default=0)
 	aparse.add_argument("-v", "--variables", type=str, help="YAML file that contains variables to be replaced with words during line length calculation")
