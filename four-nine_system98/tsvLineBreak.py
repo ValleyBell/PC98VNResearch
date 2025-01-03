@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# TODO: Analyse indentation and put an "\i" at the respective places.
 import sys
 import os
 import typing
@@ -165,12 +164,18 @@ TXTFLAG_LWORD_BEGIN	= 0x10	# "long word" can be a concatenated word with trailin
 TXTFLAG_LWORD_END	= 0x20
 TXTFLAG_CWORD_BEGIN	= 0x40	# "core word" is just a single word that consists only of alphabet letters
 TXTFLAG_CWORD_END	= 0x80
+TXTFLAG_INDENT_BEG	= 0x0100
+TXTFLAG_INDENT_END	= 0x0200
+TXTFLAG_CTRL_CODE	= 0x1000
+TXTFLAG_CTRL_PARAM	= 0x2000
+TXTFLAG_DUMMY		= 0x8000
 
 def parse_text(text: str) -> list:
 	global config
 	global var_dict
 	
 	# split text data into "tokens", with annotated width/height/...
+	indent_level = 0
 	ptext = []
 	state_space = 0x01
 	state_alpha = 0x00
@@ -230,6 +235,7 @@ def parse_text(text: str) -> list:
 			
 			if param_bytes > 0:
 				chrwidth = 0
+				flags |= TXTFLAG_CTRL_PARAM
 				param_bytes -= 1
 			elif ctrl_chr == 'j':
 				chrwidth = 2	# assume full-width emoji / custom PC-98 font character
@@ -252,55 +258,73 @@ def parse_text(text: str) -> list:
 					state_alpha |= 0x01
 			elif ctrl_chr == 'x04':
 				chrwidth = 8-2	# assume up to 8 chars for names
+				flags |= TXTFLAG_CTRL_CODE
 				param_bytes = 1
 			elif ctrl_chr == 'x05':
 				chrwidth = 6	# assume up to 6 chars for numbers (5 digits + sign)
+				flags |= TXTFLAG_CTRL_CODE
 				param_bytes = 2
 			elif ctrl_chr == 't':	# tab
 				chrwidth = 8
+				flags |= TXTFLAG_CTRL_CODE
 				state_space |= 0x01
 			elif ctrl_chr == 'r':	# new line
 				chrwidth = 0
 				chrlines = 1
-				flags |= TXTFLAG_LINE_BREAK
+				flags |= (TXTFLAG_LINE_BREAK | TXTFLAG_CTRL_CODE)
 				state_space |= 0x20	# enforce LWORD_END
 			elif ctrl_chr == 'n':	# scroll 1 line up
 				chrwidth = 0
 				chrlines = 0	# "0 lines", because we don't take additional space in the text box due to scrolling
-				flags |= TXTFLAG_LINE_BREAK
+				flags |= (TXTFLAG_LINE_BREAK | TXTFLAG_CTRL_CODE)
 				state_space |= 0x20	# enforce LWORD_END
 			elif ctrl_chr == '\n':	# new TSV line
 				chrwidth = 0
+				flags |= TXTFLAG_DUMMY
 				state_space |= 0x20	# enforce LWORD_END
 			elif ctrl_chr == 'e':	# paragraph end (wait + clear textbox)
 				chrwidth = 0
 				chrlines = -1
-				flags |= TXTFLAG_LINE_BREAK
+				flags |= (TXTFLAG_LINE_BREAK | TXTFLAG_CTRL_CODE)
 				state_space |= 0x20	# enforce LWORD_END
 			elif ctrl_chr in ['c', 'p', 'x03', 'x06', 'x08', 'x0B', 'x0C', 'x0E']:
+				flags |= TXTFLAG_CTRL_CODE
 				param_bytes = 1
 			elif ctrl_chr == 'x0F':
 				# possible improvement: handle System-98 meta commands properly
+				flags |= TXTFLAG_CTRL_CODE
 				param_bytes = 2
 		elif ord(text[pos]) >= 0x20:
-			ccstr = text[pos]
-			if (pos + 1 < len(text)) and (text[pos + 1] == '\uF87F'):
-				ccstr += text[pos + 1]
-				chrlen += 1
-				chrwidth = 1
-			#elif ccstr in "\u201C\u201D\u2018\u2019":
-			#	if config.quote_mode == 0:
-			#		chrwidth = 2	# in mode 0, they will be full-width
-			#	else:
-			#		chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
-			#elif ccstr == "\u2026":
-			#	chrwidth = 3	# the "reinsert" script will convert this to "..."
+			if param_bytes > 0:
+				chrwidth = 0
+				flags |= TXTFLAG_CTRL_PARAM
+				param_bytes -= 1
 			else:
-				chrwidth = get_cjk_char_width(ccstr)
-			
-			state_space |= 0x01 if ccstr.isspace() else 0x10
-			if ccstr.isalpha():
-				state_alpha |= 0x01
+				ccstr = text[pos]
+				if (pos + 1 < len(text)) and (text[pos + 1] == '\uF87F'):
+					ccstr += text[pos + 1]
+					chrlen += 1
+					chrwidth = 1
+				#elif ccstr in "\u201C\u201D\u2018\u2019":
+				#	if config.quote_mode == 0:
+				#		chrwidth = 2	# in mode 0, they will be full-width
+				#	else:
+				#		chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
+				#elif ccstr == "\u2026":
+				#	chrwidth = 3	# the "reinsert" script will convert this to "..."
+				else:
+					chrwidth = get_cjk_char_width(ccstr)
+				
+				state_space |= 0x01 if ccstr[0].isspace() else 0x10
+				if ccstr[0].isalpha():
+					state_alpha |= 0x01
+				if ccstr[0] in ['(', '（']:
+					flags |= TXTFLAG_INDENT_BEG
+					indent_level += 1
+				elif ccstr[0] in [')', '）']:
+					if indent_level > 0:
+						indent_level -= 1
+						flags |= TXTFLAG_INDENT_END
 		
 		if (state_space & 0x01):
 			flags |= TXTFLAG_SPACE
@@ -375,9 +399,11 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 	ptext = parse_text(txitm["text"])
 	
 	# split text data into multiple lines for the TSV
+	indent_xbase = [0]
+	line_xbase = indent_xbase[0]
+	tbox_ybase = 0
 	xpos = 0
 	max_xpos = xpos
-	tbox_ybase = 0
 	lines = [""]
 	# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
 	param_bytes = 0
@@ -408,6 +434,7 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 				# possible improvement: handle System-98 meta commands properly
 				param_bytes = 2
 			elif ctrl_chr == '\n':	# new TSV line
+				ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)	# make token search below work properly
 				continue
 			elif ctrl_chr == 'e':	# paragraph end (wait + clear textbox)
 				ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)
@@ -417,7 +444,6 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 				lines[-1] += "\\"
 				lines.append("")	# start new line
 				#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
-				xpos = 0
 				
 				# reset all coordinate data
 				tbox_ybase = len(lines) - 1	# index of current line
@@ -425,6 +451,7 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 					lines[-1] += ("\\r" * tb_init[1])	# insert new-line commands to re-reach the respective initalization Y offset
 				else:
 					tbox_ybase += tb_init[1]	# add "initial offset", because we omit that from other calculations
+				xpos = 0
 				max_xpos = xpos
 				continue
 		#print(f"CPos {ptinfo['pos']}, XPos {xpos}, Lines {len(lines)}, NextChr: '{ptinfo['data']}' (width {chrwidth}), LastLine: {lines[-1]}")
@@ -432,15 +459,19 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 		if (flags & TXTFLAG_LINE_BREAK):
 			ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)
 			lines[-1] += ptinfo["data"]
-			lines[-1] += "\\"
-			lines.append("")	# start new line
 			xpos += chrwidth
 			max_xpos = max([xpos, max_xpos])
 
-			# new line: "lines" == 1 -> ybase += 0
-			# scroll:   "lines" == 0 -> ybase += 1
-			tbox_ybase -= (ptinfo["lines"] - 1)
-			xpos = 0
+			if xpos == 0 and tbox_ybase >= len(lines):
+				tbox_ybase -= ptinfo["lines"]
+			else:
+				lines[-1] += "\\"
+				lines.append("")	# start new line
+				# new line: "lines" == 1 -> ybase += 0
+				# scroll:   "lines" == 0 -> ybase += 1
+				tbox_ybase -= (ptinfo["lines"] - 1)
+			lines[-1] += (' ' * line_xbase)
+			xpos = line_xbase
 			continue
 		
 		if False and (len(lines) - tbox_ybase == tb_height):
@@ -456,7 +487,7 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 			(lwBegIdx, lwEndIdx) = extract_word_tokens(ptext, ptid, TXTFLAG_LWORD_BEGIN, TXTFLAG_LWORD_END)
 			(cwBegIdx, cwEndIdx) = extract_word_tokens(ptext, ptid, TXTFLAG_CWORD_BEGIN | TXTFLAG_LWORD_BEGIN, TXTFLAG_CWORD_END | TXTFLAG_LWORD_END)
 			if (ptext[cwBegIdx]["linepos"][2] > ptext[lwBegIdx]["linepos"][2]) and \
-				(ptext[cwBegIdx - 1]["data"][-1] == '-') and False:
+				(ptext[cwBegIdx - 1]["data"][-1] == '-'):
 				# When the last word ended with a hyphen, assume we can break after that as if it was a space.
 				# (comparing the X position is a harder requirement than comparing the index)
 				lwBegIdx = cwBegIdx
@@ -505,7 +536,8 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 				lines[-1] += newline_code + "\\"
 				lines.append("")	# start new line
 				#lines[-1] += f"<{len(lines) - tbox_ybase}/{tb_height}>"
-				xpos = 0
+				lines[-1] += (' ' * line_xbase)
+				xpos = line_xbase
 			elif break_mode == 1:
 				# insert a line break at the beginning of the last word (and strip spaces)
 				#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - lw_xpos}")
@@ -513,18 +545,27 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 				rem_line = lines[-1][lw_lpos:]
 				#rem_line = f"<{len(lines) - tbox_ybase + 1}/{tb_height}>" + rem_line
 				lines[-1] = lines[-1][:lw_lpos] + newline_code + "\\"
-				lines.append(rem_line)
+				lines.append((' ' * line_xbase) + rem_line)
 				ptext[lwBegIdx]["flags"] |= TXTFLAG_LWORD_BEGIN
 				for ptMoveId in range(lwBegIdx, ptid):
 					ptlp = ptext[ptMoveId]["linepos"]
-					ptext[ptMoveId]["linepos"] = (len(lines) - 1, ptlp[1] - lw_lpos, ptlp[2] - lw_xpos + 0)
-				xpos = xpos - lw_xpos + 0
+					ptext[ptMoveId]["linepos"] = (len(lines) - 1, ptlp[1] - lw_lpos, ptlp[2] - lw_xpos + line_xbase)
+				xpos = xpos - lw_xpos + line_xbase
+				max_xpos = max([xpos, max_xpos])
 		
 		ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)	# (line index/Y position, character index, screen X position)
 		lines[-1] += ptinfo["data"]
 		xpos += chrwidth
 		if not (flags & TXTFLAG_SPACE):
 			max_xpos = max([xpos, max_xpos])
+		if config.indenting and multiline_text:
+			if flags & TXTFLAG_INDENT_BEG:
+				indent_xbase.append(xpos)	# save indent of "after left parenthesis"
+				line_xbase = indent_xbase[-1]
+			elif flags & TXTFLAG_INDENT_END:
+				if len(indent_xbase) > 0:
+					indent_xbase.pop()
+					line_xbase = indent_xbase[-1]
 	if not keep_lines:
 		do_textsize_check(line_count, tb_size, tsv_data, txitm, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 	
@@ -543,8 +584,9 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 		tsv_data[tsv_lid][5] = lines[txt_lid]
 	return
 
-def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
+def remove_break_from_line(text: str, SENTENCE_END_CHRS: set, state: dict) -> str:
 	is_newline = False
+	indent_level = state["indent_level"] if ("indent_level" in state) else 0
 	last_non_spc = '\x00'
 	last_chr = '\x00'
 	pos = 0
@@ -575,10 +617,16 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 				is_newline = True
 			elif ctrl_chr == 'e':	# "paragraph end" control code
 				keep_next_nl = True
+				indent_level = 0
 			elif ctrl_chr == '\n':	# new TSV line
 				pass
 		elif ord(text[pos]) >= 0x0020:
 			keep_next_nl = False	# when the actual text starts, start removing line breaks
+			if text[pos] in ['(', '（']:
+				indent_level += 1
+			elif text[pos] in [')', '）']:
+				if indent_level > 0:
+					indent_level -= 1
 		
 		if is_newline:
 			is_newline = False
@@ -586,29 +634,39 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 			if text[next_pos : next_pos+2] == '\\\n':
 				next_pos += 2	# skip line end marker
 			#print(f"Next: {text[next_pos : next_pos+2]}")
+			keep_nl = False
 			if keep_next_nl:
-				pass	# keep at the beginning of the text
+				keep_nl = True	# keep at the beginning of the text
 			# This heavily breaks indented text.
 			#elif (len(text) <= next_pos) or text[next_pos].isspace():
-			#	pass	# keep when being followed by a space
+			#	keep_nl = True	# keep when being followed by a space
 			elif (len(last_non_spc) == 1) and last_non_spc in SENTENCE_END_CHRS:
-				pass	# keep when the last character is a "sentence/paragraph end" character
+				keep_nl = True	# keep when the last character is a "sentence/paragraph end" character
 			elif (len(last_non_spc) == 1) and (ord(last_non_spc) in range(0x1F000, 0x20000)):
-				pass	# keep when the last character is a symbol or emoji character
+				keep_nl = True	# keep when the last character is a symbol or emoji character
 			elif last_non_spc in ["\\e", "\\w"]:
-				pass	# keep when the last character is a "wait" command
+				keep_nl = True	# keep when the last character is a "wait" command
+
+			if not keep_nl:
+				# fuse lines
+				text = text[:pos] + text[next_pos:]
 			else:
+				pos = next_pos
+			chrlen = 0
+			if indent_level > 0 and config.indenting:
+				next_pos = pos
 				# strip leading spaces, removing indentation
 				while (next_pos < len(text)) and text[next_pos].isspace():
 					next_pos += 1
-				# fuse lines
-				text = text[:pos] + text[next_pos:]
-				chrlen = 0
+				if next_pos > pos:
+					# remove indent
+					text = text[:pos] + text[next_pos:]
 		last_chr = cur_chr
 		if not cur_chr.isspace():
 			last_non_spc = last_chr
 		pos += chrlen
 	
+	state["indent_level"] = indent_level
 	return text
 
 def line_breaks_remove(tsv_data: list) -> list:
@@ -631,9 +689,12 @@ def line_breaks_remove(tsv_data: list) -> list:
 	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2500, 0x2800)])	# add various symbols
 	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2900, 0x2C00)])	# add more arrows
 	SENTENCE_END_CHRS = set(SENTENCE_END_CHRS)	# convert to set for faster lookup
+	state = dict()
 	for txitm in textitem_list:
 		if txitm["mode"] == "txt":
-			txitm["text"] = remove_break_from_line(txitm["text"], SENTENCE_END_CHRS)
+			txitm["text"] = remove_break_from_line(txitm["text"], SENTENCE_END_CHRS, state)
+		else:
+			state.clear()
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "02_textitems_clean.log", "wt") as f:
 			for txitm in textitem_list:
@@ -683,6 +744,7 @@ def main(argv):
 	apgrp = aparse.add_mutually_exclusive_group(required=True)
 	apgrp.add_argument("-r", "--remove", action="store_true", help="remove line breaks")
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
+	aparse.add_argument("-I", "--indenting", action="store_true", help="remove/insert indents after left parenthesis (remove is very recommended)")
 	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
 	aparse.add_argument("-x", "--extend-mode", type=int, help="how to extend small text boxes. 0 = none, 1 = clear, 2 = scroll", default=0)
 	aparse.add_argument("-v", "--variables", type=str, help="YAML file that contains variables to be replaced with words during line length calculation")
