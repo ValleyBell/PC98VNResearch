@@ -20,7 +20,7 @@ Font data
 8x8 characters:
 - 8 bytes per character
 - each byte equals 1 "line" with 8 pixels (order: top -> bottom)
-- each byte stores 8 pixels, bit 7 (mask 0x80) = leftmost pixel, bit 0 (mask 0x00) = rightmost pixel
+- each byte stores 8 pixels, bit 7 (mask 0x80) = leftmost pixel, bit 0 (mask 0x01) = rightmost pixel
 
 16x16 font:
 - consists of four 8x8 characters
