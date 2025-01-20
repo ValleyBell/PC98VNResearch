@@ -61,9 +61,13 @@ So here is what I've got:
     The default value is `\n` (byte 0Ah), which is compatible with `vg-txt-tool.py --true-ascii`.  
     The original game uses `n` (byte 6Eh).
   - There are 2 additional opcodes (bytes 01h and 02h) that allow enabling/disabling use of the 8x8 font for ASCII characters.
+  - It also adds an opcode `CLR_CHR` (mapped to byte 03h by default) that allows clearing the text box.
   - In order to get additional space for texts when translating the Japanese messages, the variable `SEG026_SPACE` can be increased. It will insert additional space before the main data segment.
   - There is a total of 172 separate "MOV AX, text_ptr" instructions that are patched to allow for easier relocating of the text.
   - A prepatched version with example text: [VG-ASC.EXE](VG-ASC.EXE).
+  - The patch also has additional switches that allow you to:
+    - skip fights or jump to the end after the first fight (for easier testing)
+    - skip the erotic scenes while keeping all other cutscenes intact (allows for a SFW version of the game)
 - [vg-txt-tool.py](vg-txt-tool.py) - tool for decoding/reencoding the `TXT` message files in "V.G.: Variable Geo"
   - The game uses the ASCII letter `n` to indicate line breaks, which the tool converts to `\n`.
   - ASCII letters can be converted to the JIS ASCII mirror page (default) or to full-width characters.

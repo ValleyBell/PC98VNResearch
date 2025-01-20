@@ -14,13 +14,20 @@
 ;   - 00 - text end
 ;   - 01 - enable 8x8 font for ASCII
 ;   - 02 - enable 8x16 font for ASCII (default)
+;   - CLR_CHR - clear text box (set to 03 by default)
 ;   - 'n' or 0Ah - newline (can be configured for NL_CHR variable)
 ;   - ASCII letters 20..7E - draw using 8x8 or 8x16 font (see above, default is 8x16)
 ;   - 8540h..869Eh - draw as 8x16 (half-width) character
 ;   - anything else -> draw full-width 16x16 character
 
+%define SKIP_UNDRESSING	0	; skip the "undressing" scenes ("non-18+" patch)
+%define SKIP_FIGHT	0	; 0 = no patch, 1 = win, 2 = lose, 3 = cancel fight (goes to 2P character selection)
+%define JUMP_TO_END	0	; jump to ending scene after the first battle
+
+
 ;NL_CHR EQU 'n'
 NL_CHR EQU `\n`
+CLR_CHR EQU 03h
 
 	use16
 SEG000_BASE_OFS EQU 2000h
@@ -34,6 +41,7 @@ SEG026_NEW_OFS  EQU SEG026_BASE_OFS+SEG026_SPACE
 
 seg001 EQU 0525h
 seg012 EQU 159Ah
+seg017 EQU 1970h
 seg018 EQU 197Fh
 seg026 EQU 1A9Dh
 
@@ -56,6 +64,8 @@ RelocDummy EQU 547Ch	; unused offset (segment 0525h, offset 022Ch)
 %endrep
 
 	; patch relocation table in modified functions
+	incbin "VG.EXE", $, 09BAh-($-$$)
+	dw	RelocDummy, 000h	; originally: DoEnd1_Jun: seg001:SetTextPosition (0000h:38A4h)
 	incbin "VG.EXE", $, 0FB6h-($-$$)
 	dw	RelocDummy, 000h	; originally: LoadText_DS: seg018:j_DrawTextChar (0525h:0B06h)
 	dw	RelocDummy, 000h	; originally: LoadText_DS: seg018:j_DrawTextChar (0525h:0ADEh)
@@ -198,6 +208,8 @@ textBox_YStart EQU 202Ch
 	mov	ax, str_0459 - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 2D7Ch - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_0490 - ($$+SEG026_NEW_OFS)
+	incbin "VG.EXE", $, 2D9Ch - ($-$$-SEG000_BASE_OFS)
+DoUndress_Yuka_ResumeMusic:	; seg000:2D9C
 	incbin "VG.EXE", $, 2DCCh - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_04CE - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 2E7Bh - ($-$$-SEG000_BASE_OFS)
@@ -240,6 +252,29 @@ textBox_YStart EQU 202Ch
 	mov	ax, str_082E - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 3368h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_0879 - ($$+SEG026_NEW_OFS)
+
+%if SKIP_UNDRESSING
+	; skip undressing scene
+	incbin "VG.EXE", $, 3424h - ($-$$-SEG000_BASE_OFS)
+	push	word [2646h]	; push Player 1 score
+	push	cs
+	call	near UndressResumeMusic
+	add	sp, byte 2
+	jmp	short undress_skip
+	
+UndressResumeMusic:
+	; NOTE: There is a part of code inside the "undressing scene" code that restarts the battle music.
+	; I don't want to deal with the segment relocation stuff too much, so I will just recreate the
+	; initial stack layout here and then jump into the part of the function that restarts the music.
+	push	bp
+	mov	bp, sp
+	push	si
+	jmp	near DoUndress_Yuka_ResumeMusic
+	
+	incbin "VG.EXE", $, 3486h - ($-$$-SEG000_BASE_OFS)
+undress_skip:
+%endif
+
 	incbin "VG.EXE", $, 34A0h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_08C1 - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 34AFh - ($-$$-SEG000_BASE_OFS)
@@ -272,6 +307,11 @@ textBox_YStart EQU 202Ch
 	mov	ax, str_0A8E - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 388Ah - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_0AC8 - ($$+SEG026_NEW_OFS)
+	
+	; dummy out "call SetTextPosition(0, 1)"
+	incbin "VG.EXE", $, 38A1h - ($-$$-SEG000_BASE_OFS)
+	times 38A6h-($-$$-SEG000_BASE_OFS) db	90h
+	
 	incbin "VG.EXE", $, 38A9h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_0B14 - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 38B5h - ($-$$-SEG000_BASE_OFS)
@@ -356,6 +396,33 @@ textBox_YStart EQU 202Ch
 	mov	ax, str_1207 - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 41A4h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_1251 - ($$+SEG026_NEW_OFS)
+
+%if SKIP_FIGHT
+	; skip actual fight
+	incbin "VG.EXE", $, 4231h - ($-$$-SEG000_BASE_OFS)
+	; Note: The call to sub_1230 (located at 422Eh) is required to set up the drawing window for the "battle won" scene.
+	jmp	short loc_4236	; jmp + NOP, so I don't need to care about the relocation table
+	times 4236h-($-$$-SEG000_BASE_OFS) db	00h
+loc_4236:
+	mov	ax, [2646h]
+	mov	[bp-0Ch], ax	; required to make mid-battle cutscene work
+	
+%if SKIP_FIGHT == 1
+	inc	word [2646h]	; increase Player 1 score
+	jmp	near fight_RoundEnd
+%elif SKIP_FIGHT == 2
+	inc	word [2648h]	; increase Player 2 score
+	jmp	near fight_RoundEnd
+%else
+	mov	word [bp-02h], 0	; some "break" condition
+	jmp	near fight_End
+%endif
+	incbin "VG.EXE", $, 44C8h - ($-$$-SEG000_BASE_OFS)
+fight_RoundEnd:
+	incbin "VG.EXE", $, 450Dh - ($-$$-SEG000_BASE_OFS)
+fight_End:
+%endif
+
 	incbin "VG.EXE", $, 4706h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_129B - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 470Ah - ($-$$-SEG000_BASE_OFS)
@@ -442,6 +509,22 @@ textBox_YStart EQU 202Ch
 	mov	ax, str_14B1 - ($$+SEG026_NEW_OFS)
 	incbin "VG.EXE", $, 4D92h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_14BC - ($$+SEG026_NEW_OFS)
+
+; old patch - skips all rounds, but causes issues with the "battle won" screens
+;%if SKIP_FIGHT
+;	; skip actual fight, and just set "fight won" return code
+;	incbin "VG.EXE", $, 4F0Bh - ($-$$-SEG000_BASE_OFS)
+;	mov	ax, SKIP_FIGHT-1
+;	times 4F0Fh-($-$$-SEG000_BASE_OFS) db	90h
+;%endif
+
+%if JUMP_TO_END
+	; modify "fight ID" check to jump to the ending after the first fight
+	incbin "VG.EXE", $, 4F6Ch - ($-$$-SEG000_BASE_OFS)
+	cmp	word [001Ah], byte 1
+	times 4F71h-($-$$-SEG000_BASE_OFS) db	90h
+%endif
+
 	incbin "VG.EXE", $, 5162h - ($-$$-SEG000_BASE_OFS)
 	mov	ax, str_14CF - ($$+SEG026_NEW_OFS)
 
@@ -467,14 +550,16 @@ LoadText_DS:
 	pop	bp
 	retf
 
+lt_var_tpos_scrx EQU -05h
+lt_var_tpos_scry EQU -03h
+
 LoadText_ES:
 	push	bp
 	mov	bp, sp
-	sub	sp, byte 4
+	sub	sp, byte 5
 	push	di
 	push	si
 	
-	;mov	di, word [bp-02h]
 	mov	byte [bp-01h], 01h	; enable ASCII -> JIS mirror conversion by default
 	les	si, [bp+06h]
 	jmp	near ltxt_chrcheck
@@ -530,7 +615,7 @@ ltp_fin:
 	
 	; --- new code: set X position increment
 ltxt_textwidth:
-	mov	cl, 2		; default to full-width
+	mov	cx, 2		; default to full-width
 	or	ah, ah
 	jz	short lttw_halfwidth	; 1-byte character -> half-width
 	cmp	ax, 8540h
@@ -539,23 +624,63 @@ ltxt_textwidth:
 	jb	short lttw_halfwidth	; 8540..869E = half-width
 	;jae	short lttw_fullwidth	; 869F..9FFC -> full-width
 lttw_halfwidth:
-	mov	cl, 1		; set to half-width (1 byte on screen)
+	mov	cx, 1		; set to half-width (1 byte on screen)
 lttw_fullwidth:
 	mov	[cs:ltxt_movex], cl
 	
-	push	di
-	sub	ax, ax
-	push	ax
-	mov	ax, [textBox_YStart]
-	add	ax, [textPosY]
-	mov	cl, 4
-	shl	ax, cl
-	inc	ax
-	push	ax
+	; For spaces, we will just skip the text box size checks - and we can skip drawing, too.
+	cmp	ax, 0020h
+	jz	near ltxt_space	; ASCII space
+	cmp	ax, 8140h
+	jz	near ltxt_space	; full-width space
+	cmp	ax, 8640h
+	jz	near ltxt_space	; half-width space
+	
+	; do line wrapping checks
+	; Note: The original code does this after drawing. I moved it here so that
+	;       newline handling works better.
+	mov	ax, [textBox_XEnd]
+	sub	ax, [textBox_XStart]	; AX = text box width
+	sub	ax, cx		; subtract text character width
+	inc	ax		; We want to wrap when exceeding the text box, so add +1.
+	cmp	ax, [textPosX]
+	jg	short ltxt_noxwrap	; Note: The original code checks "jge" (break on <), but "jg" (break on <=) looks nicer.
+	
+	; X coordinate exceeds text box - start new line
+	mov	word [textPosX], 0
+	inc	word [textPosY]
+ltxt_noxwrap:
+	
+	mov	ax, [textBox_YEnd]
+	sub	ax, [textBox_YStart]
+	cmp	ax, [textPosY]
+	jge	short ltxt_noywrap
+	
+	; Y coordinate exceeds text box - clear text box
+	push	cs
+	call	near ClearTextBox
+ltxt_noywrap:
+	
+	; text position -> screen position
 	mov	ax, [textBox_XStart]
 	add	ax, [textPosX]
 	mov	cl, 3
 	shl	ax, cl
+	mov	[bp+lt_var_tpos_scrx], ax
+	
+	mov	ax, [textBox_YStart]
+	add	ax, [textPosY]
+	mov	cl, 4
+	shl	ax, cl
+	mov	[bp+lt_var_tpos_scry], ax
+	
+	push	di
+	sub	ax, ax
+	push	ax
+	mov	ax, [bp+lt_var_tpos_scry]
+	inc	ax
+	push	ax
+	mov	ax, [bp+lt_var_tpos_scrx]
 	inc	ax
 	push	ax
 ltes_reloc3:
@@ -565,16 +690,10 @@ ltes_reloc3:
 	push	di
 	sub	ax, ax
 	push	ax
-	mov	ax, [textBox_YStart]
-	add	ax, [textPosY]
-	mov	cl, 4
-	shl	ax, cl
+	mov	ax, [bp+lt_var_tpos_scry]
 	inc	ax
 	push	ax
-	mov	ax, [textBox_XStart]
-	add	ax, [textPosX]
-	mov	cl, 3
-	shl	ax, cl
+	mov	ax, [bp+lt_var_tpos_scrx]
 	add	ax, word 2
 	push	ax
 ltes_reloc4:
@@ -583,63 +702,33 @@ ltes_reloc4:
 	
 	push	di
 	dw	36FFh, textColor	; push textColor
-	mov	ax, [textBox_YStart]
-	add	ax, [textPosY]
-	mov	cl, 4
-	shl	ax, cl
-	push	ax
-	mov	ax, [textBox_XStart]
-	add	ax, [textPosX]
-	mov	cl, 3
-	shl	ax, cl
-	push	ax
+	push	word [bp+lt_var_tpos_scry]
+	push	word [bp+lt_var_tpos_scrx]
 ltes_reloc5:
 	call	seg018:j_DrawTextChar
 	add	sp, byte 8
 	
 	push	di
 	dw	36FFh, textColor	; push textColor
-	mov	ax, [textBox_YStart]
-	add	ax, [textPosY]
-	mov	cl, 4
-	shl	ax, cl
-	push	ax
-	mov	ax, [textBox_XStart]
-	add	ax, [textPosX]
-	mov	cl, 3
-	shl	ax, cl
+	push	word [bp+lt_var_tpos_scry]
+	mov	ax, [bp+lt_var_tpos_scrx]
 	inc	ax
 	push	ax
 ltes_reloc6:
 	call	seg018:j_DrawTextChar
 	add	sp, byte 8
 	
+ltxt_space:
 ltxt_movex EQU $+4	; hooray for self-modifying code
 	add	word [textPosX], byte 2
 	
-	mov	ax, [textBox_XEnd]
-	sub	ax, [textBox_XStart]
-	cmp	ax, [textPosX]
-	jge	short ltxt_chrcheck
-	
-	; X coordinate exeeds text box - start new line
-	mov	word [textPosX], 0
-	inc	word [textPosY]
-	
-	mov	ax, [textBox_YEnd]
-	sub	ax, [textBox_YStart]
-	cmp	ax, [textPosY]
-	jge	short ltxt_chrcheck
-	
-	; Y coordinate exeeds text box - clear text box
-	push	cs
-	call	near ClearTextBox
-
 ltxt_chrcheck:
 	cmp	byte [es:si], 0
 	jz	short loc_15F12	; text end
 	cmp	byte [es:si], NL_CHR
 	jz	short loc_15F06	; handle newline
+	cmp	byte [es:si], CLR_CHR
+	jz	short ltxt_tbclr	; clear textbox
 	jmp	ltxt_loop
 
 loc_15F06:				; CODE XREF: LoadText_ES+103j
@@ -648,12 +737,13 @@ loc_15F06:				; CODE XREF: LoadText_ES+103j
 	inc	word [textPosY]
 	jmp	short ltxt_chrcheck
 
+ltxt_tbclr:
+	inc	si		; advance text pointer by 1
+	push	cs
+	call	near ClearTextBox
+	jmp	short ltxt_chrcheck
+
 loc_15F12:				; CODE XREF: LoadText_ES+FDj
-	;mov	bx, [bp+06h]
-	;sub	si, bx
-	;mov	word [bp-02h], di
-	;mov	word [bp-04h], si
-	
 	pop	si
 	pop	di
 	mov	sp, bp
@@ -732,6 +822,8 @@ str_13CD:	; "『増田　千穂』、n"
 	db	"With Newlines.", NL_CHR
 	db	01h, "ANd a tiny FONT - 1234 ABCD abcd XYZ xyz.", NL_CHR, 0
 
+%assign data_space SEG026_NEW_OFS+000Ch-($-$$)
+%warning Extra text segment: data_space bytes remaining
 	times 000Ch-($-$$-SEG026_NEW_OFS) db	0AAh
 
 ; --- include actual data segment ---
@@ -1065,6 +1157,8 @@ str_14BC:	; "かかってらっしゃい"
 	db	82h, 0A9h, 82h, 0A9h, 82h, 0C1h, 82h, 0C4h, 82h, 0E7h, 82h, 0C1h, 82h, 0B5h, 82h, 0E1h, 82h, 0A2h, 00h
 str_14CF:
 	db	"b:nr3", 00h
+%assign data_space SEG026_NEW_OFS+14D6h-($-$$)
+%warning Original text segment: data_space bytes remaining
 	times 14D6h-($-$$-SEG026_NEW_OFS) db	0
 
 	incbin "VG.EXE", $-SEG026_SPACE, 1EFCh - ($-$$-SEG026_NEW_OFS)
@@ -1084,6 +1178,8 @@ str_1F58:	; "Ａ"
 	db	82h, 60h, 00h
 str_1F5B:	; "用意ができたら何かキーを押してくださいね。"
 	db	97h, 70h, 88h, 0D3h, 82h, 0AAh, 82h, 0C5h, 82h, 0ABh, 82h, 0BDh, 82h, 0E7h, 89h, 0BDh, 82h, 0A9h, 83h, 4Ch, 81h, 5Bh, 82h, 0F0h, 89h, 9Fh, 82h, 0B5h, 82h, 0C4h, 82h, 0ADh, 82h, 0BEh, 82h, 0B3h, 82h, 0A2h, 82h, 0CBh, 81h, 42h, 00h
+%assign data_space SEG026_NEW_OFS+1F86h-($-$$)
+%warning Debug message segment: data_space bytes remaining
 	times 1F86h-($-$$-SEG026_NEW_OFS) db	0
 
 	incbin "VG.EXE", $-SEG026_SPACE
