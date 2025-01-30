@@ -1,0 +1,429 @@
+Frontier Universe hacking information
+=================
+
+The main executable "FRONT.EXE" uses a special "module" system that allows it to load parts of the game's code at runtime.
+
+The module loading works like this:
+1. far CALL to an offset inside the "loader" structure
+2a. If the destination is a JMP command, then the module is already loaded and it gets executed directly. (no special processing)
+2b. If the destination is "INT 3Fh", the module will be loaded from the EXE file.
+3. Dynamically allocate memory for the module's data.
+4. Load the module data from the EXE file. (The offset from where to load is stored at CS:0004, see "EXE loader stubs" below.)
+5. Go through the module's relocation table and modify all the segments to point to whatever segments are listed in the "main segment list".
+   Segment 0000 usually refers to the EXE's main segment, which always stays in memory.
+   Other segments point to the respective "EXE loader stub" locations.
+6. For all entry points, replace the "INT 3Fh" call with a far JMP.
+   CF 3F a1 a2 00 (INT 3Fh / dw a2a1 / dw 0) -> EA a1 a2 s1 s2 (JMP s2s1:a2a1)
+7. return to the offset where the original "INT 3Fh" call happened (done by modifying the return address on the stack)
+
+EXE segment reference list: (EXE offset 0273C0)
+	each entry is 8 bytes long:
+	- 2 bytes - segment offset
+	- 2 bytes - segment size in bytes
+	- 2 bytes - ??
+	- 2 bytes - ??
+
+EXE loader stubs: (EXE offset 0278F0)
+	The loader stub consists of a 20h-byte header, which is followed by a (variable size) list of entry points (5 bytes each).
+	
+	Header:
+	4 bytes - INT 3Fh call + padding (bytes CD 3F 00 00)
+	4 bytes - offset of the loadable module, relative to EXE file offset 029AE0 (<offset>)
+	2 bytes - size of code data in bytes (<csz>)
+	2 bytes - size of relocation table in bytes (<rsz>)
+	1 byte  - number of entry points <e>
+	13h bytes - all 00 (filled in by the module loader later)
+	
+	Examples:
+	EXEofs main seg   mem ofs   <constant >  < offset  >  <csz>  <rsz>  <e>
+	027FA0 <0368h> -> 03DE00    CD 3F 00 00  20 43 01 00  7C 1E  4A 03  14 / in-memory segment 848Eh
+	028A60 <03E0h> -> 057C70    CD 3F 00 00  90 E1 02 00  C5 35  6C 04  37 / in-memory segment 853Ah
+	0292B0 <0440h> -> 077A70    CD 3F 00 00  90 DF 04 00  68 0D  26 01  13 / in-memory segment 85BFh
+	029540 <0470h> -> 07D7F0    CD 3F 00 00  10 3D 05 00  34 02  56 00  06 / in-memory segment 85E8h
+	029580 <0478h> -> 07DA90    CD 3F 00 00  B0 3F 05 00  DD 38  82 04  1B / in-memory segment 85ECh
+	029630 <0480h> -> 081860    CD 3F 00 00  80 7D 05 00  C3 05  80 00  0B / in-memory segment 85F7h
+	029690 <0488h> -> 081ECE    CD 3F 00 00  E0 83 05 00  77 09  2A 00  06 / in-memory segment 85FDh
+	029720 <0498h> -> 082F20    CD 3F 00 00  40 94 05 00  48 06  AE 00  07 / in-memory segment 8606h
+	0297E0 <04A8h> -> 084FF0    CD 3F 00 00  10 B5 05 00  17 0A  3A 01  0F / in-memory segment 8612h
+	
+	Entry point:
+	2 bytes - INT 3F call (CD 3F)
+	2 bytes - JMP destination address inside the segment
+	1 byte  - padding (required for replacement instruction)
+
+Loadable module:
+	The module consists of code data (size is <csz> from EXE loader stubs) and a relocation table (size is <rsz>).
+	
+	The "relocation table" is just a list of 2-byte offsets, relative to the beginning of the respective segment.
+	Each entry of the relocation table points to a "segment value". This is actually a reference to the "segment reference list". (EXE offset 0273C0)
+	The new segment is calculated by:
+		- reading the value
+		- masking it with 0xFFF8 (i.e. masking bits 0..2 out)
+		- taking that as index into the "segment reference list" and reading the value there
+	If the read value is odd, something else is done. (long-pointer handling?) Bits 1/2 are ignored.
+
+
+Common call structures
+----------------------
+text drawing call:
+	1E              PUSH    DS
+	68 96 05        PUSH    0596h
+	...
+	9A 64 1C 68 5F  CALL    5F68h:1C64h (in EXE: 9A <64 1C> <18 00>)
+
+image load call #1:
+	6A 00           PUSH    0h
+	B8 1C 6D        MOV     AX, 6D1Ch
+	8E C0           MOV     ES, AX
+	26 FF 36 xx xx  PUSH    WORD PTR ES:[...]
+	8E C0           MOV     ES, AX
+	26 FF 36 xx xx  PUSH    WORD PTR ES:[...]
+	8E C0           MOV     ES, AX
+	26 FF 36 xx xx  PUSH    WORD PTR ES:[...]
+	8E C0           MOV     ES, AX
+	26 FF 36 xx xx  PUSH    WORD PTR ES:[...]
+	6A 01           PUSH    1
+	1E              PUSH    DS
+	68 xx xx        PUSH    <offset>
+	9A 2F 00 F7 85  CALL    85F7h:002Fh (in EXE: 9A <2F 00> <80 04>)
+
+image load call #2:
+	6A 0F           PUSH    0Fh
+	6A 00           PUSH    00h
+	1E              PUSH    DS
+	68 xx xx        PUSH    <offset>
+	9A 25 00 F7 85  CALL    85F7h:0025h (in EXE: 9A <25 00> <80 04>)
+
+INT 3Fh (load new module)
+	-> address 066616h (660F:0526)
+	-> The return address is at ESP+6 (offset) / ESP+8 (segment)
+	00066616  push    bp                                          55
+	00066617  mov     bp,sp                                       8B EC
+	00066619  test    bp,1h                                       F7 C5 01 00
+	...
+
+SetupInt3F:
+	0006623B  push    es        ; [EXE: 0098FB]                   06
+	0006623C  push    bx                                          53
+	0006623D  push    ds                                          1E
+	0006623E  mov     al,[0A1h] ; DS:0A1h / 83D01 = 3Fh           A0 A1 00
+	00066241  mov     dx,[2h]   ; DS:02h  / 83C62 = 0526h         8B 16 02 00
+	00066245  mov     ds,[4h]   ; DS:04h  / 83C64 = 660Fh         8E 1E 04 00
+	00066249  mov     ah,25h                                      B4 25
+	0006624B  int     21h                                         CD 21
+	0006624D  pop     ds                                          1F
+	0006624E  pop     [2h]                                        8F 06 02 00
+	00066252  pop     [4h]                                        8F 06 04 00
+
+
+Partial program flow
+--------------------
+(memory offsets are from MAME's pc9801rs machine when booting the game from floppy disks)
+ 0005F220  push    bp                                          55
+ 0005F221  mov     bp,sp                                       8B EC
+ 0005F223  push    si                                          56
+ 0005F224  push    ds                                          1E
+ 0005F225  mov     ax,66A7h                                    B8 A7 66
+ 0005F228  mov     ds,ax                                       8E D8
+ 0005F22A  call    85E8h:25h                                   9A 25 00 E8 85
+	85E8:0025   INT 3Fh     CD 3F   ; [EXE: 029565, seg-base: 029540]
+	85E8:005C   DW  0000h   00 00   ; function pointer
+	85E8:002A   DB  0       00
+	→ CS:IP 9117:0000, DS with "waku" / "bg"
+	 00091170  push    bp       ; [EXE: 07D7F0]                    55
+	 00091171  mov     bp,sp                                       8B EC
+	 00091173  push    ds                                          1E
+	 00091174  mov     ax,6A72h ; DS with "waku"/"bg"/"main"       B8 72 6A
+	 00091177  mov     ds,ax                                       8E D8
+	 00091179  call    85F7h:43h ; call INT 3Fh                    9A 43 00 F7 85 [EXE: 9A <43 00> <80 04>]
+		85F7:0043   INT 3Fh     CD 3F   ; [EXE: 029673, seg-base: 029630]
+		85F7:0045   DW  0585h   85 05
+		85F7:0047   DB  0       00
+		-> CS:IP 913B:0585, DS with "gmain"/"gover"
+		 00091935  push    bp       ; [EXE: 081DE5]                    55
+		 00091936  mov     bp,sp                                       8B EC
+		 00091938  push    ds                                          1E
+		 00091939  mov     ax,6AD2h                                    B8 D2 6A
+		 0009193C  mov     ds,ax                                       8E D8
+		 0009193E  push    85F7h                                       68 F7 85
+		 00091941  push    2Ah                                         68 2A 00
+		 00091944  call    5DD4h:88Fh                                  9A 8F 08 D4 5D
+		 00091949  pop     cx                                          59
+		 0009194A  pop     cx                                          59
+		 0009194B  pop     ds                                          1F
+		 0009194C  pop     bp                                          5D
+		 0009194D  retf                                                CB
+	 0009117E  nop                                                 90
+	 0009117F  push    cs                                          0E
+	 00091180  call    911EBh                                      E8 68 00
+	 00091183  nop                                                 90
+	 00091184  push    cs                                          0E
+	 00091185  call    9122Ah                                      E8 A2 00
+	 00091188  nop                                                 90
+	 00091189  push    cs                                          0E
+	 0009118A  call    91317h                                      E8 8A 01
+	 0009118D  call    848Eh:3Eh                                   9A 3E 00 8E 84
+		848E:003E   INT 3Fh     CD 3F   ; [EXE: 027FDE, seg-base: 027FA0]
+		848E:0040   DW  19EEh   EE 19
+		848E:0042   DB  0       00
+		→ CS:IP 873C:19EE, DS with various text
+		 00088DAE  push    bp           ; [EXE: 03F7EE]                55
+		 00088DAF  mov     bp,sp                                       8B EC
+		 00088DB1  sub     sp,0C8h                                     81 EC C8 00
+		 00088DB5  push    si                                          56
+		 00088DB6  push    di                                          57
+		 00088DB7  push    ds                                          1E
+		 00088DB8  mov     ax,6823h                                    B8 23 68
+		 00088DBB  mov     ds,ax                                       8E D8
+		 00088DBD  xor     si,si                                       33 F6
+		 00088DBF  jmp     88DC7h                                      EB 06
+		 00088DC1  mov     byte ptr [bp+si-0C8h],0FFh                  C6 82 38 FF FF
+		 00088DC6  inc     si                                          46
+		 00088DC7  cmp     si,0C8h                                     81 FE C8 00
+		 00088DCB  jl      88DC1h                                      7C F4
+		 00088DCD  xor     si,si                                       33 F6
+		 00088DCF  jmp     88E2Eh                                      EB 5D
+		 00088DD1  xor     di,di                                       33 FF
+		 00088DD3  jmp     88E28h                                      EB 53
+		 00088DD5  mov     ax,si                                       8B C6
+	 00091192  nop                                                 90
+	 00091193  push    cs                                          0E
+	 00091194  call    91333h                                      E8 9C 01
+	 00091197  call    640Dh:0BE9h                                 9A E9 0B 0D 64
+	 0009119C  mov     dx,6D1Ch                                    BA 1C 6D
+	 0009119F  mov     es,dx                                       8E C2
+	 000911A1  mov     es:[0DF8Dh],al                              26 A2 8D DF
+	 000911A5  push    0h                                          6A 00
+	 000911A7  nop                                                 90
+---
+	 00088F64  jl      88F41h                                      7C DB
+	 00088F66  xor     si,si                                       33 F6
+	 00088F68  jmp     88F72h                                      EB 08
+	 00088F6A  push    si                                          56
+	 00088F6B  call    853Ah:2Ah                                   9A 2A 00 3A 85
+		853A:002A   INT 3Fh     CD 3F   ; [EXE: 028A8A, seg-base: 028A60]
+		853A:002C   DW  0D3E    3E 0D
+		853A:002D   DB  0       00
+		→ CS:IP 8924:0D3E, DS with various text
+		 00089F7E  push    bp           ; [EXE: 0589AE]                55
+		 00089F7F  mov     bp,sp                                       8B EC
+		 00089F81  push    si                                          56
+		 00089F82  push    ds                                          1E
+		 00089F83  mov     ax,6932h                                    B8 32 69
+		 00089F86  mov     ds,ax                                       8E D8
+		 00089F88  mov     si,[bp+6h]                                  8B 76 06
+		 00089F8B  mov     ax,si                                       8B C6
+		 00089F8D  mov     dx,6h                                       BA 06 00
+		 00089F90  imul    dx                                          F7 EA
+		 00089F92  mov     dx,7B18h                                    BA 18 7B
+		 00089F95  mov     bx,ax                                       8B D8
+		 00089F97  mov     es,dx                                       8E C2
+		 00089F99  mov     byte ptr es:[bx+4EA6h],0h                   26 C6 87 A6 4E 00
+	 00088F70  pop     cx                                          59
+	 00088F71  inc     si                                          46
+	 00088F72  cmp     si,14h                                      83 FE 14
+	 00088F75  jl      88F6Ah                                      7C F3
+	 00088F77  xor     si,si                                       33 F6
+	 00088F79  jmp     88F83h                                      EB 08
+	 00088F7B  push    si                                          56
+	 00088F7C  call    85BFh:61h                                   9A 61 00 BF 85
+		85BF:0061   INT 3Fh     CD 3F   ; [EXE: 029311, seg-base: 0292B0]
+		85BF:0063   DW  0420h   20 04
+		85BF:0065   DB  0       00
+		→ CS:IP 8C81:0420, DS with various text
+		 0008CC30  push    bp          ; [EXE: 077E90]                 55
+		 0008CC31  mov     bp,sp                                       8B EC
+		 0008CC33  push    si                                          56
+		 0008CC34  push    ds                                          1E
+		 0008CC35  mov     ax,6A56h                                    B8 56 6A
+		 0008CC38  mov     ds,ax                                       8E D8
+		 0008CC3A  mov     si,[bp+6h]                                  8B 76 06
+		 0008CC3D  mov     ax,si                                       8B C6
+		 0008CC3F  mov     dx,7h                                       BA 07 00
+		 0008CC42  imul    dx                                          F7 EA
+		 0008CC44  mov     dx,7B18h                                    BA 18 7B
+		 0008CC47  mov     bx,ax                                       8B D8
+		 0008CC49  mov     es,dx                                       8E C2
+		 0008CC4B  mov     byte ptr es:[bx+1FEh],0FFh                  26 C6 87 FE 01 FF
+---
+ 000921FC  mov     dx,6D1Ch                                    BA 1C 6D
+ 000921FF  mov     es,dx                                       8E C2
+ 00092201  mov     es:[0DF8Dh],al                              26 A2 8D DF
+ 00092205  push    0h                                          6A 00
+ 00092207  nop                                                 90
+ 00092208  push    cs                                          0E
+ 00092209  call    923C4h                                      E8 B8 01
+ 0009220C  pop     cx                                          59
+ 0009220D  call    8612h:5Ch        ; protection loader        9A 5C 00 12 86 [EXE: 9A <5C 00> <A8 04>]
+	8612:005C   INT 3Fh     CD 3F   ; [EXE: 02983C, seg-base: 0297E0]
+	8612:005E   DW  0000h   00 00
+	8612:0060   DB  0       00
+	→ CS:IP 8D58:0000, DS with protection screen
+	 0008D580  push    bp      ; [EXE: 084FF0]                     55
+	 0008D581  mov     bp,sp                                       8B EC
+	 0008D583  dec     sp                                          4C
+	 0008D584  dec     sp                                          4C
+	 0008D585  push    ds                                          1E
+	 0008D586  mov     ax,6CFBh                                    B8 FB 6C
+	 0008D589  mov     ds,ax                                       8E D8
+	 0008D58B  nop                                                 90
+	 0008D58C  xor     al,al   ; <-- protection skip               30 C0    original: 0E
+	 0008D58E  jmp     8D595h  ; <-- protection skip               EB 05    original: E8 12 00
+	 0008D590  nop                                                 90
+	 0008D591  push    cs                                          0E
+	 0008D592  call    8D742h                                      E8 AD 01
+	 0008D595  mov     [bp-1h],al                                  88 46 FF
+	 0008D598  push    ax                                          50
+	 0008D599  nop                                                 90
+	 0008D59A  push    cs                                          0E
+	 0008D59B  call    8DED0h                                      E8 32 09
+	 0008D59E  pop     cx                                          59
+	 0008D59F  pop     ds                                          1F
+	 0008D5A0  leave                                               C9
+	 0008D5A1  retf                                                CB
+ 00092212  call    85ECh:9Dh     ; main loader                 9A 9D 00 EC 85 [EXE: 9A <9D 00> <78 04>]
+	85EC:009D   INT 3Fh     CD 3F   ; [EXE: 02961D, seg-base: 029580]
+	85EC:009F   DW  0000h   00 00
+	85EC:00A1   DB  0       00
+	→ CS:IP 8DFA:0000, DS with "waku" / "bg"
+	 0008DFA0  push    bp                                          55
+	 0008DFA1  mov     bp,sp                                       8B EC
+	 0008DFA3  push    si                                          56
+	 0008DFA4  push    ds                                          1E
+	 0008DFA5  mov     ax,6A76h                                    B8 76 6A
+	 0008DFA8  mov     ds,ax                                       8E D8
+	 0008DFAA  push    0h                                          6A 00
+	 0008DFAC  call    5F68h:1C64h                                 9A 64 1C 68 5F
+	 0008DFB1  pop     cx                                          59
+	 0008DFB2  push    0h                                          6A 00
+	 0008DFB4  mov     ax,6D1Ch                                    B8 1C 6D
+	 0008DFB7  mov     es,ax                                       8E C0
+	 0008DFB9  push    word ptr es:[0CD2Eh]                        26 FF 36 2E CD
+	 0008DFBE  mov     es,ax                                       8E C0
+	 0008DFC0  push    word ptr es:[0CD2Ch]                        26 FF 36 2C CD
+	 0008DFC5  mov     es,ax                                       8E C0
+	 0008DFC7  push    word ptr es:[0CD2Ah]                        26 FF 36 2A CD
+	 0008DFCC  mov     es,ax                                       8E C0
+	 0008DFCE  push    word ptr es:[0CD28h]                        26 FF 36 28 CD
+	 0008DFD3  push    1h                                          6A 01
+	 0008DFD5  push    ds                                          1E
+	 0008DFD6  push    3D6h      ; addr of "waku"                  68 D6 03
+	 0008DFD9  call    85F7h:2Fh                                   9A 2F 00 F7 85
+		85F7:002F   INT 3Fh     CD 3F   ; [EXE: 02965F, seg-base: 029630]
+		85F7:0031   DW  0000h   00 00
+		85F7:0033   DB  0       00
+		→ CS:IP 9241:0000, DS with "waku" / "bg"
+		 00092410  push    bp           ; [EXE: 081860]                55
+		 00092411  mov     bp,sp                                       8B EC
+		 00092413  sub     sp,0Eh                                      83 EC 0E
+		 00092416  push    ds                                          1E
+		 00092417  mov     ax,6AD2h                                    B8 D2 6A [EXE: B8 <48 02>]
+		 0009241A  mov     ds,ax                                       8E D8
+		 0009241C  push    ss                                          16
+		 0009241D  lea     ax,[bp-0Eh]                                 8D 46 F2
+		 00092420  push    ax                                          50
+		 00092421  push    word ptr [bp+8h]                            FF 76 08
+		 00092424  push    word ptr [bp+6h]                            FF 76 06
+		 00092427  nop                                                 90
+		 00092428  push    cs                                          0E
+		 00092429  call    92643h                                      E8 17 02
+		 0009242C  add     sp,8h                                       83 C4 08
+		 ...
+		 0009243B  push    word ptr [bp+14h]                           FF 76 14
+		 0009243E  push    word ptr [bp+12h]                           FF 76 12
+		 00092441  push    word ptr [bp+10h]                           FF 76 10
+		 00092444  push    word ptr [bp+0Eh]                           FF 76 0E
+		 00092447  push    word ptr [bp+0Ch]                           FF 76 0C
+		 0009244A  push    word ptr [bp+0Ah]                           FF 76 0A
+		 0009244D  push    6AD2h                                       68 D2 6A
+		 00092450  push    8h                                          68 08 00
+		 00092453  call    85FDh:20h                                   9A 20 00 FD 85
+			85FD:0020   INT 3Fh     CD 3F   ; [EXE: 0296B0, seg-base: 029690]
+			85FD:0022   DW  0000h   00 00
+			85FD:0024   DB  0       00
+			→ CS:IP 9188:0000, DS with "waku" / "bg"
+			 00091880  push    bp           ; [EXE: 081ECE]                55
+			 00091881  mov     bp,sp                                       8B EC
+			 00091883  sub     sp,8h                                       83 EC 08
+			 00091886  push    si                                          56
+			 00091887  push    di                                          57
+			 00091888  push    ds                                          1E
+			 00091889  mov     ax,6AF7h                                    B8 F7 6A
+			 0009188C  mov     ds,ax                                       8E D8
+			 0009188E  push    8001h                                       68 01 80
+			 00091891  push    word ptr [bp+8h]                            FF 76 08
+			 00091894  push    word ptr [bp+6h]                            FF 76 06
+			 00091897  call    5DD4h:0B0Bh                                 9A 0B 0B D4 5D
+			 0009189C  add     sp,6h                                       83 C4 06
+			 0009189F  mov     si,ax                                       8B F0
+			 000918A1  cmp     si,-1h                                      83 FE FF
+			 000918A4  jne     918A9h                                      75 03
+			 000918A6  jmp     919EBh                                      E9 42 01
+		 00092458  add     sp,10h                                      83 C4 10
+		 0009245B  pop     ds                                          1F
+		 0009245C  leave                                               C9
+		 0009245D  retf                                                CB
+	 0008DFDE  add     sp,10h                                      83 C4 10
+	 ...
+	 0008E005  push    3DBh                                        68 DB 03
+	 0008E008  call    85F7h:2Fh                                   9A 2F ...
+	 0008E00D  add     sp,10h                                      83 C4 10
+	 0008E010  push    28h                                         6A 28
+	 0008E012  push    1h                                          6A 01
+	 0008E014  call    63B7h:5Ah                                   9A 5A 00 B7 63
+	 0008E019  pop     cx                                          59
+	 0008E01A  pop     cx                                          59
+	 0008E01B  mov     ax,6D1Ch                                    B8 1C 6D
+	 0008E01E  mov     es,ax                                       8E C0
+	 0008E020  mov     byte ptr es:[0DF78h],0FFh                   26 C6 06 78 DF FF
+	 0008E026  mov     si,0FFFFh                                   BE FF FF
+	 0008E029  nop                                                 90
+	 0008E02A  push    cs                                          0E
+	 0008E02B  call    8E1B7h  ; main menu display                 E8 89 01
+	 0008E02E  cmp     ax,1h                                       3D 01 00
+	 0008E031  je      8E03Ah                                      74 07
+	 0008E033  cmp     ax,2h                                       3D 02 00
+	 0008E036  je      8E041h                                      74 09
+	 0008E038  jmp     8E048h                                      EB 0E
+	 0008E03A  nop                                                 90
+
+Useful breakpoints (offsets for MAME with pc9801rs machine)
+------------------
+module loader:
+- bpset 00066616	// stop right when entering INT 3Fh
+- print w@(SSBASE+ESP+08)*0x10 + w@(SSBASE+ESP+06)	// get return address
+program main loader:
+- bpset 0005F22A	// break before loading main game
+- bpset 0005F22F	// break after returning (for ending screen?)
+main screen:
+- 08A286 CALL 8A340h    E8 B7 00 ? main cursor movement
+- bpset 08A289		// break after clicking a menu item
+
+Code patches
+------------
+Trigger Ending screen after one year:
+ -- reached after "time command" is finished
+ 0005F5F0  jg      5F5FEh                                      7F 0C
+ 0005F5F2  jl      5F5F9h                                      7C 05
+ 0005F5F4  cmp     ax,[bp-4h]                                  3B 46 FC
+ 0005F5F7  jae     5F5FEh                                      73 05
+ 0005F5F9  mov     ax,1h                                       B8 01 00
+ 0005F5FC  jmp     5F600h                                      EB 02
+ 0005F5FE  xor     ax,ax                                       33 C0    <--- patch to "jmp 5F5F9h"  EB F9
+ 0005F600  pop     ds                                          1F
+ 0005F601  leave                                               C9
+ 0005F602  retf                                                CB
+
+Get a Game Over after one year:
+ -- reached after "time command" is finished
+ 0005F286  call    8606h:3Eh                                   9A 3E 00 06 86
+ 0005F28B  pop     cx                                          59
+ 0005F28C  mov     ax,6D1Ch                                    B8 1C 6D
+ 0005F28F  mov     es,ax                                       8E C0
+ 0005F291  cmp     word ptr es:[0DF7Ah],0C350h                 26 81 3E 7A DF 50 C3
+ 0005F298  jne     5F2A2h                                      75 08    <--- patch to "jeq" (74 08)
+ 0005F29A  push    2h                                          6A 02
+ 0005F29C  call    8601h:39h                                   9A 39 00 01 86
+ 0005F2A1  pop     cx                                          59
+ 0005F2A2  push    0h                                          6A 00
+ 0005F2A4  call    8423h:43h                                   9A 43 00 23 84

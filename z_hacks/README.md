@@ -33,6 +33,29 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         This will jump to the credits screen directly.
       - variant 2: while viewing the first dialogue line (file `BL_001.SO3`), search for `b:\bl_002.so3` and overwrite it with `b:\bl_015.so3`
         After many dialogue lines, it will jump to one of the endings (NSFW!).
+- Frontier Universe
+  - enable / disable user manual protection screen:
+    - In `FRONT.EXE`, search for `B8 70 02 8E D8 90`. (EXE offset 0x84FF6) After this sequence, check/modify the following 4 bytes:
+      - the original, uncracked EXE has `0E E8 12 00`, which will load + show the "user manual protection" screen
+      - the cracked EXE has `30 C0 EB 05`, which will cause the screen to be skipped and simulate a "success" return code
+  - trigger "time over / game over" screen
+    - In `FRONT.EXE`, search for `26 81 3E 7A DF 50 C3`. (EXE offset 0x02951) This instruction checks for the timeout to be reached.
+    - Change the byte after this sequence from `75` ("JEQ") to `74` ("JNE").
+    - Then start a new game and let the clock run for one year.
+  - jump to "congratulations" screen
+    - In `FRONT.EXE`, search for `8B F0 0B F6 74 07`. (EXE offset 0x293F)
+    - Change the byte `74` ("JE") to `75` ("JNE") to enforce the "congratulations" screen being called in any case.
+    - Then start a new game and let the clock run for one year.
+    - alternate patch (seems to work only with Scenario 1):
+      - In `FRONT.EXE`, search for `3B 46 FC 73 05 B8 01 00 EB 02`. (EXE offset 0x02CB4) This is inside the function that checks for the winning condition.
+      - Change the bytes after this sequence from `33 C0` ("XOR AX, AX") to `EB F9` ("JMP $-5", jumps to "MOV AX, 1").
+  - jump to staff roll
+    - In `FRONT.EXE`, search for `8B F0 0B F6 74 07`. (EXE offset 0x293F)
+    - Change the byte `74` ("JE") to `75` ("JNE").
+    - Search for `9A 3E 00 32 28`. (EXE offset 0x02946, CALL ShowCongrats)
+    - Change these bytes to `9A 5C 00 37 28` (CALL ShowCredits)
+    - Then start a new game and let the clock run for one year.
+    - NOTE: The staff roll code seems to be unreferenced and partially broken.
 - Gaogao 1/2
   - jump to an arbitrary chapter:
     - while on the main menu, search for `18 00 61 01 01 00 18 00 62 01 00 00`
@@ -221,7 +244,8 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - `US05.BIN` - Continue Screen
       - `US06.BIN` - Staff Roll
 - Valkyrie: The Power Beauties
-  - Swapping files unfortunately doesn't work here and will cause the game to crash.
+  - Swapping files unfortunately doesn't work here and will cause the game to crash. (probably due to the scripts taking wrong assumptions)
+  - Additionally, the scripting language is complex and seems to allow for nested expressions. This makes script hacking difficult.
   - jump to ending scene
     - Take `VA_END.SAV` and put it as `DATA1.SAV` into the game's main folder.
     - Then load the save game.
