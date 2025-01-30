@@ -57,8 +57,8 @@
 | [Travel★Junction<br/>トラベル★ジャンクション](https://vndb.org/v9133) | IDES | 1996-06-28 | Adv98V  Version 1.75.63(R8) |
 | [Visitte<br/>ビジット](https://vndb.org/v8808) | Mischief | 1996-08-30 | OVL  Version 1.00 for NEC PC-9801/9821<br/>Note: calls itself "EXE  Version 1.00" |
 | [VR Date - May Club<br/>Ｖ．Ｒ．デート 五月倶楽部メイクラブ](https://vndb.org/v190) | Desire | 1995-08-25 | Four･Nine System-98 v3.12 |
-| [Waku Waku Mahjong Panic! ~Shikigami Denshou~<br/>わくわく麻雀パニック！ ～式神伝承～](https://vndb.org/v735) | Four･Nine | 1995-01-13 | DAIMA Factory Inc. DIANA v1 |
-| [Waku Waku Mahjong Panic! 2 ~Kokushi Musou~<br/>わくわく麻雀パニック！２ ～刻視夢想～](https://vndb.org/v736) | Four･Nine | 1996-07-12 | DAIMA Factory Inc. DIANA v2 |
+| [Waku Waku Mahjong Panic! \~Shikigami Denshou\~<br/>わくわく麻雀パニック！ ～式神伝承～](https://vndb.org/v735) | Four･Nine | 1995-01-13 | DAIMA Factory Inc. DIANA v1 |
+| [Waku Waku Mahjong Panic! 2 \~Kokushi Musou\~<br/>わくわく麻雀パニック！２ ～刻視夢想～](https://vndb.org/v736) | Four･Nine | 1996-07-12 | DAIMA Factory Inc. DIANA v2 |
 | [X-GIRL](https://vndb.org/v8717) | IDES | 1996-04-19 | Adv98V  Version 1.75.63(R8) |
 | [Xenon \~Mugen no Shitai\~<br/>XENON ～夢幻の肢体～](https://vndb.org/v7474) | C's Ware | 1994-12-09 | C's Ware AGS |
 | [Yume no Sei<br/>夢の精](https://vndb.org/v9165) | 13cm | 1996-01-26 | AyPio UK2 (late version) "DREAM SYSTEM" |

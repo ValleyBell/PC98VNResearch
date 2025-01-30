@@ -265,13 +265,13 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         - 302/307/... - rounds lost
         - 303/308/... - continues
         - 304/309/... - unused?
-- Waku Waku Mahjong Panic! ~Shikigami Denshou~
+- Waku Waku Mahjong Panic! \~Shikigami Denshou\~
   - skip intro:
     - while on tht title screen, search for `1500 08 BD0D` and overwrite it with `0A00 E70B 0D` (file `BEGINF.DSD`)
   - jump to scene: (with 3C being the ending scene)
     - while the opening dialogue is scrolling, search for `1700 5E01 0000 62` and replace with `1700 1E02 3C00 62` (file `BEGINF.DSD`)
     - The intro dialogue has to finish in order to avoid graphical glitches.
-- Waku Waku Mahjong Panic! 2 ~Kokushi Musou~
+- Waku Waku Mahjong Panic! 2 \~Kokushi Musou\~
   - jump to ending scene
     - Take `WMP2_JAN2FILE.1` and put it as `JAN2FILE.1` into the game's main folder.
     - Then start the game from the beginning. Once you can reach the menu from ingame, load the save game.
