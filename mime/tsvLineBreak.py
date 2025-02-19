@@ -47,10 +47,12 @@ def unquote_column(text: str) -> str:
 	return text
 
 def quote_column(text: str) -> str:
-	if ('"' not in text) and ('\n' not in text):
-		return text
+	CHARS2QUOTE = ['"', '\n']
+	for c2q in CHARS2QUOTE:
+		if c2q in text:
+			return '"' + text.replace('"', '""') + '"'
 	
-	return '"' + text.replace('"', '""') + '"'
+	return text
 
 def parse_tsv(lines: list) -> list:
 	global config
@@ -99,7 +101,7 @@ def do_textsize_check(tb_size, tsv_cols, line_id, lines, text_size, xpos):
 	global config
 	
 	(tb_width, tb_height) = tb_size
-	if config.textsize_check == 1:
+	if config.textsize_check >= 1:
 		(xsize, ysize) = text_size
 		if len(lines) > 0 and xpos <= 0:
 			ysize -= 1	# ignore last line when empty
@@ -111,8 +113,8 @@ def do_textsize_check(tb_size, tsv_cols, line_id, lines, text_size, xpos):
 		return
 	
 	# show line data
-	#print("\told: " + str(old_txt))
-	print("\ttext: " + str(lines))
+	#print(f"    old: {old_txt}")
+	print(f"    text: {lines}")
 	return
 
 def split_keep(text: str, sep: str) -> list:
@@ -235,7 +237,7 @@ def parse_text(text: str) -> list:
 			flags |= TXTFLAG_CWORD_BEGIN
 		elif state_alpha == 0x02:
 			ptext[-1]["flags"] |= TXTFLAG_CWORD_END
-
+		
 		if (flags & (TXTFLAG_LINE_BREAK | TXTFLAG_SPC_BREAK)):
 			state_space = 0x01	# enforce LWORD_BEGIN at next letter/control character
 		
@@ -277,24 +279,41 @@ def has_alpha(text: str) -> bool:
 			return True
 	return False
 
-def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
+def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> tuple:
 	global config
 	global var_dict
 	
+	ptext = parse_text(text)
+	
+	# calculate quick text size for early returns
+	tbox_ybase = 0
+	xpos = 0
+	max_xpos = xpos
+	for (ptid, ptinfo) in enumerate(ptext):
+		xpos += ptinfo["width"]
+		if (ptinfo["flags"] & TXTFLAG_LINE_BREAK):
+			max_xpos = max([xpos, max_xpos])
+			tbox_ybase += 1
+			xpos = 0
+	max_xpos = max([xpos, max_xpos])
+	
 	if line_cols[TEXTCOL_TYPE] == "sel":
-		return text	# skip "selection" lines, as its text box size is determined by the game
+		# For "selection" lines, thte text box size is determined by the game.
+		# However the box drawing code breaks with uneven box sizes, so we do a few simple checks here.
+		if (xpos % 2) == 1:
+			print(f"TSV line {1+line_id}: Text width {xpos} will cause broken box drawing!")
+			print(f"    text: {text}")
+		return (text, (max_xpos, tbox_ybase))
 	
 	tbox_size = line_cols[TEXTCOL_TBOX].split('@')[0]
 	if not "x" in tbox_size:
-		return text	# not text box size set - skip these as well
+		return (text, (max_xpos, tbox_ybase))	# not text box size set - skip these as well
 	(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
 	
 	multiline_text = False
 	if line_cols[TEXTCOL_TYPE] == "txt":
 		if tb_height > 1:
 			multiline_text = True	# line breaks may be added to longer text paragraphs
-	
-	ptext = parse_text(text)
 	
 	# split text data into multiple lines for the TSV
 	line_xbase = 0
@@ -446,7 +465,7 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> list:
 	# strip trailing spaces on all lines but the last one
 	for lid in range(len(lines) - 1):
 		lines[lid] = lines[lid].rstrip()
-	return '\\n'.join(lines)
+	return ('\\n'.join(lines), (max_xpos, len(lines) - tbox_ybase))
 
 def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 	is_newline = False
@@ -551,13 +570,27 @@ def line_breaks_add(tsv_data: list) -> list:
 	
 	if config.hyphenation:
 		hyp_en = hyphen.Hyphenator('en_GB')
+	last_sel_tsize = None
+	last_sel_line = None
 	for (line_id, cols) in enumerate(tsv_data):
 		if type(cols) is not list:
 			continue
-		if cols[TEXTCOL_TYPE] == "txt":
-			text = unquote_column(cols[config.text_column])
-			text = add_breaks_to_line(text, cols, line_id)
-			cols[config.text_column] = quote_column(text)
+		text = unquote_column(cols[config.text_column])
+		(text, tsize) = add_breaks_to_line(text, cols, line_id)
+		cols[config.text_column] = quote_column(text)
+		
+		if config.textsize_check >= 2 and cols[TEXTCOL_TYPE] == "sel":
+			(sel_line, sel_idx) = cols[TEXTCOL_LINE].strip().split(',')
+			if sel_line != last_sel_line:
+				# new selection
+				last_sel_line = sel_line
+				last_sel_tsize = tsize
+			elif last_sel_tsize is not None:
+				# compare selection line width
+				if tsize[0] != last_sel_tsize[0]:
+					print(f"TSV line {1+line_id}: Selection width mismatch: "
+						f"line 0 ({last_sel_tsize[0]}) != line {sel_idx} ({tsize[0]})!")
+					print(f"    text: {text}")
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "07_tsvdata.log", "wt") as f:
 			for cols in tsv_data:
@@ -572,7 +605,7 @@ def main(argv):
 	apgrp = aparse.add_mutually_exclusive_group(required=True)
 	apgrp.add_argument("-r", "--remove", action="store_true", help="remove line breaks")
 	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
-	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
+	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default], 2 = also check selection width", default=1)
 	aparse.add_argument("-n", "--text-column", type=int, help="column to use for text to insert (1 = first column)", default=6)
 	aparse.add_argument("-q", "--quote-mode", type=int, help="mode for slanted quotation marks,\n" \
 			"0 = full-width,\n1/2 = half-width", default=1)
