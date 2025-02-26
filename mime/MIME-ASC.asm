@@ -558,9 +558,12 @@ PrintMenuEntry:
 	cmp	ax, 5C5Ch
 	jz	short pme_ret
 	
+	call	GetCharWidth	; determine actual character width (may be different from byte count)
+	push	cx
 	mov	bx, [es:di]	; save original textDrawPtr value
 	call	PrintChar	; draw unselected text (white)
-	add	si, cx
+	add	si, cx		; advance pointer by "character byte count"
+	pop	cx
 	add	dl, cl		; add character width to "menu width counter"
 	
 	add	bx, byte 28h	; move pointer into "selected text" area
@@ -580,7 +583,7 @@ reloc_pme:
 	sub	word [es:di], byte 28h
 	jmp	short PrintMenuEntry
 
-	times 7B3Ch-6-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 9 bytes
+	times 7B3Ch-6-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 4 bytes
 pme_ret:
 	add	si, byte 2	; skip 5C5C
 	pop	di
