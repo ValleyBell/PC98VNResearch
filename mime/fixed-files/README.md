@@ -25,4 +25,5 @@ This folder contains a bunch of fixed files for the game.
     ![L130B original](L130B-org.png)
   - L130B after:  
     ![L130B fixed](L130B.png)
+- [D01_mod.N](D01_mod.N) - version of `D01.N` that was modified to fix a "NO INSTRUMENT" error when played back on a Roland SC-88
 - [STMED.GTA](STMED.GTA) - fixed missing white pixels in the first row

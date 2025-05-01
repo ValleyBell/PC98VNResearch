@@ -107,12 +107,12 @@ Commands
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
-	Jumps when: [register] > value
+	Jumps when: [register] > value (unsigned comparison)
 18 JLT - conditional jump: less than
 	2 bytes - register ID
 	2 bytes - value
 	2 bytes - destination file offset to continue execution at
-	Jumps when: [register] < value
+	Jumps when: [register] < value (unsigned comparison)
 19 IMGLD2 - same as 1A
 	-> 9 bytes
 	Note: The scripts all use command 1A, so this is command probably got its code removed and thus is invalid.
@@ -143,6 +143,9 @@ Commands
 	2 bytes - number of text strings (N)
 	? bytes - series of N Shift-JIS strings, each is terminated with two backslashes (5C5Ch)
 	Input:
+	- register 9 - selected text main colour
+	- register 10 - selected text shadow colour
+	- register 11 - graphics layer of border image?
 	- register 51 - mode? (checked for 0, 1, 2 and 3)
 		mode 1/3 will show the list of saved games
 	- register 54 - enable selection sound effect
@@ -153,10 +156,10 @@ Commands
 	The text is drawn using the colours stored in register 9 (main colour) and 10 (shadow colour).
 1E QUIT - end script and quit
 	This will terminate the script and quit the game then.
-1F CMD1F - ??
-	2 bytes - ??
-20 CMD20 - ??
-	2 bytes - ??
+1F CMD1F - fade screen in (black -> colour)
+	2 bytes - step size in percent per frame (1 = slowest, 100 = instant)
+20 CMD20 - fade screen out (colour -> black)
+	2 bytes - step size in percent per frame (1 = slowest, 100 = instant)
 21 SAVREAD - read save game file
 	? bytes - null-terminated file name
 22 CMD22 - ??
@@ -212,13 +215,15 @@ Commands
 	- register 23 - mouse X position
 	- register 24 - mouse Y position
 	- register 26 - ?? (mode 0 only)
-28 CMD28 - ??
+28 CMD28 - show mouse cursor
 	no parameters
 	This calls INT 68h, routine AH=3.
-29 CMD29 - ??
+29 CMD29 - hide mouse cursor
 	no parameters
 	This calls INT 68h, routine AH=4.
-2A CMD2A - ??
+2A CMD2A - set mouse cursor image
+	Input:
+	- register 26 - cursor image ID (0..4)
 	no parameters
 	This calls INT 68h, routine AH=0Bh with parameter AL = [register 26]
 2B BGMPLAY - play music
@@ -232,7 +237,7 @@ Commands
 2D CMD2D - ??
 	2 bytes - register ID 1
 	2 bytes - register ID 2
-	This calls INT 68h, routine AH=6 with parameters BX = [register 1], DX = [register 2].
+	This calls INT 68h, routine AH=6 with parameters BX = [register of 1st parameter], DX = [register of wnd parameter].
 2E MAPWRT - write map data
 	2 bytes - register ID for map X position
 	2 bytes - register ID for map Y position

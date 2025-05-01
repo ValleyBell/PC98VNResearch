@@ -12,19 +12,13 @@ with open(sys.argv[1], "rb") as f:
 	fdata = f.read()
 
 with open(sys.argv[2], "wt", encoding="utf-8") as f:
-	f.write(f"#ID\tGTA\tname")
-	for varID in range(0x1E, 0x2E, 2):
-		if varID == 0x22:
-			f.write(f"\tExp.")
-		elif varID == 0x24:
-			f.write(f"\tHP")
+	f.write("#ID\tGTA\tname                 ")
+	f.write("\telement\tlevel\tExp.\tHP\tatk\tdef\tint\tagl\tact1\tact2\tact3\tact4\tmoney");
+	for varID in range(0x40, 0x48, 2):
+		if varID == 0x44:
+			f.write(f"\twidth")
 		else:
 			f.write(f"\tv{varID:02X}")
-	for varID in range(0x2E, 0x3E, 4):
-		f.write(f"\tv{varID:02X}")
-	f.write(f"\tRING")	# 0x3E
-	for varID in range(0x40, 0x48, 2):
-		f.write(f"\tv{varID:02X}")
 	f.write(f"\n")
 	
 	for itemID in range(len(fdata) // 0x48):
@@ -41,6 +35,7 @@ with open(sys.argv[2], "wt", encoding="utf-8") as f:
 		if True:	# The game requires a terminator.
 			cpos = mname_sjis.find(b"\\\\")
 			mname_sjis = mname_sjis[:cpos]
+		mname_sjis = mname_sjis.ljust(21, fillchar=' ')
 		vOther = struct.unpack_from("<HHHHHHHHIIIIHHHHH", fdata, pos + 0x1E)
 		try:
 			mname = mname_sjis.decode("cp932")

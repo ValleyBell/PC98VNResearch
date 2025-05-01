@@ -177,7 +177,8 @@
 11F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
 12F	7,7	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 7F 7,8 south [2]
 12F	13,9	telept		SCN\SEL_EV3.DAT	teleport -> 7,0 south [2]
-12F	13,15	st-up		SCN\SEL_EV3.DAT	"location: Border of Time, boss ""Arachne"" #2, stairs up -> 13F 7,14 north [0]"
+12F	13,15	evt		SCN\SEL_EV3.DAT	"location: Border of Time, boss ""Arachne"" #2
+12F	13,15	st-up		SCN\SEL_EV3.DAT	stairs up -> 13F 7,14 north [0]"
 13F	7,15	st-dwn		SCN\SEL_EV3.DAT	stairs down -> 12F 13,14 north [0]
 0F	11,10	wrt		SCN\A118_.DAT	"ancient writing ""MINAGOROSHI"""
 0F	11,14	wrt		SCN\A118_.DAT	"ancient writing ""ANATANO TUMIHA, IKUTHU DESUKA"""
@@ -201,7 +202,8 @@
 2F	15,3	loc		SCN\A200B.DAT	location: The Three Dwarfs
 2F	7,13	loc		SCN\A201D.DAT	location: Phantom Castle
 2F	7,11	evt		SCN\A300_.DAT	event: Tear joins party
-2F	14,14	st-up		SCN\A203_.DAT	"location: Golden Apples, boss ""Nekomata"", rope up -> 3F 14,14 east [3]"
+2F	14,14	evt		SCN\A203_.DAT	"location: Golden Apples, boss ""Nekomata""
+2F	14,14	st-up		SCN\A203_.DAT	rope up -> 3F 14,14 east [3]"
 2F	2,2			SCN\A118_.DAT	[invalid/unused]
 2F	2,0	loc		SCN\A118_.DAT	location: Magic Tablet
 2F	11,9	wrt		SCN\A118_.DAT	"ancient writing ""FUTATABI HOROBINO"""
@@ -255,11 +257,11 @@
 9F	7,0	evt		SCN\A800_.DAT	"stone tablet, boss ""Flame Guardian"""
 10F	7,1	evt		SCN\A800_.DAT	stone tablet (no boss)
 11F	7,3	evt		SCN\A800_.DAT	"stone tablet, boss ""Wind Guardian"""
-12F	0,7	evt		SCN\AC00_.DAT	location: Star Weaver
-12F	7,14	evt		SCN\AC02_.DAT	location: Story Teller
-12F	14,7	evt		SCN\AC01_.DAT	location: Star Gazer
-12F	7,0	telept		SCN\A118_.DAT	longer ancient writing, teleport -> 10,5 south [2]
-12F	13,15	st-up		SCN\AC06_.DAT	location: Border of Time, stairs up -> 13F 7,14 north [0]
+12F	0,7	loc		SCN\AC00_.DAT	location: Star Weaver
+12F	7,14	loc		SCN\AC02_.DAT	location: Story Teller
+12F	14,7	loc		SCN\AC01_.DAT	location: Star Gazer
+12F	7,0	telept		SCN\A118_.DAT	longer ancient writing, teleport -> 13,9 south [2]
+12F	13,15			SCN\AC06_.DAT	[invalid/unused]
 13F	7,0	loc		SCN\A118_.DAT	[invalid/unused]
 13F	7,2	loc		SCN\AC06_.DAT	location: Sanctuary
 14F	7,5	evt		SCN\AE00_.DAT	event: character build question N-1
@@ -288,5 +290,6 @@
 14F	2,8	evt		SCN\AE00_.DAT	event: character build question WS-3
 14F	0,8	evt		SCN\AE00_.DAT	event: character build question WS-4
 14F	4,6	evt		SCN\AE00_.DAT	event: character build question WN-2
-14F	2,2	evt		SCN\AE00_.DAT	event: character build question WN-3
+#14F	2,2	evt		SCN\AE00_.DAT	event: character build question WN-3 (broken check)
+14F	2,6	evt		SCN\AE00_.DAT	event: character build question WN-3 (fixed location)
 14F	0,6	evt		SCN\AE00_.DAT	event: character build question WN-4

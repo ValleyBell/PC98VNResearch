@@ -7947,7 +7947,7 @@ loc_13063:				; CODE XREF: sub_12FB3+4Cj
 		call	sub_10B5A
 		mov	[bp+var_4], ax
 		push	0
-		call	sub_14920
+		call	RefreshPalette
 		add	sp, 2
 		call	SetupIntVec09
 
@@ -8228,7 +8228,7 @@ sub_13252	endp
 
 
 WaitForVSync	proc far		; CODE XREF: seg002:0170p
-					; sub_140FA:loc_14119P	...
+					; FadeScreenIn:loc_14119P ...
 		push	ax
 
 loc_1325A:				; CODE XREF: WaitForVSync+5j
@@ -9282,7 +9282,7 @@ CopyGTAPalette	proc far		; CODE XREF: LoadGTAFile+172P
 		mov	ax, seg	dseg
 		mov	es, ax
 		assume es:dseg
-		mov	di, offset byte_21EB3
+		mov	di, offset PaletteData
 		mov	cx, 18h
 		rep movsw
 		pop	es
@@ -9439,7 +9439,7 @@ sub_14005	endp
 
 ; Attributes: bp-based frame
 
-sub_140FA	proc far		; CODE XREF: seg007:7EB1P
+FadeScreenIn	proc far		; CODE XREF: seg007:7EB1P
 
 arg_0		= word ptr  6
 
@@ -9451,23 +9451,23 @@ arg_0		= word ptr  6
 		push	ds
 		mov	ax, seg	dseg
 		mov	ds, ax
-		xor	cl, cl
+		xor	cl, cl		; clear	'exit loop' flag
 
-loc_14108:				; CODE XREF: sub_140FA+32j
-		mov	bx, word_21EE3
+loc_14108:				; CODE XREF: FadeScreenIn+32j
+		mov	bx, FadeState
 		add	bx, [bp+arg_0]
 		cmp	bx, 100
 		jb	short loc_14119
 		mov	bx, 100
-		inc	cl
+		inc	cl		; set 'exit loop' flag
 
-loc_14119:				; CODE XREF: sub_140FA+18j
+loc_14119:				; CODE XREF: FadeScreenIn+18j
 		call	WaitForVSync
 		push	bx
 		push	cs
-		call	near ptr sub_14920
+		call	near ptr RefreshPalette
 		add	sp, 2
-		mov	word_21EE3, bx
+		mov	FadeState, bx
 		or	cl, cl
 		jz	short loc_14108
 		pop	ds
@@ -9476,14 +9476,14 @@ loc_14119:				; CODE XREF: sub_140FA+18j
 		pop	ax
 		pop	bp
 		retf
-sub_140FA	endp
+FadeScreenIn	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Attributes: bp-based frame
 
-sub_14134	proc far		; CODE XREF: seg007:7EBEP
+FadeScreenOut	proc far		; CODE XREF: seg007:7EBEP
 
 arg_0		= word ptr  6
 
@@ -9495,22 +9495,22 @@ arg_0		= word ptr  6
 		push	ds
 		mov	ax, seg	dseg
 		mov	ds, ax
-		xor	cl, cl
+		xor	cl, cl		; clear	'exit loop' flag
 
-loc_14142:				; CODE XREF: sub_14134+2Ej
-		mov	bx, word_21EE3
+loc_14142:				; CODE XREF: FadeScreenOut+2Ej
+		mov	bx, FadeState
 		sub	bx, [bp+arg_0]
 		jnb	short loc_1414F
 		xor	bx, bx
-		inc	cl
+		inc	cl		; set 'exit loop' flag
 
-loc_1414F:				; CODE XREF: sub_14134+15j
+loc_1414F:				; CODE XREF: FadeScreenOut+15j
 		call	WaitForVSync
 		push	bx
 		push	cs
-		call	near ptr sub_14920
+		call	near ptr RefreshPalette
 		add	sp, 2
-		mov	word_21EE3, bx
+		mov	FadeState, bx
 		or	cl, cl
 		jz	short loc_14142
 		pop	ds
@@ -9519,7 +9519,7 @@ loc_1414F:				; CODE XREF: sub_14134+15j
 		pop	ax
 		pop	bp
 		retf
-sub_14134	endp
+FadeScreenOut	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -9631,8 +9631,8 @@ sub_1416A	endp
 
 ; Attributes: bp-based frame
 
-sub_1421E	proc far		; CODE XREF: sub_142DC+27p
-					; sub_14920+33p
+WritePalColour	proc far		; CODE XREF: sub_142DC+27p
+					; RefreshPalette+33p
 
 arg_0		= word ptr  6
 arg_2		= word ptr  8
@@ -9648,7 +9648,7 @@ arg_6		= word ptr  0Ch
 		push	ds
 		mov	ax, seg	dseg
 		mov	ds, ax
-		mov	ax, word_21EE3
+		mov	ax, FadeState
 		mov	cx, ax
 		mov	bx, 100
 		mul	[bp+arg_2]
@@ -9667,7 +9667,7 @@ arg_6		= word ptr  0Ch
 		mov	ax, MiscFlags
 		test	al, 2
 		jz	short loc_142C1
-		mov	ax, [bp+arg_2]
+		mov	ax, [bp+arg_2]	; patch	colour for monochrome LCD display
 		mov	bx, ax
 		shl	ax, 5
 		add	bx, bx
@@ -9709,15 +9709,15 @@ arg_6		= word ptr  0Ch
 		mov	ax, cs:[bx]
 		mov	[bp+arg_6], ax
 
-loc_142C1:				; CODE XREF: sub_1421E+3Bj
+loc_142C1:				; CODE XREF: WritePalColour+3Bj
 		mov	ax, [bp+arg_0]
-		out	0A8h, al	; Interrupt Controller #2, 8259A
+		out	0A8h, al	; GDC: set palette
 		mov	ax, [bp+arg_2]
-		out	0ACh, al	; Interrupt Controller #2, 8259A
+		out	0ACh, al	; GDC: set colour Red
 		mov	ax, [bp+arg_4]
-		out	0AAh, al	; Interrupt Controller #2, 8259A
+		out	0AAh, al	; GDC: set colour Green
 		mov	ax, [bp+arg_6]
-		out	0AEh, al	; Interrupt Controller #2, 8259A
+		out	0AEh, al	; GDC: set colour Blue
 		pop	ds
 		pop	dx
 		pop	cx
@@ -9725,7 +9725,7 @@ loc_142C1:				; CODE XREF: sub_1421E+3Bj
 		pop	ax
 		pop	bp
 		retf
-sub_1421E	endp
+WritePalColour	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -9745,7 +9745,7 @@ arg_0		= word ptr  6
 		push	ds
 		mov	ax, seg	dseg
 		mov	ds, ax
-		mov	si, offset byte_21EB3
+		mov	si, offset PaletteData
 		mov	bx, [bp+arg_0]
 		add	si, bx
 		add	si, bx
@@ -9759,7 +9759,7 @@ arg_0		= word ptr  6
 		push	ax
 		push	bx
 		push	cs
-		call	near ptr sub_1421E
+		call	near ptr WritePalColour
 		add	sp, 8
 		pop	ds
 		pop	si
@@ -10676,8 +10676,8 @@ ImageCopySetup	endp
 
 ; Attributes: bp-based frame
 
-sub_14920	proc far		; CODE XREF: sub_12FB3+107P
-					; sub_140FA+26p ...
+RefreshPalette	proc far		; CODE XREF: sub_12FB3+107P
+					; FadeScreenIn+26p ...
 
 arg_0		= word ptr  6
 
@@ -10692,25 +10692,25 @@ arg_0		= word ptr  6
 		mov	ax, seg	dseg
 		mov	ds, ax
 		mov	ax, [bp+arg_0]
-		mov	word_21EE3, ax
+		mov	FadeState, ax
 		mov	ax, seg	dseg
 		mov	ds, ax
-		mov	si, offset byte_21EB3
-		mov	cx, 10h
+		mov	si, offset PaletteData
+		mov	cx, 10h		; 16 palette colours
 		xor	bx, bx
 		xor	dh, dh
 
-loc_14943:				; CODE XREF: sub_14920+3Aj
+loc_14943:				; CODE XREF: RefreshPalette+3Aj
 		mov	dl, [si+2]
-		push	dx
+		push	dx		; blue
 		mov	dl, [si+1]
-		push	dx
+		push	dx		; green
 		mov	dl, [si]
 		add	si, 3
-		push	dx
-		push	bx
+		push	dx		; red
+		push	bx		; colour index
 		push	cs
-		call	near ptr sub_1421E
+		call	near ptr WritePalColour
 		add	sp, 8
 		inc	bx
 		loop	loc_14943
@@ -10722,7 +10722,7 @@ loc_14943:				; CODE XREF: sub_14920+3Aj
 		pop	ax
 		pop	bp
 		retf
-sub_14920	endp
+RefreshPalette	endp
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -11349,8 +11349,8 @@ scrJumpTbl	dw offset scr00_TalkDungeon; 0 ; DATA XREF: LoadScript+85o
 		dw offset scr1C_SetNextScript; 1Ch
 		dw offset scr1D_ShowMenu; 1Dh
 		dw offset scr1E_Quit	; 1Eh
-		dw offset scr1F		; 1Fh
-		dw offset scr20		; 20h
+		dw offset scr1F_FadeIn	; 1Fh
+		dw offset scr20_FadeOut	; 20h
 		dw offset scr21_LoadSaveGame; 21h
 		dw offset scr22		; 22h
 		dw offset scr23		; 23h
@@ -13297,16 +13297,16 @@ scr1E_Quit:				; DATA XREF: seg007:scrJumpTblo
 		retf
 ; ---------------------------------------------------------------------------
 
-scr1F:					; DATA XREF: seg007:scrJumpTblo
+scr1F_FadeIn:				; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
-		call	sub_140FA
+		call	FadeScreenIn
 		add	sp, 2
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
 
-scr20:					; DATA XREF: seg007:scrJumpTblo
+scr20_FadeOut:				; DATA XREF: seg007:scrJumpTblo
 		push	word ptr [si]
-		call	sub_14134
+		call	FadeScreenOut
 		add	sp, 2
 		jmp	scr_fin_2b
 ; ---------------------------------------------------------------------------
@@ -15796,7 +15796,7 @@ a1l5l		db 1Bh,'[>1l',1Bh,'[>5l',0 ; DATA XREF: sub_12FB3+123o
 aRemainMemoryDk	db 'remain memory : %dKB',0Ah,0 ; DATA XREF: sub_12FB3+132o
 aUseMemoryDkb	db '   use memory : %dKB',0Ah,0 ; DATA XREF: sub_12FB3+145o
 byte_1DDF2	db 0Ch dup(0)		; DATA XREF: LoadGTAFile+13Eo
-byte_1DDFE	db 12h dup(0)		; DATA XREF: sub_1421E+87o
+byte_1DDFE	db 12h dup(0)		; DATA XREF: WritePalColour+87o
 word_1DE10	dw 0			; DATA XREF: seg000:02E0w seg000:037Dr ...
 word_1DE12	dw 0			; DATA XREF: seg000:02E4w seg000:0381r
 gtaImgWidth	dw 0			; DATA XREF: seg000:0396w seg000:03D4r ...
@@ -15852,10 +15852,11 @@ word_21EB0	dw 0			; DATA XREF: sub_1092A+35r
 					; sub_1096C+9Fr ...
 byte_21EB2	db 0			; DATA XREF: sub_1431D+Fw
 					; sub_147D0+BBr ...
-byte_21EB3	db 30h dup(0)		; DATA XREF: CopyGTAPalette+13o
+PaletteData	db 30h dup(0)		; DATA XREF: CopyGTAPalette+13o
 					; sub_142DC+Co	...
-word_21EE3	dw 100			; DATA XREF: sub_140FA:loc_14108r
-					; sub_140FA+2Cw ...
+FadeState	dw 100			; DATA XREF: FadeScreenIn:loc_14108r
+					; FadeScreenIn+2Cw ...
+					; 0 = black, 100 = full	colours
 word_21EE5	dw 0			; DATA XREF: sub_147D0+4w
 					; sub_147D0+39w ...
 byte_21EE7	db 0			; DATA XREF: sub_147D0+Aw

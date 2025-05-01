@@ -1,4 +1,4 @@
-#ID	GTA	name	element	v20	Exp.	HP	v26	v28	v2A	v2C	v2E	v32	v36	v3A	RING	v40	v42	v44	v46
+#ID	GTA	name	element	level	Exp.	HP	atk	def	int	agl	act1	act2	act3	act4	money	v40	v42	width	v46
 0	M010I	Green Slime	2	1	59	10	2	1	1	1	0	0	0	0	4	0	5	1	10
 1	M011E	Small Plant	1	1	57	10	2	1	1	2	0	0	0	0	2	0	5	1	10
 2	M012E	Bunny Warrior	1	2	69	8	3	3	1	1	0	0	0	0	8	13	5	1	10

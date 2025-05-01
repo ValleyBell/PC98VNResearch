@@ -69,3 +69,38 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
 - The few hardcoded texts that MIME has in the EXE file are printed in a very verbose way:
   They unrolled the loop of printing every character. (Just look at `Print_NoData` and `Print_Cancel` in the disassembly.)  
   Those two functions were very easy to size-optimize, giving me lots of free space for inserting my custom text handling code.
+
+## Game bugs / unimplemented features
+
+- The map data is broken in the v2 update of MIME, allowing the player to leave the map on 1F at 1,15 and on 3F at 14,15.
+- There are minor graphical issues:
+  - `STMED.GTA`: There is a missing white pixel on the uppermost line in some of the background map tiles.
+  - The text box for full-screen text breaks the dithering pattern on the border of the right edge.  
+    This is caused by the text box drawing code copying the box pattern to Y=323..339 instead of Y=328..344. (Y=328..344 is used on the left side.)
+- Various healing spells don't work properly and don't work as specified in the manual.
+  - battle mode:
+    - Sanpa Shikou: heals only 1 party member instead of the whole party
+  - camp mode:
+    - Tear's healing spells: Tear always gets fully healed. Everyone else would heal by the specified amount of HP.
+    - Insui Shourai: restores 100 HP instead of 50 HP
+    - Shuuha Shijin: uses 100 MP instead of 10 MP, restores 500 HP instead of 100 HP
+    - Sanpa Shikou: unuseable
+    - In camp mode, all healing spells affect all party members due to the lack of the character selection.
+- Side quests:
+  - The side quest with the broken boy doll is broken in the original game. Taking the boy doll only advances the dialogue (`A607_.DAT`), but won't give you the "Broken Doll Boy" item that you need for completing the quest. (expected by `A405_.DAT`)
+    - Maybe the developers were split over how to handle this: The characters discuss about the limited inventory space, but will take the doll in any case.
+  - Apparently it was planned that you could save Amnell from the vines. Changing save game register 281 from 0 to 1 reveals the additional dialogue, but there is no event to set it.
+    - It's really a shame that the sidequest is unfinished, as various locations have additional dialogues for it: Old Tree, Flower Field, Flower Queen, Tirolian's Den, Vine Cross, Three Dwarfs, Pierrot's Room
+    - The "Vine Cross" screen (`A118_.DAT`) doesn't react properly to r281=1. It requires r104=75 to show a different text (at this point r104 is 76) and the image is wrong.
+- Eagle's occupation can be changed from "squire" to "knight" by changing register 298 from 0 to 1 in a save game. However there is no ingame event that sets this value.
+- The image files for the map graphics contain images for showing "far away treasure chest" (2 different distances) and "opened treasure chest". The images unfortunately went unused due to how map events work.  
+  Technical background: Treasure chests are part of the game scripts instead of the map data. This makes it impossible to show them from afar. Showing them open should be possible, but is unimplemented.
+- There are graphics files that show an unused slot machine for the casino. (`SU_A_.GTA` and `SU_B_.GTA`)
+- When you enter floor 12F the first time, the story counter is supposed to be set to 120 and trigger a new set of dialogues for Noah's Bar and the Lady of the Black Snake.
+  However the next time the story counter is when after talking to all 3 people to 12F and then it is set to 125, triggering a new set of dialogues.  
+  Thus, a bunch of dialogues go unused by normal means. They can be viewed using Debug Mode by setting the Story Flags to 120.  
+  Additional notes:
+  - The condition for Suzu's dialogue for story counter 120 was not programmed in. This results in her telling you about Sakura's death despite her still being in the bar.
+    The script contains a copy of Suzu's "story counter 70" dialogue for this situation, but it is unused.
+  - Setting the story counter to 120 for all locations breaks the state of some of the sidequests that are available after the 7F boss. Maybe this is why they ended up not setting the counter upon reaching 12F.
+- Talking to the 3 star people on 12F advances the story counter to 125, but this will reset the state of some of the sidequests, e.g. the one for healing White Lily.

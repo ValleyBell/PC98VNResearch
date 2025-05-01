@@ -123,6 +123,19 @@ MAP_BORDER_TILE = [
 	(176, 0), (  0, 0), (192, 0),	# 0x0016, 0x0000, 0x0018
 	(208, 0), (224, 0), (240, 0),	# 0x001A, 0x001C, 0x001E
 ]
+LOCATION_OVERLAY_RECTS = [
+	# This is a list and not a map to ensure a specific drawing order.
+	("loc",     (112, 0)),	# static location
+	("wrt",     (112, 0)),	# static location
+	("st-up",   ( 80, 0)),	# stairs up
+	("st-dwn",  ( 96, 0)),	# stairs down
+	("telept",  (288, 0)),	# teleport
+	("trap",    (272, 0)),	# trap
+	("chest",   (256, 0)),	# treasure chest
+	("evt",     (112,16)),	# one-time event
+]
+
+map_locations = [{} for i in range(MAP_COUNT)]
 
 def read_tiles(tileFileName):
 	global tileImg
@@ -174,6 +187,29 @@ def read_map_data(filePath: str) -> list:
 		data = f.read(MAP_COUNT * 0x100 * 0x02)
 		dIt = struct.iter_unpack("<H", data)
 		return [x[0] for x in dIt]
+
+def read_location_data(filePath: str):
+	with open(filePath, "rt", encoding="utf-8") as f:
+		for (lid, line) in enumerate(f):
+			ltrim = line.lstrip()
+			if len(ltrim) == 0 or ltrim.startswith('#') or ltrim.startswith(';'):
+				continue
+			ltrim = line.rstrip('\n')
+			cols = ltrim.split('\t')
+			if len(cols) < 3:
+				print(f"Line {lid} invalid: {ltrim}")
+				break
+			
+			cols[0] = cols[0].upper()
+			if cols[0] == "B1F":
+				cols[0] = "0F"
+			floorId = int(cols[0].rstrip("F"))
+			coord = tuple([int(valstr) for valstr in cols[1].split(',', 1)])
+			locType = cols[2].lower()
+			if floorId < MAP_COUNT:
+				if coord not in map_locations[floorId]:
+					map_locations[floorId][coord] = set()
+				map_locations[floorId][coord].add(locType)
 
 def dump_single_map(config, mapData: list, mapId: int, outPath: pathlib.Path):
 	global tileImg
@@ -237,6 +273,14 @@ def dump_single_map(config, mapData: list, mapId: int, outPath: pathlib.Path):
 						tId = tileaddr2id(tAddr)
 						mapImg.paste(tiles[tId], (x, y), tilesMask[tId])
 			
+			coord = (mapX, mapY)
+			if coord in map_locations[mapId]:
+				locList = map_locations[mapId][coord]
+				for (locName, tAddr) in LOCATION_OVERLAY_RECTS:
+					if locName in locList:
+						tId = tileaddr2id(tAddr)
+						mapImg.paste(tiles[tId], (x, y), tilesMask[tId])
+			
 			if config.secrets:
 				for (flagMask, flagVals, tAddr) in MAP_TILE_SPECIAL_RECTS:
 					if (tileFlags & flagMask) == flagVals:
@@ -266,6 +310,9 @@ def dump_map_data(config):
 	read_tiles(config.tiles)
 	mapData = read_map_data(config.map)
 	
+	if config.locations:
+		read_location_data(config.locations)
+	
 	if config.id is not None:
 		outName = pathlib.Path(config.output)
 		dump_single_map(config, mapData, config.id, outName)
@@ -286,9 +333,10 @@ def main(argv):
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-m", "--map", type=str, required=True, help="MIME save game (Z1000.DAT)")
 	aparse.add_argument("-t", "--tiles", type=str, required=True, help="image with map tiles (STMED.BMP)")
+	aparse.add_argument("-l", "--locations", type=str, help="TSV file with 3 columns (floor, coordinate, type) that define locations")
 	aparse.add_argument("-o", "--output", type=str, required=True, help="output bitmap file, map ID gets added into file name")
 	aparse.add_argument("-i", "--id", type=int, help="dump only a specific map, instead of all")
-	aparse.add_argument("-e", "--events", action="store_true", help="enable stairs/event overlay")
+	aparse.add_argument("-e", "--events", action="store_true", help="enable stairs/event overlay (based on map data)")
 	aparse.add_argument("-s", "--secrets", action="store_true", help="enable overlay for secret passages and collision errors")
 	aparse.add_argument("-c", "--cover", action="store_true", help="only show uncovered areas")
 	aparse.add_argument("-b", "--border", action="store_true", help="draw map border")

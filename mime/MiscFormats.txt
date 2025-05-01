@@ -20,7 +20,21 @@ r15 - current floor
 	13 = "13F"
 	14 = character building maze
 
-r42 - current hour
+r26 - currently mouse cursor (0..4)
+	0 = sword
+	1 = hand
+	2 = talk
+	3 = magnifying glass
+	4 = trash can
+
+r34 - currently selected icon (0..4)
+	0 = map icon
+	1 = sword icon
+	2 = talk icon
+	3 = search icon
+	4 = floppy disk icon
+
+r42 - current hour (1..13)
 	1 = wind
 	2 = protection
 	3 = shadow
@@ -34,7 +48,15 @@ r42 - current hour
 	11 = light
 	12 = destruction
 	13 = evil
+r43 - steps since beginning of current hour (0..31)
+	After 32 steps, this is reset to 0 and the "current hour" is increased.
+r44 - last displayed hour
+	When this is different from r42, the text showing the current hour is redrawn.
+	This is often set to -1 to enforce redrawing, especially after event scenes.
+r46 - current day
+	This is increased every time the r42 wraps around. Aside from that, it is not used anywhere.
 
+r55 - general "calculation result" register
 r56..r61 - current money (each register contains 1 digit, ordered from highest to lowest significant digit)
 
 r172 - 12F treasure chest bitmask (bits 0..9 used)
@@ -64,6 +86,7 @@ r262 - 10F treasure chest bitmask (bits 0..2 used)
 r263 - 11F treasure chest bitmask (bits 0..2 used)
 r269 - 4F treasure chest bitmask (bits 0..8 used)
 r270 - 5F treasure chest bitmask (bits 0..8 used)
+r281 - "Saving Amnell" sidequest state (0 = Amnell is trapped, 1 = Amnell was saved, partly broken)
 r283 - 6F treasure chest bitmask (bits 0..4 used)
 
 r284 - "Dream Author" sidequest state (0..4)
@@ -73,13 +96,13 @@ r287 - Tear trust level
 r288 - Henzou trust level
 r289 - Eldelyca trust level
 
-r290 - H Scene "Dana and Donna" state (0 = available, 1 = completed)
-r291 - H Scene "Stella" state (0 = available, 1 = completed)
-r292 - H Scene "Elvira" state (0 = available, 1 = gave "Rare Skull", 2 = completed)
-r293 - H Scene "Chloture" state (0 = available, 1 = completed)
-r294 - H Scene "Tenko-chan" state (0 = available, 1 = completed)
+r290 - H Scene "Dana and Donna" state (0 = not done, 1 = done)
+r291 - H Scene "Stella" state (0 = not done, 1 = done)
+r292 - H Scene "Elvira" state (0 = not done, 1 = gave "Rare Skull", 2 = gave "Super Rare Skull")
+r293 - H Scene "Chloture" state (0 = not done, 1 = completed)
+r294 - H Scene "Tenko-chan" state (0 = not done, 1 = completed)
 r295 - unused (intended for H Scene "Cass" state?)
-r296 - H Scene "Ashley" state (0 = available, 1 = completed)
+r296 - H Scene "Ashley" state (0 = not done, 1 = completed)
 r297 - unused
 
 r298 - Eagle occupation state
@@ -89,20 +112,20 @@ r298 - Eagle occupation state
 r299 - main story state
 	Possible values: (descriptions from debug mode menu)
 	  0: Beginning
-	  5: Tirolian
-	 20: 2F
+	  5: Tirolian asks for "Corn"
+	 20: entered 2F
 	 25: Tear joined party
-	 30: 3F/Henzou joined party
+	 30: entered 3F/Henzou joined party
 	 35: Met Yutika
 	 40: Defeated Chimera
 	 45: Eldelyca joined party
 	 50: Saved Drawer Girl
 	 55: Tear got voice stolen
 	 60: Defeated Siren
-	 65: Defeated Siren
+	 65: watched cutscene with Henzou at the inn (way to 7F opened)
 	 70: Entered Curse Maze
 	 75: Met Ranki
-	120: Entered Null Maze
+	120: Entered Null Maze (12F)
 	125: Met the three star girls
 	130: Defeated Aus
 	Trivia: The 100/10 digits correspond to the highest floor you visited.
@@ -224,22 +247,47 @@ Pos	Len	Description
 			Bit 1 (0002h): water
 			Bit 2 (0004h): fire
 			Bit 3 (0008h): wind
-20	02	??
+20	02	[unused]
+		It looks like this was supposed to be the monster's level.
+		But the developers apparently scrapped the concept and all monsters from ID 19 on have it set to 0.
 22	02	experience points gained by defeating
 24	02	health points
-26	02	??
-28	02	??
-2A	02	??
-2C	02	??
-2E	04	??
-32	04	??
-36	04	??
-3A	04	??
+26	02	attack
+28	02	defense
+2A	02	intelligence
+2C	02	agility
+2E	02	action 1 ID (10% chance)
+30	02	[unused]
+32	02	action 2 ID (10% chance)
+34	02	[unused]
+36	02	action 3 ID (10% chance)
+38	02	[unused]
+3A	02	action 4 ID (70% chance)
+3C	02	[unused]
 3E	02	money obtained by defeating
-40	02	??
-42	02	??
-44	02	??
-46	02	??
+40	02	[unused]
+		This seems to be a leftover from a scrapped concept.
+42	02	[unused] (always set to 5)
+44	02	graphics width
+			1 = 160 pixels
+			2 = 320 pixels
+			3 = 480 pixels
+			4 = 640 pixels
+		This is used for properly centering the monster name below the image.
+46	02	related to graphics loading
+
+Actions:
+0 - normal attack
+1 - Monster uses all its strength! (strong attack)
+2 - Monster bites down hard! (strong attack)
+3 - Monster flails wildly! (attack whole party)
+4 - Monster unleashes a beam of light! (attack whole party)
+5 - Monster breathes fumes! (attack whole party)
+6 - Monster ran away! (monster flees)
+7 - Monster sniffles its nose! (normal attack)
+8 - Monster unleashes a tickle attack! (strong attack)
+9 - Monster tries its best! (strong attack)
+
 
 Z103#.DAT - monster group data
 ---------
