@@ -177,7 +177,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - after this, you can start the game and will reach the ending after skipping the same short cutscene 17 times
 - Oerstedia
   - `SAD.EXE` is used to play back the ingame videos and intro cutscene. (`.CMD` files)  
-    It requires `KBDRIVE` (INT D2h) and `MTM` (INT 50h) to be loaded.
+    It requires `KBDRIVE` (INT 0D2h) and `MTM` (INT 50h) to be loaded.
     The game uses the following calls in `OERINIT.EXE` (intro) and `OERTERM.EXE` (ending):
     - `SAD.EXE B:FGTTL 0 0` - show FUGA Systems logo
     - `SAD.EXE B:OEROPEN1` - show opening
@@ -193,6 +193,31 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
         - `D` - dwarf
         - `L` - lizard
       - Playing the `OEREND_?` files directly doesn't work, but swapping them with `FGTTL.CMD` works just fine. (aside from the lack of music)
+- Princess Maker 2:
+  - save game edit to the end:
+    - make a save game (e.g. `F101.GNX`)
+    - set daughter age to 18: go to 00BAh and set the 2 bytes to `12 00`
+    - (optional) set the current year to 1218: go to 0394h and set the 2 bytes to `C2 04`, go to 0032h and do the same (0032h = save screen display, 0394h = actual ingame year)
+    - (optional) set body properties to something that makes sense: go to 00D2h and set the 10 bytes to `18 40 F7 12 F1 25 BD 17 6A 26`
+    - modify other values to select a specific ending:
+      - "Ruling Queen" Ending:
+        - set Fighter/Magical/Social/Housework Reputation = 421: go to 0054h and set the 8 bytes to `A5 01 A5 01 A5 01 A5 01`
+        - set Refinement = 800: go to 0044h and set the 2 bytes to `20 03`
+        - set Morality = 999: go to 0048h and set the 2 bytes to `E7 03`
+        - (optional) marry the Prince:
+          - set Charisma = 200: go to 0046h and set the 2 bytes to `C8 00`
+          - set Relationship with Prince = 100: go to 0260h and set the 2 bytes to `64 00`
+        - (optional) make your daughter NOT complain about not having done anything:
+          - set [task counter] school: Protocol = 15: go to 0162h and set the 2 bytes to `0F 00`
+          - set [task counter] work: Church = 20: go to 0172h and set the 2 bytes to `14 00`
+        - alternatively just take `PM2_RulingQueen.GNX` and put it as `F101.GNX` in the Princess Maker 2 folder
+      - "Warrior Hero" Ending:
+        - set Fighter Reputation = 421: go to 0054h and set the 2 bytes to `A5 01`
+        - set Sensitivity = 99: go to 004Eh and set the 2 bytes to `63 00`
+        - set Morality = 999: go to 0048h and set the 2 bytes to `E7 03`
+      - other endings:
+        - for a list of requirements, see the Princess Maker 2 [Strategy Guide by rayquazza_star](https://gamefaqs.gamespot.com/pc/562668-princess-maker-2/faqs/72298) at GameFAQs
+    - save the file, then load the save game and click the "schedule" button to go to the ending
 - Pleria - The Royal Emblem
   - jump to ending
     - before booting the game, copy all files from the `_D` folder into the `_B` folder (works around an issue with a missed disk swap command when swapping file names)
@@ -235,7 +260,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
   - jump to various scenes after selecting a player
     - While in the main menu, open the PC-98 emulator's RAM and search for the 2nd occurrence of `A:\US01.BIN`
     - There should be `A:\US13.MF2` a bit above. (**not** `A:\SAVE8.DAT`)
-    - change the file and `US01.BIN` one of the following names to access various screens directly:
+    - change the file name `US01.BIN` to one of the following names to access various screens directly:
       - `INIT.BIN` - Initialization
       - `US00.BIN` - Title Screen
       - `US01.BIN` - Map Screen (after player selection)

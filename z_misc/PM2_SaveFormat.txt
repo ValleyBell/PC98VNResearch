@@ -1,0 +1,222 @@
+﻿Princess Maker 2 Save Game Format
+---------------------------------
+Applies to the 1994 DOS version, both NEC PC-9801 and IBM PC.
+
+The NEC PC-98 save game works with the IBM PC version, except that some names that use Shift-JIS don't render.
+
+Pos	Len	Description
+0000	0C	"PM2/ver1.02", 00h
+000C	02	
+000E	12	[save screen] Daughter Name
+0020	12	[save screen] Family Name
+0032	02	[save screen] date - year
+0034	02	[save screen] date - month (1..12)
+0036	02	[save screen] week day (0 = Sunday .. 6 = Saturday)
+0038	02	[save screen] date - day (1..31)
+003A	02	
+003C	02	
+003E	02	Constitution (Stamina)
+0040	02	Strength
+0042	02	Intelligence
+0044	02	Refinement (Elegance)
+0046	02	Charisma (Glamour)
+0048	02	Morality
+004A	02	Faith
+004C	02	Sin (Apathy)
+004E	02	Sensitivity
+0050	02	Stress
+0052	02	?? (usually 45, changing it breaks the game)
+0054	02	Fighter Reputation (summarized?)
+0056	02	Magical Reputation (summarized?)
+0058	02	Social Reputation (summarized?)
+005A	02	Housework Reputation (summarized?)
+005C	02	Combat Skill
+005E	02	Combat Attack (final)
+0060	02	Combat Defense
+0062	02	Magical Skill
+0064	02	Magical Attack
+0066	02	Magical Defense
+0068	02	Decorium (Etiquette)
+006A	02	Art
+006C	02	Conversation (Speech)
+006E	02	Cooking
+0070	02	Cleaning
+0072	02	Attitude (Personality)
+0074	02	
+0076	02	[again?] Combat Skill
+0078	02	Combat Attack (base value, without weapon)
+007A	02	[again?] Combat Defense
+007C	02	[again?] Magical Skill
+007E	02	[again?] Magical Attack
+0080	02	[again?] Magical Defense
+0082	02	[again?] Etiquette
+0084	02	[again?] Art
+0086	02	[again?] Conversation
+0088	02	[again?] Cooking
+008A	02	[again?] Cleaning
+008C	02	[again?] Attitude
+008E	02	[again?] Combat Skill
+0090	02	[again?] Combat Attack (base value, without weapon)
+0092	02	[again?] Combat Defense
+0094	02	[again?] Magical Skill
+0096	02	[again?] Magical Attack
+0098	02	[again?] Magical Defense
+009A	02	[again?] Etiquette
+009C	02	[again?] Art
+009E	02	[again?] Conversation
+00A0	02	[again?] Cooking
+00A2	02	[again?] Cleaning
+00A4	02	[again?] Attitude
+00A6	02	Fighter Reputation (base value?, subtracted from shown stat)
+00A8	02	Magical Reputation (base value?, subtracted from shown stat)
+00AA	02	Social Reputation (base value?, subtracted from shown stat)
+00AC	02	Housework Reputation (base value?, subtracted from shown stat)
+00AE	02	?? (usually 2, changing it breaks the game)
+00B0	04	Gold
+00B4	02	
+00B6	02	
+00B8	02	
+00BA	02	Daughter Age (used to determine look)
+		Set to 18 to end the game
+00BC	02	Father Age
+00BE	02	Daughter Birthday: Day
+00C0	02	Father Birthday: Day
+00C2	02	Daughter Birthday: Month
+00C4	02	Father Birthday: Month
+00C6	02	Daughter Birthday: Year
+00C8	02	Father Birthday: Year
+00CA	02	
+00CC	02	
+00CE	02	
+00D0	02	
+00D2	02	Daughter body: Height (100 = 1.00 cm) [English DOS version: display code divides by 256.4 to get inch]
+00D4	02	Daughter body: Weight (100 = 1.00 kg) [English DOS version: display code divides by 45.25 to get pounds]
+00D6	02	Daughter body: Bust (100 = 1.00 cm) [English DOS version: display code divides by 256.4 to get inch]
+00D8	02	Daughter body: Waist (100 = 1.00 cm) [English DOS version: display code divides by 256.4 to get inch]
+00DA	02	Daughter body: Hips (100 = 1.00 cm) [English DOS version: display code divides by 256.4 to get inch]
+00DC	02	
+00DE	02	adventure: maximum HP
+00E0	02	adventure: maximum MP
+00E2	02	adventure: current HP
+00E4	02	adventure: current MP
+00E6	02	adventure: attack
+00E8	02	adventure: defense
+00EA	02	Sickness
+00EC	02	Delinquency
+00EE	02	Popularity
+
+0152	02	[task counter] school total
+		Note: The ending screen picks the school class with the highest counter and makes text based on it.
+		0 = "I have many memories, of happy times and sad...  but I'm disappointed that you never made me study."
+		1..4 = "I recall ###.  I only did it a few times, but it was a really wonderful experience."
+		5..14 = "above all else, ### comes to mind.  Sometimes I didn't like it at the time, but now I think about it fondly."
+		15..24 = "I remember studying ### quite a lot."
+		25+ = "I remember studying ### all the time. I must have done that more any of the other girls."
+0154	02	[task counter] school: Science
+0156	02	[task counter] school: Poetry
+0158	02	[task counter] school: Theology
+015A	02	[task counter] school: Strategy
+015C	02	[task counter] school: Fencing
+015E	02	[task counter] school: Fighting
+0160	02	[task counter] school: Magic
+0162	02	[task counter] school: Protocol
+0164	02	[task counter] school: Painting
+0166	02	[task counter] school: Dancing
+0168	02	[task counter] work total
+		Note: The ending screen picks the work job with the highest counter and makes text based on it.
+		Only successful jobs are taken into account.
+		0 = "I always thought, though, that it would have been kind of fun to try a part-time job."
+		1..19 = "I also like to think about the times when you let me work part-time. I still remember ###."
+		20..44 = "It was difficult working when I was still just a child, but I think it was good experience. It made me pretty good at ###."
+		45..69 = "I worked for ## so much that I ended up becoming very good at ###."
+		70+ = "I don't think any of the other girls worked as enthusiastically as I did."
+016A	02	[task counter] work: Housework (successful)
+016C	02	[task counter] work: Babysitting (successful)
+016E	02	[task counter] work: Inn (successful)
+0170	02	[task counter] work: Farm (successful)
+0172	02	[task counter] work: Church (successful)
+0174	02	[task counter] work: Restaurant (successful)
+0176	02	[task counter] work: Lumberjack (successful)
+0178	02	[task counter] work: Salon (successful)
+017A	02	[task counter] work: Masonry (successful)
+017C	02	[task counter] work: Hunter (successful)
+017E	02	[task counter] work: Graveyard (successful)
+0180	02	[task counter] work: Tutor (successful)
+0182	02	[task counter] work: Bar (successful)
+0184	02	[task counter] work: Sleazy Bar (successful)
+0186	02	[task counter] work: Cabaret (successful)
+0188	02	[task counter] ??
+018A	02	[task counter] work: Housework (attempts)
+018C	02	[task counter] work: Babysitting (attempts)
+018E	02	[task counter] work: Inn (attempts)
+0190	02	[task counter] work: Farm (attempts)
+0192	02	[task counter] work: Church (attempts)
+0194	02	[task counter] work: Restaurant (attempts)
+0196	02	[task counter] work: Lumberjack (attempts)
+0198	02	[task counter] work: Salon (attempts)
+019A	02	[task counter] work: Masonry (attempts)
+019C	02	[task counter] work: Hunter (attempts)
+019E	02	[task counter] work: Graveyard (attempts)
+01A0	02	[task counter] work: Tutor (attempts)
+01A2	02	[task counter] work: Bar (attempts)
+01A4	02	[task counter] work: Sleazy Bar (attempts)
+01A6	02	[task counter] work: Cabaret (attempts)
+
+01C8	02	[task counter] adventure total?
+01CA	02	[task counter] adventure east/forest
+
+01D2	02	[task counter] Time off: free time?
+01D4	02	[task counter] Time off: free time?
+
+0260	02	relationship with prince
+0262	02	relationship with father
+0264	02	relationship with butler
+0266	02	maternal instinct
+0268	02	monsters killed
+
+0394	02	[ingame] current date - year
+0396	02	[ingame] current date - month (1..12)
+0398	02	[ingame] week day (0 = Sunday .. 6 = Saturday)
+039A	02	[ingame] current date - day (1..31)
+039C	02	??
+039E	02	last day of the month?
+
+03A8	02	?? (set to 1 on daughter's birthday)
+
+03B0	02	Daughter Name (ingame) [string size, always 20h]
+03B2	20	Daughter Name (ingame) [data]
+03D2	02	?? [string size, always 20h]
+03D4	20	?? [data]
+03F4	02	Family Name (ingame) [string size, always 20h]
+03F6	20	Family Name (ingame) [data]
+0416	02	?? [string size, always 20h]
+0418	20	?? [data]
+
+0440	02	dress name [string size, always 10h]
+0442	10	dress name [data]
+0452	02	?? [size, always 40h]
+0454	40	?? [data]
+0494	02	?? [size, always 12h]
+0496	12	?? [data]
+
+04AC	02	?? [size, always 10h]
+04AE	10	?? [data]
+04BE	02	?? [size, always 40h]
+04C0	40	?? [data]
+0500	02	?? [size, always 12h]
+0502	12	?? [data]
+
+0518	02	?? [size, always 10h]
+051A	10	?? [data]
+052A	02	?? [size, always 40h]
+052C	40	?? [data]
+056C	02	?? [size, always 12h]
+056E	12	?? [data]
+
+058A	02	dress name [string size, always 10h]
+058C	10	dress name [data]
+059C	02	?? [size, always 40h]
+059E	40	?? [data]
+
+1B00	02	diet name [size, always 10h]
+1B02	10	diet name [data]
