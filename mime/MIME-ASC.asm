@@ -5,6 +5,7 @@
 ;	A detailed description of how EXE files work can be found at: https://wiki.osdev.org/MZ
 
 	use16
+	cpu	186
 SEG_BASE_OFS EQU 5160h	; We assume "seg007", whose code begins at offset 5160h in the EXE file.
 
 	org	-SEG_BASE_OFS
@@ -145,7 +146,6 @@ scr00_TalkDungeon:
 ptLineStep EQU tempVars+00h
 ptBrktFunc EQU tempVars+02h
 ptPtrMem EQU tempVars+04h
-pt_end EQU scr_fin_2b
 
 PrintTalk:
 	mov	ax, ds
@@ -167,7 +167,7 @@ pt_line_start:
 pt_loop:
 	mov	ax, [es:si]
 	cmp	ax, 5C5Ch	; '\\'
-	jz	pt_end
+	jz	short pt_end
 	or	al, al		; check for null terminator
 	jz	short pt_name_end
 	cmp	al, 0Ah		; [not in original game] check for newline character
@@ -196,6 +196,9 @@ pt_draw:
 pt_close_brkt:
 	jmp	[cs:ptBrktFunc]
 
+pt_end:
+	jmp	near scr_fin_2b		; [indirect jump for Intel 286 support]
+
 pt_name:
 	test	dl, 01h
 	jnz	pt_draw			; "name mode" already active -> just draw the ## directly
@@ -219,7 +222,7 @@ pt_name_end:
 	and	dl, ~01h		; disable "name mode"
 	jmp	short pt_loop
 
-	times 7174h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 8 bytes
+	times 7174h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 7 bytes
 
 	incbin "MIME.EXE", $, 71DFh - ($-$$-SEG_BASE_OFS)
 scr02_TalkFullScr:
@@ -232,8 +235,8 @@ scr02_TalkFullScr:
 pt_brkt_dungeon:
 	mov	ax, [si]
 	cmp	ax, 7581h	; check for Shift-JIS 8175
-	;jz	short ptbd_indent	; yes - do additional 2-char indent for all following lines
-	jnz	pt_nextline
+	jz	short ptbd_indent	; yes - do additional 2-char indent for all following lines
+	jmp	near pt_nextline	; [not a jnz for Intel 286 support]
 	
 ptbd_indent:
 	add	di, [cs:ptLineStep]	; move to next line
@@ -286,14 +289,15 @@ gfc_get_jis_hwcheck:	; check for half-width JIS pages
 	cmp	al, 9
 	jb	short gfc_get_jis_p2
 	cmp	al, 12
-	jb	near get_get_ascii_loc_13971	; JIS page 9..11 -> jump to half-width code
-	;jmp	short gfc_get_jis_p2
+	;jb	near get_get_ascii_loc_13971	; JIS page 9..11 -> jump to half-width code [JB NEAR needs an Intel 386 or later]
+	jae	short gfc_get_jis_p2
+	jmp	near get_get_ascii_loc_13971
 gfc_get_jis_p2:
 	out	0A3h, al	; character code, high byte (page)
 	mov	al, ah
 	jmp	gfc_get_jis_main
 
-	times 72A1h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 55 bytes
+	times 72A1h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 53 bytes
 
 
 ; --- patch save game code ---
@@ -523,11 +527,14 @@ gcw_fullwidth:
 	mov	cx, 2
 	ret
 
+j_pn_fail:
+	jmp	near pn_fail
 pndel_var_width:
 	mov	dx, bx		; save end address
 	mov	bx, ScriptMemory
 	cmp	dx, bx
-	jbe	near pn_fail	; end address <= start address -> we have nothing to delete
+	;jbe	near pn_fail	; end address <= start address -> we have nothing to delete
+	jbe	short j_pn_fail	; [for Intel 286 support]
 pndel_vw_loop:
 	mov	ax, [cs:bx]
 	call	GetCharType
@@ -542,7 +549,7 @@ pndel_vw_loop:
 	mov	word [cs:ScriptMemory+6Eh], 1	; save "success" state in variable 55
 	jmp	near pndel_delete		; size: 48 bytes
 
-	times 7A94h-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 83 bytes
+	times 7A94h-($-$$-SEG_BASE_OFS) db 00h	; remaining space: 82 bytes
 
 ; --- patch menu selection text ---
 	incbin "MIME.EXE", $, 7AD0h - ($-$$-SEG_BASE_OFS)
@@ -602,17 +609,20 @@ scr_printsi:
 	call	PrintStr_SI
 	jmp	ScriptMainLoop
 
+j_pndel_calc_len:
+	jmp	near pndel_calc_len
 pndel_var_modes:
 	test	dh, 40h
-	jnz	near pndel_calc_len	; special "length calculation" function
+	;jnz	near pndel_calc_len	; special "length calculation" function
+	jnz	short j_pndel_calc_len	; [for Intel 286 support]
 	jmp	near pndel_var_width	; new "variable width" mode
-						; size: 10 bytes (3+4+4)
+						; size: 11 bytes (3+3+2+3)
 
 pn_fail:
 	mov	word [cs:ScriptMemory+6Eh], 0	; save "failed" state in variable 55
 	jmp	ScriptMainLoop			; size: 10 bytes
 
-	times 827Bh-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 7 bytes
+	times 827Bh-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 6 bytes
 
 	incbin "MIME.EXE", $, 82C5h - ($-$$-SEG_BASE_OFS)
 scr33_PlrName_AddChr:
@@ -633,7 +643,10 @@ pnadd_var_width:
 	call	GetCharType	; get size
 	add	dl, cl		; increase name length by CX
 	cmp	dl, 8
-	ja	near pn_fail
+	;ja	near pn_fail
+	jbe	short pnadd_nofail	; [for Intel 286 support]
+	jmp	near pn_fail
+pnadd_nofail:
 	mov	[cs:ScriptMemory+0Eh], dl	; save new name length (low byte only, so that flags are kept)
 	mov	word [cs:ScriptMemory+6Eh], 1	; save "success" state in variable 55
 	; fall through
@@ -643,11 +656,13 @@ pnadd_fixed_width:
 	call	PrintChar
 	jmp	ScriptMainLoop
 
-	times 8310h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 6 bytes
+	times 8310h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 5 bytes
 	incbin "MIME.EXE", $, 8310h - ($-$$-SEG_BASE_OFS)
 scr34_PlrName_DelChr:
 	call	PlrName_Setup
-	jc	near pndel_var_modes	; register 7, bit 15 enables "new" modes
+	;jc	near pndel_var_modes	; register 7, bit 15 enables "new" modes
+	jnc	short pndel_delete	; [for Intel 286 support]
+	jmp	near pndel_var_modes
 pndel_delete:
 	mov	word [cs:bx], 0	; set the variable to 0 to clear the character
 	
@@ -661,7 +676,7 @@ reloc_scr34:
 	add	sp, byte 0Ah
 	jmp	ScriptMainLoop			; size: 27 bytes (since pndel_delete)
 
-	times 8338h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 6 bytes
+	times 8338h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 5 bytes
 
 	incbin "MIME.EXE", $, 84BEh - ($-$$-SEG_BASE_OFS)
 ; patching scr3B_PrintVarStr
