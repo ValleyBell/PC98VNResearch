@@ -1,11 +1,12 @@
 ; Night Slave patch for supporting half-width characters
-; made by Valley Bell, 2023-11-19, update on 2023-11-25
+; made by Valley Bell, 2023-11-19, updated on 2023-11-25
 ;
 ; Assembling using NASM:
-;	nasm -f bin -o "NSG_ASC.EXE" -l "NSG_ASC-patch.lst" "NSG_ASCII-patch.asm"
+;	nasm -f bin -o "NSG_ASC.EXE" -l "NSG_ASC.lst" "NSG_ASC.asm"
 ;	This requires a decrypted + decompressed NSG.EXE called "NSG.DEC2.EXE" (130 012 bytes) to be in the same folder.
 
 	use16
+	cpu	186
 PE_HEADER_SIZE EQU 130h
 
 	org -PE_HEADER_SIZE
@@ -39,7 +40,7 @@ PrintSJISText_H1:
 ptx1_next:
 		lodsb
 		or	al, al
-		jz	near ptx1_end	; 00h - end
+		jz	short j_ptx1_end ; 00h - end
 		cmp	al, 0Dh
 		jz	short ptx1_newline ; 0Dh - new line
 		cmp	al, 20h
@@ -56,6 +57,9 @@ ptx1_next:
 		jb	short ptx1_space ; 0A0h .. 0DFh -> draw space
 		jmp	short ptx1_sjis	; 0E0h .. 0FFh -> draw Shift-JIS character
 ; ---------------------------------------------------------------------------
+
+j_ptx1_end:
+		jmp	short ptx1_end
 
 ptx1_newline:
 		mov	cx, 592		; set X position to maximum to enforce a line break
@@ -191,7 +195,7 @@ PrintSJISText_H2:
 ptx2_next:
 		lodsb
 		or	al, al
-		jz	near ptx2_end	; 00h - end
+		jz	short j_ptx2_end ; 00h - end
 		cmp	al, 0Dh
 		jz	short ptx2_newline ; 0Dh - new line
 		cmp	al, 20h
@@ -208,6 +212,9 @@ ptx2_next:
 		jb	short ptx2_space ; 0A0h .. 0DFh -> draw space
 		jmp	short ptx2_sjis	; 0E0h .. 0FFh -> draw Shift-JIS character
 ; ---------------------------------------------------------------------------
+
+j_ptx2_end:
+		jmp	short ptx2_end
 
 ptx2_newline:
 		mov	cx, 592		; set X position to maximum to enforce a line break

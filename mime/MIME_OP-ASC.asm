@@ -5,6 +5,7 @@
 ;	A detailed description of how EXE files work can be found at: https://wiki.osdev.org/MZ
 
 	use16
+	cpu	186
 SEG_BASE_OFS EQU 00A0h	; We assume "seg000", whose code begins at offset 00A0h in the EXE file.
 
 	org	-SEG_BASE_OFS
@@ -75,17 +76,20 @@ parse_text_loop:
 	cmp	al, 81h
 	jb	short ptl_halfwidth	; 00..80 -> ASCII
 	cmp	al, 0A0h
-	jb	ptl_fullwidth		; 81xx .. 9Fxx -> Shift-JIS
+	jb	short j_ptl_fullwidth	; 81xx .. 9Fxx -> Shift-JIS
 	cmp	al, 0E0h
 	jb	short ptl_halfwidth	; A0..DF -> half-width Katakana
 	cmp	al, 0FDh
-	jb	ptl_fullwidth		; E0xx .. FCxx -> Shift-JIS
+	jb	short j_ptl_fullwidth	; E0xx .. FCxx -> Shift-JIS
 
 ptl_halfwidth:
 	dec	si	; SI was advanced by 2 bytes, but we want only 1 byte
 	xor	ah, ah
 	stosw
 	jmp	short parse_text_loop
+
+j_ptl_fullwidth:
+	jmp	near ptl_fullwidth
 
 	times 61D8h-($-$$-SEG_BASE_OFS) db 90h
 loc_161D8:

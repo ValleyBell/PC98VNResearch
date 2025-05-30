@@ -3,6 +3,7 @@
 ;	This requires STSSP.COM (5 064 bytes) to be in the same folder.
 
 	use16
+	cpu	186
 BASE_OFS EQU 100h	; COM load offset
 
 	org	BASE_OFS

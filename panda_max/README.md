@@ -18,7 +18,7 @@ I did a fair amount of research on it in order to help BabaJeanmel with a proper
 - [CMF text dumping/insertion tool](ns-cmf-text-tool.py)
 - partial [CMF format description](NightSlave-CMF.txt)
 - `NSG.EXE` disassembly: [ASM file](NSG.DEC2.asm) / [IDB database](NSG.DEC2.idb) / [decrypted/decompressed executable](NSG.DEC2.EXE)
-- a [patch to support ASCII text](NSG_ASCII-patch.asm) for `NSG.EXE`
+- a [patch to support ASCII text](NSG_ASC.asm) for `NSG.EXE`
   - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
   - A prepatched version is included as [NSG\_ASC.EXE](NSG_ASC.EXE).
 - `ENDING.EXE` disassembly: [ASM file](NS_ENDING.asm) / [IDB database](NS_ENDING.idb)

@@ -30,6 +30,7 @@ NL_CHR EQU `\n`
 CLR_CHR EQU 03h
 
 	use16
+	cpu	186
 SEG000_BASE_OFS EQU 2000h
 SEG001_BASE_OFS EQU 7250h	; We assume "seg001", whose code begins at offset 7250h in the EXE file.
 SEG019_BASE_OFS EQU 1BD60h
@@ -605,6 +606,9 @@ ltp_aconv_on:
 	or	byte [bp-01h], 01h
 	jmp	near ltxt_chrcheck
 
+j_ltxt_space:
+	jmp	near ltxt_space
+
 ltp_fullwidth:
 	mov	ah, al
 	mov	al, [es:si]	; read Shift-JIS 2nd byte
@@ -630,11 +634,11 @@ lttw_fullwidth:
 	
 	; For spaces, we will just skip the text box size checks - and we can skip drawing, too.
 	cmp	ax, 0020h
-	jz	near ltxt_space	; ASCII space
+	jz	short j_ltxt_space	; ASCII space
 	cmp	ax, 8140h
-	jz	near ltxt_space	; full-width space
+	jz	short j_ltxt_space	; full-width space
 	cmp	ax, 8640h
-	jz	near ltxt_space	; half-width space
+	jz	short j_ltxt_space	; half-width space
 	
 	; do line wrapping checks
 	; Note: The original code does this after drawing. I moved it here so that
@@ -729,7 +733,7 @@ ltxt_chrcheck:
 	jz	short loc_15F06	; handle newline
 	cmp	byte [es:si], CLR_CHR
 	jz	short ltxt_tbclr	; clear textbox
-	jmp	ltxt_loop
+	jmp	near ltxt_loop
 
 loc_15F06:				; CODE XREF: LoadText_ES+103j
 	inc	si		; advance text pointer by 1
