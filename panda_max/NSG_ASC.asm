@@ -327,8 +327,8 @@ mdrTextLen		EQU 0CA55h	; byte
 	;org	0C946h
 mdrTextPrint_H2:			; CODE XREF: mdr03_Text+60p
 		cmp	word [cs:mdrDoTxtDraw], byte 0
-		jz	loc_1C9D8
-		;jmp	short loc_1C951
+		jnz	short loc_1C951
+		jmp	loc_1C9D8
 
 loc_1C951:				; CODE XREF: mdrTextPrint_H2+6j
 		mov	ds, [cs:mdrTextSeg]
@@ -396,8 +396,8 @@ loc_1C9D0:				; CODE XREF: mdrTextPrint_H2+82j
 		retn
 ; ---------------------------------------------------------------------------
 
-loc_1C9D8:
 	times 0C9D8h-($-$$-PE_HEADER_SIZE) db 90h
+loc_1C9D8:
 
 
 	incbin "NSG.DEC2.EXE", $

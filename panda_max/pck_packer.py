@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # PANDA HOUSE MAX Archive (Un-)Packer
-# Written by Valley Bell, 2023-02-22 (unpacking), 2023-08-? (repacking)
+# Written by Valley Bell, 2023-02-22 (unpacking), 2023-08-11 (repacking)
 import sys
 import os
 import argparse
