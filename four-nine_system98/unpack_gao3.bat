@@ -1,4 +1,2 @@
-@set SCRIPT=%~dp0Unpack.py
-cd /d R:\GAO3
-for %%f in (*.CAT) do python.exe %SCRIPT% "%%f" "%%~dpnf.LIB" "%%~dpfunpack\%%~nf"
+for %%f in (R:\GAO3\*.CAT) do python "%~dp0sys98_packer.py" -x "%%f" "%%~dpfunpack\%%~nf"
 pause

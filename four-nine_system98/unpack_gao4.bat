@@ -1,2 +1,2 @@
-for %%f in (R:\CANAAN\*.CAT) do python.exe Unpack.py "%%f" "%%~dpnf.LIB" "%%~dpfunpack\%%~nf"
+for %%f in (R:\CANAAN\*.CAT) do python "%~dp0sys98_packer.py" -x "%%f" "%%~dpfunpack\%%~nf"
 pause

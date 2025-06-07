@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# TODO:
+#	check "linebreak removal" in
+#		- wfh001.asm	str_065F
 import sys
 import os
 import typing
@@ -115,23 +118,27 @@ def special_split(text: str, separators: list) -> list:
 
 def parse_tbox_info(tbinfo: str) -> tuple:
 	tb_data = special_split(tbinfo, ['*', '@'])
-	tb_size = [int(x) for x in tb_data[0].split("x")]
-	if tb_data[1] != "":
-		tb_init = [int(x) if x != "" else 0 for x in tb_data[1].split(",")]
-	else:
-		tb_init = [0, 0]
-	if tb_data[2] != "":
-		tb_ofs = [int(x) if x != "" else None for x in tb_data[2].split(",")]
-	else:
-		tb_ofs = [None, None]
-	return (tb_size, tb_init, tb_ofs)
+	try:
+		tb_size = [int(x) for x in tb_data[0].split("x")]
+		if tb_data[1] != "":
+			tb_init = [int(x) if x != "" else 0 for x in tb_data[1].split(",")]
+		else:
+			tb_init = [0, 0]
+		if tb_data[2] != "":
+			tb_ofs = [int(x) if x != "" else None for x in tb_data[2].split(",")]
+		else:
+			tb_ofs = [None, None]
+		return (tb_size, tb_init, tb_ofs)
+	except Exception as e:
+		print(f"Bad text box specification: {tbinfo}")
+		raise e
 
 def do_textsize_check(old_linecount, tb_size, tsv_data, txitm, lines, text_size, xpos):
 	global config
 	
 	(tb_width, tb_height) = tb_size
+	(xsize, ysize) = text_size
 	if config.textsize_check == 1:
-		(xsize, ysize) = text_size
 		if len(lines) > 0 and xpos <= 0:
 			ysize -= 1	# ignore last line when empty
 		if xsize <= tb_width and ysize <= tb_height:
@@ -153,7 +160,7 @@ def do_textsize_check(old_linecount, tb_size, tsv_data, txitm, lines, text_size,
 	#		continue	# ignore comment lines
 	#	old_txt.append(tsv_data[tsv_lid][5])
 	#print("\told: " + str(old_txt))
-	print("\ttext: " + str(lines))
+	print("\ttext: " + str(lines[-text_size[1]:]))
 	return
 
 TXTFLAG_SPACE		= 0x01	# character is a space
@@ -560,8 +567,13 @@ def textitem2tsv(txitm: dict, tsv_data: list, keep_lines: bool) -> None:
 			max_xpos = max([xpos, max_xpos])
 		if config.indenting and multiline_text:
 			if flags & TXTFLAG_INDENT_BEG:
-				indent_xbase.append(xpos)	# save indent of "after left parenthesis"
-				line_xbase = indent_xbase[-1]
+				if xpos <= 4:
+					indent_xbase.append(xpos)	# save indent of "after left parenthesis"
+					line_xbase = indent_xbase[-1]
+				else:
+					# heuristic: When the opening bracket is too far in the middle, keep indent.
+					# (required for wf3_21.asm / str_076F)
+					indent_xbase.append(line_xbase)
 			elif flags & TXTFLAG_INDENT_END:
 				if len(indent_xbase) > 0:
 					indent_xbase.pop()
@@ -637,16 +649,26 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set, state: dict) -> st
 			keep_nl = False
 			if keep_next_nl:
 				keep_nl = True	# keep at the beginning of the text
-			# This heavily breaks indented text.
-			#elif (len(text) <= next_pos) or text[next_pos].isspace():
-			#	keep_nl = True	# keep when being followed by a space
-			elif (len(last_non_spc) == 1) and last_non_spc in SENTENCE_END_CHRS:
+			elif last_non_spc in ['.', '・']:
+				keep_nl = True	# keep when the last character is a "sentence/paragraph end" character
+				# prevent concatenation in a very long streak of "........"
+				if not ((pos >= 10) and (text[pos-10:pos] == (last_non_spc * 10))):
+					# fuse lines when it happens in a sequence of "...\n..."
+					if indent_level == 0:
+						# no indenting - assume no indent in next line
+						if text[next_pos] == last_non_spc:
+							keep_nl = False
+					else:
+						# indented line - strip spaces before checking
+						if text[next_pos:].lstrip().startswith(last_non_spc):
+							keep_nl = False
+			elif (len(last_non_spc) == 1) and (last_non_spc in SENTENCE_END_CHRS):
 				keep_nl = True	# keep when the last character is a "sentence/paragraph end" character
 			elif (len(last_non_spc) == 1) and (ord(last_non_spc) in range(0x1F000, 0x20000)):
 				keep_nl = True	# keep when the last character is a symbol or emoji character
 			elif last_non_spc in ["\\e", "\\w"]:
 				keep_nl = True	# keep when the last character is a "wait" command
-
+			
 			if not keep_nl:
 				# fuse lines
 				text = text[:pos] + text[next_pos:]

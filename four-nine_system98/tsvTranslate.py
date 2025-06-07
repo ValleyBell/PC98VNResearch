@@ -15,6 +15,8 @@ DEBUG_OUTPUT_PATH = None
 LANGUAGE_SRC = "ja"	# Japanese
 LANGUAGE_TGT = "en"	# English
 TRANSLATE_MAX_CHARS = 500	# maximum characters that are translated per request
+REQS_WAIT = 10
+REQ_WAIT_TIME = 30
 
 config = {}
 var_dict = {"words": []}
@@ -123,7 +125,10 @@ def process_data(tsv_data: list) -> list:
 				f.write(str({**trdat, "text": text}) + "\n")
 	
 	# Translate the unique text strings.
-	translated_texts = translate_items_grouped(unique_texts, unique_tkeys)
+	if config.single_line:
+		translated_texts = translate_items_single(unique_texts, unique_tkeys, 0, False)
+	else:
+		translated_texts = translate_items_grouped(unique_texts, unique_tkeys)
 	if DEBUG_OUTPUT_PATH:
 		with open(DEBUG_OUTPUT_PATH + "05_translated_texts.log", "wt") as f:
 			for trdat in trans_data:
@@ -290,7 +295,7 @@ def check_keys_in_text(text: str, keys: set) -> bool:
 			return False
 	return True
 
-def translate_items_single(texts: list, tkeys: list, line_base: int) -> list:
+def translate_items_single(texts: list, tkeys: list, line_base: int, group_fail: bool) -> list:
 	# translate each line separately
 	trans_texts = []
 	for (tid, txt) in enumerate(texts):
@@ -302,7 +307,10 @@ def translate_items_single(texts: list, tkeys: list, line_base: int) -> list:
 		
 		if trans_text is None:
 			print("Failed to call web service")
-			return None
+			if group_fail:
+				return None
+			else:
+				trans_text = text	# just ignore translation
 		if not check_keys_in_text(txt, tkeys[tid]):
 			print("Placeholders got missing - ignoring translation.")
 			trans_text = text
@@ -339,6 +347,8 @@ def translate_items_grouped(texts: list, keys: list) -> list:
 	return [txt for grp in text_groups for txt in grp]
 
 def translate_item_group(text_group: list, text_keys: list, line_sep: str, line_base: int, lines_total: int) -> typing.Optional[list]:
+	global config
+	
 	RETRY_ATTEMPS = 2
 	
 	grptxt_count = len(text_group)
@@ -375,7 +385,7 @@ def translate_item_group(text_group: list, text_keys: list, line_sep: str, line_
 	
 	if len(text_group) < 8:
 		print("translating lines separately.")
-		return translate_items_single(text_group, text_keys, line_base)
+		return translate_items_single(text_group, text_keys, line_base, True)
 	else:
 		print("splitting into smaller groups.")
 		split_idx = len(text_group) // 2
@@ -403,9 +413,9 @@ def translate_text(text: str) -> typing.Optional[str]:
 		}))
 	#return unicodedata.normalize("NFKC", text)
 	
-	if (translate_req_id % 10) == 0 and translate_req_id > 0:
+	if (translate_req_id % REQS_WAIT) == 0 and translate_req_id > 0:
 		print("Waiting a bit ...", end="", flush=True)
-		time.sleep(60)
+		time.sleep(REQ_WAIT_TIME)
 
 	req = requests.get("https://translate.google.com/m",
 		params = {
@@ -481,16 +491,22 @@ def translate_tsv(fn_in: str, fn_out: str) -> int:
 
 def main(argv):
 	global config
+	global REQS_WAIT
+	global REQ_WAIT_TIME
 	
 	print("TSV Translator")
 	aparse = argparse.ArgumentParser()
 	aparse.add_argument("-r", "--raw", action="store_true", help="no remapping of Japanese quotation marks")
 	aparse.add_argument("-t", "--title-case", action="store_true", help="apply Title Case to text items of 'selection' type")
 	aparse.add_argument("-v", "--variables", type=str, help="YAML file that contains variables, can help with translation formatting")
+	aparse.add_argument("-s", "--single-line", action="store_true", help="translate each line separately instead of in groups")
 	aparse.add_argument("in_file", help="input file (.TSV)")
 	aparse.add_argument("out_file", help="output file (.TSV)")
 	
 	config = aparse.parse_args(argv[1:])
+	if config.single_line:
+		REQS_WAIT *= 2
+		REQ_WAIT_TIME /= 2
 	
 	if config.variables:
 		global var_dict

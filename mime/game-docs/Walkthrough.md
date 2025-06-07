@@ -314,7 +314,7 @@ Recommended level: 38 (maybe 36/37?)
 - There are treasure chests to the left and right. You should equip the "Diamond Circlet" and "Ruby Circlet".
 - Grind until every character is at least level 39. (38?)
 - Make sure that Tear has the "Shelt" spell, which heals 300 HP. (requirements: 4x Earth Rune, 2x Light Rune)
-- Go south to @13,15 and defeat Arachne. (8040 HP) *(r115 = 126)* She gives you lots of experience, so you will get at 1 or 2 level ups.
+- Go south to @13,15 and defeat Arachne. (8040 HP) *(r115 = 126)* She gives you lots of experience, so you will get 1 or 2 level ups.
 - Take the stairs to 13F.
 
 ## 13F

@@ -8,7 +8,7 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 
 - [list of games using the engine](game-list.md)
 - [an archive with all known game executables](executables.7z)
-- [archive unpacking tool](Unpack.py) for `DISK_#.LIB/CAT` files
+- [archive unpacking and repacking tool](sys98_packer.py) for `DISK_#.LIB/CAT` files
 - decompression tool for the game's LZSS-packed data: [cleaned up version](Decompress.py), [original disassembly translation](Decompress.py.bak)
 - [scenario format description](SceneFormat.txt)
 - [scenario descrambler](ScenarioDecode.py)
@@ -55,10 +55,22 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 
 - The engine's image format is the [Pi image format](https://mooncore.eu/bunny/txt/pi-pic.htm), but with stripped header.
 - Scenario files use a simple `XOR 01h` scrambling algorithm that is applied to all "payload" bytes, which begin at offset 100h.
-- LZSS is used to compress the data inside archives. The nametable is initialized with all `00` bytes.
 - Archive files, when used, consist of a pair of `.CAT` and `.LIB` files.
   - `.CAT` (catalogue) contains the file list
   - `.LIB` (library) contains the actual file data
+  - Data in archive files may be LZSS-compressed.
+  - Conditions for compression:
+    - The 6-byte header in CAT/LIB files is always uncompressed.
+    - The TOC data in CAT files is compressed, when the CAT file has a `Cat1` signature. It has no separate compression header.
+    - The data of individual files in the LIB can be compressed when the "compression" flag is set in the CAT for the respective file.  
+      If so, then the data starts with a 4-byte Little Endian value that indicates the size of the decompressed data.
+  - Compression algorithm notes:
+    - During the decompression, the nametable is initialized with all `00` bytes. The compressed streams don't seem to reference data beyond the beginning of the file though.
+    - It starts writing to the nametable at offset `001h`. (The usual/common start offset is `0FEEh`.)
+    - The LZSS reference word is `AB CD` where the length is `B` and the reference offset is `CDA`. (Okumura's LZSS has length as `D` and offset as `CAB`.)
+    - Compressed data is terminated by an "end of stream" marker, which is a reference word with value `0000`.
+    - The four･nine compressor prefers recent matches. (Okumura's LZSS prefers older matches.)
+    - [lzss-tool](https://github.com/ValleyBell/ExtractorsDecoders/blob/master/lzss-tool.c) parameters: `-n n -C 0 -R 0x03 -O 0x001 -E 1`, for data in LIB files also use `-a o4`.
 - The engine uses Shift-JIS for text encoding.
 - Some games use half-width Katakana characters, which use non-standard JIS codes that most Shift-JIS parsers can not read.  
   see [this JIS table](https://harjit.moe/jistables2/jisplane1a.html), plane 01-10 (JIS 2a21..2a7e / Shift-JIS 859f..85fc), column "NEC 78JIS"  
