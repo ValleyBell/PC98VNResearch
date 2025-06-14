@@ -4,6 +4,52 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
 
 **Note:** In most cases, file names and strings are terminated using a `00` byte. Keep in mind to append a `00` byte especially after file names.
 
+- Amaranth II
+  - view an arbitrary cutscene at the beginning
+    - open `AMA2.EXE` and search for `E8 7F 01 C6 06 60 06 30`
+    - replace the last `30` with any number 30..37 (ASCII "0".."7") to select the cutscene file `A2_0#.CMD`
+      - `A2_00.CMD` - FUGA Systems logo
+      - `A2_01.CMD` - Opening
+      - `A2_02.CMD`..`A2_05.CMD` - Chapter Introduction
+      - `A2_06.CMD` - Ending 1
+      - `A2_07.CMD` - Ending 2 / Staff Roll
+    - Then start the game with the opening. (first option)
+  - continue to ending after exiting the main game
+    - open `AMA2.EXE` and search for `CD 21 E8 DE 00 72 4D`
+    - replace the `72 4D` with `90 90`
+  - skip the main game
+    - open `AMA2.EXE` and search for `CD 21 E8 DE 00 72 4D`
+    - replace the entire sequence with `90` bytes
+- Amaranth III
+  - always skip opening
+    - open `AMA3.EXE` and search for `B4 4D CD 21 3C 01`
+    - replace the `3C 01` with `33 C0`
+  - continue to ending after exiting the main game
+    - open `AMA3.EXE` and search for `80 3E 0E 00 46`
+    - replace the sequence with `33 C0 90 90 90`
+  - skip the main game
+    - open `AMA3.EXE` and search for `CD 21 1E B8 CC 00 8E D8 80 3E 0E 00 46 1F 75 06`
+    - replace the entire sequence with `90` bytes
+- Amaranth IV
+  - Note: Edits will be done in PC-98 RAM directly here.
+          Alternatively it should be possible to decompress `AMA4DRV.SYS` (OPTLINK compression) and edit that.
+  - always skip opening
+    - while on the loader menu, open the PC-98 RAM and search for `68 FE 01 E8 D4 FE 59`
+    - replace the entire sequence with `90` bytes
+  - continue to ending after exiting the main game
+    - decompress (OPTLINK) `AMA4DRV.SYS`, open it and search for `F6 09 17 0A 1E 0A 1E 0A`
+    - replace the first 4 bytes with `F6 09 F8 09`
+    - Background:
+      - The "Execute Driver" (AMA4DRV.SYS) calls the main game executable, AMARAN4.EXE.
+      - The main executable returns value 0 after exiting the game via the menu.
+      - The bytes above change the pointer for return code 0 (checked via a C-style switch-case) to the one of return code 0xFE, which is the ending.
+- Amaranth KH
+  - always skip opening
+    - open `KH.EXE` and search for `BE CA 06 E8 25 01`
+    - replace all those bytes with values `90`
+  - continue to ending after exiting the main game
+    - open `KH.EXE` and search for `83 7F 02 00 1F 74 06`
+    - replace the `74 06` with `90 90`
 - Escalation '95 \~Onee-sama tte Yonde Ii Desu ka?\~
   - jump to ending from main menu
     - in `start.mdr` (decrypt by XORing with 0FFh)
