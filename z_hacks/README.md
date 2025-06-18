@@ -196,6 +196,20 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - then re-encrypt the file
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
+- Mirage
+  - Notes:
+    - The actions are to be performed by editing the PC-98 emulator RAM while at a certain location. The script files (`.SCN`) are compressed, so editing them directly is harder.
+    - Actions should be performed on the floppy disk version. The game simulates multiple floppy disk by multiple folders when installed on the hard disk and it is currently unknown how the "disk switch" works.
+    - Run the game at 10 MHz or slower. (Dungeon crawling gets uncontrollable with higher CPU speeds.)
+  - jump to ending from main menu
+    - While at the main menu screen (file `INIT.SO2`), search for `B:\M_A000.SO2` and overwrite it with `B:\M_5_06.SO2`
+      Insert floppy disk E to the second drive, then start the game from the beginning.
+- Mirage 2
+  - Notes:
+    - The actions are to be performed by editing the PC-98 emulator RAM while at a certain location. The script files (`.SCN`) are compressed, so editing them directly is harder.
+  - jump to ending from main menu
+    - While at the main menu screen (file `T_INIT.SCN`), search for `A:\t_0_01.scn` and overwrite it with `A:\end_03.scn`
+      Then start the game from the beginning.
 - Mirror
   - enable all scenarios
     - open `SAVE.DAT` and set all 2-byte words to `01 00`
@@ -287,9 +301,9 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - A recommended method of quickly getting to an ending is to search for `90 11 93 00 00 00` and replace it with `83 18 <offset>`.
       Then just choose "From the beginning" in the main menu.
 - Rondo
+  - Notes:
+    - The actions are to be performed by editing the PC-98 emulator RAM while at a certain location. The script files (`.SO3`) are compressed, so editing them directly is harder.
   - jump to ending from main menu
-    - Notes:
-      - The actions are to be performed by editing the PC-98 emulator RAM while at a certain location. The script files (`.SO3`) are compressed, so editing them directly is harder.
     - while at the menu selection screen (file `A0_000.SO3`), search for `A:\START.SO3` and overwrite it with `A:\END.SO3` + a `00` byte  
       This will jump directly to the credits screen after confirming the character name.
 - Street Mahjong 2
