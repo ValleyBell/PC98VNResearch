@@ -1,0 +1,166 @@
+--- a/A700B.ASM	2024-10-07 00:57:39.106831800 +0200
++++ b/A700B.ASM	2024-10-08 00:20:49.248889200 +0200
+@@ -577,53 +577,53 @@
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"ティアを切り裂く返り血がオレの頰にとぶ‥‥"
+-	WAIT	116
++	WAIT	174	;  3.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"ティアは力つきて、ぐったりとオレの胸にしなだれかかっている。"
+-	WAIT	116
++	WAIT	174	;  6.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【##】「なんで‥‥なんで来たんだ‥‥」"
+-	WAIT	116
++	WAIT	174	;  9.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【ティア】「だめよ‥‥お願い諦めたり‥‥しないで‥‥」"
+-	WAIT	116
++	WAIT	174	; 12.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【##】「馬鹿野郎‥‥弱虫の癖に‥‥オレの為に‥‥」"
+-	WAIT	116
++	WAIT	203	; 15.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【ティア】「あ、貴方はこの世界を救う人‥‥わ、わたし‥‥いつも夢でみているの‥‥」"
+-	WAIT	116
++	WAIT	290	; 20.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【ティア】「この滅びの風を‥‥とめて‥‥貴方しかいないの‥‥」"
+-	WAIT	116
++	WAIT	203	; 24.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"その瞬間、辺りが光に包まれた‥‥"
+-	WAIT	116
++	WAIT	145	; 27.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CALL	sub_54D2
+-	CMD20	2
++	CALL	mysub_59C6
+ 	PORTA6	0
+ 	BLIT4	0x0000, 640, 400, 0x0000, 0
+ 	IMGLD	0x0100, 0x028D, "G070H"
+@@ -632,79 +632,79 @@
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"光がおさまると、オレはアラクネの呪縛からとかれていた。"
+-	WAIT	116
++	WAIT	290	;  5.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【エルデリカ】「##！！」"
+-	WAIT	116
++	WAIT	87	;  6.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"エルデリカがアラクネの前に立ちはだかる。"
+-	WAIT	116
++	WAIT	203	; 10.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【##】「エル！　お前まで！！なんで逃げなかったんだ！！」"
+-	WAIT	116
++	WAIT	203	; 13.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"エルはオレの呼びかけに振り返る。"
+-	WAIT	116
++	WAIT	116	; 15.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【エルデリカ】「‥‥‥‥逃げる？　どうして？」"
+-	WAIT	116
++	WAIT	203	; 19.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"エルは淋しそうに微笑んだ‥‥"
+-	WAIT	116
++	WAIT	174	; 22.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【エルデリカ】「仲間を置いて逃げる位なら、死んだ方がましよ」"
+-	WAIT	116
++	WAIT	203	; 25.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"篇蔵も傷口から血を流しながらも、オレとティアをかばうように立ちはだかっている。"
+-	WAIT	116
++	WAIT	232	; 29.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【##】「もういい！　もういいんだ！　頼む！　もうやめてくれ！！」"
+-	WAIT	116
++	WAIT	203	; 33.0 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【篇蔵】「己の命よりも大切なものがある！　それを守って死ねるのなら本望！！」"
+-	WAIT	116
++	WAIT	290	; 38.0
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"【アラクネ】「こざかしい！！　まとめて殺してあげるよ！！」"
+-	WAIT	116
++	WAIT	203	; 41.5 s
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CMD0F	0
+ 	BLIT1	0x6682, 608, 56, 0x0000, 1
+ 	TALKFS	"アラクネの体が異様に歪みだした！"
+-	WAIT	116
++	WAIT	145	; 44s | total time here: 44 seconds -> 44s * 58 frames/s = 2552 frames
+ 	CMD0F	0
+ 	BLIT1	0x0000, 608, 56, 0x6682, 2
+ 	CALL	sub_54D2
+@@ -4047,3 +4047,7 @@
+ 	TXTCOL	1, 0
+ 	RET
+ 
++mysub_59C6:	; mini-subroutine to keep TSV line numbers intact
++	CMD20	2
++	BGMPLAY	; restart BGM so that the screen fade to the boss works properly
++	RET

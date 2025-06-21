@@ -46,7 +46,7 @@ MIME is a dungeon crawler adventure by Studio Twin'kle.
   - The tool features various options, like including the border, showing only uncovered areas or showing secret passages.
   - Example call: `python map-dump.py -m Z1000.DAT -t "STMED+overlay.png" -o map.png -b -e -s`
 - general [game documentation](game-docs/README.md)
-- [fixed files](fixed-files/README.md) (save games and graphics)
+- [fixed files](fixed-files/README.md) (save games, graphics, game scripts)
 
 ## Notes
 

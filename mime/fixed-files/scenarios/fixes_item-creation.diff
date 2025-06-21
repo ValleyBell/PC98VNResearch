@@ -1,0 +1,259 @@
+--- a/A205A.ASM	2024-07-27 07:42:09.189107300 +0200
++++ b/A205A.ASM	2024-08-19 22:12:28.278875800 +0200
+@@ -1475,96 +1475,96 @@
+ loc_10BC:
+ 	JEQ	r338, 8, loc_10C6
+ 	JP	loc_10F1
+-
+ loc_10C6:
+ 	JEQ	r339, 8, loc_10D0
+ 	JP	loc_10F1
+-
+ loc_10D0:
+ 	JEQ	r340, 11, loc_10DA
+ 	JP	loc_10F1
+-
+ loc_10DA:
+ 	JEQ	r341, 12, loc_10E4
+ 	JP	loc_10F1
+-
+ loc_10E4:
+ 	JEQ	r342, 12, loc_10EE
+ 	JP	loc_10F1
+-
+ loc_10EE:
+ 	JP	loc_1804
+ 
+ loc_10F1:
+ 	JEQ	r337, 12, loc_10FB
+ 	JP	loc_1130
+-
+ loc_10FB:
+ 	JEQ	r338, 12, loc_1105
+ 	JP	loc_1130
+-
+ loc_1105:
+ 	JEQ	r339, 12, loc_110F
+ 	JP	loc_1130
+-
+ loc_110F:
+ 	JEQ	r340, 12, loc_1119
+ 	JP	loc_1130
+-
+ loc_1119:
+ 	JEQ	r341, 12, loc_1123
+ 	JP	loc_1130
+-
+ loc_1123:
+ 	JEQ	r342, 12, loc_112D
+ 	JP	loc_1130
+-
+ loc_112D:
+ 	JP	loc_1814
+ 
+ loc_1130:
+ 	JEQ	r337, 3, loc_113A
+ 	JP	loc_116F
+-
+ loc_113A:
+ 	JEQ	r338, 6, loc_1144
+ 	JP	loc_116F
+-
+ loc_1144:
+ 	JEQ	r339, 10, loc_114E
+ 	JP	loc_116F
+-
+ loc_114E:
+ 	JEQ	r340, 12, loc_1158
+ 	JP	loc_116F
+-
+ loc_1158:
+ 	JEQ	r341, 12, loc_1162
+ 	JP	loc_116F
+-
+ loc_1162:
+ 	JEQ	r342, 13, loc_116C
+ 	JP	loc_116F
+-
+ loc_116C:
+ 	JP	loc_180C
+ 
+-loc_116F:
++loc_116F:	; [BUGFIX] creation of item 124
++	JEQ	r337, 3, loc_116F_1	; shadow rune
++	JP	loc_1170
++loc_116F_1:
++	JEQ	r338, 7, loc_116F_2	; fire rune
++	JP	loc_1170
++loc_116F_2:
++	JEQ	r339, 7, loc_116F_3	; fire rune
++	JP	loc_1170
++loc_116F_3:
++	JEQ	r340, 12, loc_116F_4	; destruction rune
++	JP	loc_1170
++loc_116F_4:
++	JEQ	r341, 12, loc_116F_5	; destruction rune
++	JP	loc_1170
++loc_116F_5:
++	JEQ	r342, 13, loc_116F_6	; evil rune
++	JP	loc_1170
++loc_116F_6:
++	JP	uloc_181C		; create item 124 (紅炎の剣)
++
++loc_1170:
+ 	JEQ	r337, 2, loc_1179
+ 	JP	loc_11AE
+-
+ loc_1179:
+ 	JEQ	r338, 2, loc_1183
+ 	JP	loc_11AE
+-
+ loc_1183:
+ 	JEQ	r339, 8, loc_118D
+ 	JP	loc_11AE
+-
+ loc_118D:
+ 	JEQ	r340, 8, loc_1197
+ 	JP	loc_11AE
+-
+ loc_1197:
+ 	JEQ	r341, 12, loc_11A1
+ 	JP	loc_11AE
+@@ -1741,96 +1741,96 @@
+ loc_1328:
+ 	JEQ	r337, 2, loc_1332
+ 	JP	loc_1367
+-
+ loc_1332:
+ 	JEQ	r338, 7, loc_133C
+ 	JP	loc_1367
+-
+ loc_133C:
+ 	JEQ	r339, 7, loc_1346
+ 	JP	loc_1367
+-
+ loc_1346:
+ 	JEQ	r340, 7, loc_1350
+ 	JP	loc_1367
+-
+ loc_1350:
+ 	JEQ	r341, 7, loc_135A
+ 	JP	loc_1367
+-
+ loc_135A:
+ 	JEQ	r342, 11, loc_1364
+ 	JP	loc_1367
+-
+ loc_1364:
+ 	JP	loc_185C
+ 
+-loc_1367:
++loc_1367:	; [ADDITION] creation of item 238
++	JEQ	r337, 1, loc_1367_1	; wind rune
++	JP	loc_1368
++loc_1367_1:
++	JEQ	r338, 2, loc_1367_2	; protection rune
++	JP	loc_1368
++loc_1367_2:
++	JEQ	r339, 2, loc_1367_3	; protection rune
++	JP	loc_1368
++loc_1367_3:
++	JEQ	r340, 3, loc_1367_4	; shadow rune
++	JP	loc_1368
++loc_1367_4:
++	JEQ	r341, 3, loc_1367_5	; shadow rune
++	JP	loc_1368
++loc_1367_5:
++	JEQ	r342, 3, loc_1367_6	; shadow rune
++	JP	loc_1368
++loc_1367_6:
++	JP	loc_1863		; create item 238 (伊賀頭巾)
++
++loc_1368:
+ 	JEQ	r337, 2, loc_1371
+ 	JP	loc_13A6
+-
+ loc_1371:
+ 	JEQ	r338, 2, loc_137B
+ 	JP	loc_13A6
+-
+ loc_137B:
+ 	JEQ	r339, 8, loc_1385
+ 	JP	loc_13A6
+-
+ loc_1385:
+ 	JEQ	r340, 8, loc_138F
+ 	JP	loc_13A6
+-
+ loc_138F:
+ 	JEQ	r341, 11, loc_1399
+ 	JP	loc_13A6
+-
+ loc_1399:
+ 	JEQ	r342, 11, loc_13A3
+ 	JP	loc_13A6
+-
+ loc_13A3:
+ 	JP	loc_1864
+ 
+ loc_13A6:
+ 	JEQ	r337, 2, loc_13B0
+ 	JP	loc_13E5
+-
+ loc_13B0:
+ 	JEQ	r338, 2, loc_13BA
+ 	JP	loc_13E5
+-
+ loc_13BA:
+ 	JEQ	r339, 3, loc_13C4
+ 	JP	loc_13E5
+-
+ loc_13C4:
+ 	JEQ	r340, 6, loc_13CE
+ 	JP	loc_13E5
+-
+ loc_13CE:
+ 	JEQ	r341, 8, loc_13D8
+ 	JP	loc_13E5
+-
+ loc_13D8:
+ 	JEQ	r342, 8, loc_13E2
+ 	JP	loc_13E5
+-
+ loc_13E2:
+ 	JP	loc_186C
+ 
+ loc_13E5:
+ 	JEQ	r337, 2, loc_13EF
+ 	JP	loc_1424
+-
+ loc_13EF:
+ 	JEQ	r338, 2, loc_13F9
+ 	JP	loc_1424
+-
+ loc_13F9:
+ 	JEQ	r339, 5, loc_1403
+ 	JP	loc_1424
+-
+ loc_1403:
+ 	JEQ	r340, 11, loc_140D
+ 	JP	loc_1424
+@@ -2213,15 +2213,15 @@
+ loc_184C:
+ 	MOVI	r375, 194
+ 	JP	loc_194A
+-
+ loc_1854:
+ 	MOVI	r375, 196
+ 	JP	loc_194A
+-
+ loc_185C:
+ 	MOVI	r375, 228
+ 	JP	loc_194A
+-
++loc_1863:
++	MOVI	r375, 238
++	JP	loc_194A
+ loc_1864:
+ 	MOVI	r375, 239
+ 	JP	loc_194A

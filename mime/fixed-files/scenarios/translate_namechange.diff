@@ -1,0 +1,72 @@
+--- a/Z0000.ASM	2024-10-06 17:27:43.769182100 +0200
++++ b/Z0000.ASM	2024-10-07 00:48:29.593298000 +0200
+@@ -93,7 +93,7 @@
+ 	CMD0F	0
+ 	BLIT1	0x0000, 640, 400, 0x0000, 1
+ 	TXTCOL	1, 0
+-	PRINT2	0x0656, "　　　　　　イーグル"
++	DSPS	0x0662, r0	; print player name directly (was a hardcoded PRINT2 instruction before)
+ 	MOVI	r18, 0
+ 	JEQ	r18, 0, loc_02B3
+ 	JP	loc_02BB
+@@ -121,7 +121,8 @@
+ 	CMD2A
+ 	MOVI	r25, 3
+ 	MOVI	r38, 1
+-	MOVI	r7, 4
++	MOVI	r7, 0xC008	; bit 15 enables ASCII support, bit 14 enables length detection
++	PNAMDEL	; special call to calculate the actual length of the player's predefined name
+ 	WAIT	1
+ 	PORTA4	0
+ 	MOVI	r53, 0
+@@ -139,7 +140,6 @@
+ 	CMD60
+ 	CMD28
+ 	JP	loc_05D9
+-
+ loc_0338:
+ 	WAIT	4
+ 	CMD27
+@@ -501,18 +501,18 @@
+ 	JEQ	r18, 14, loc_06B9
+ 	JEQ	r18, 15, loc_06D2
+ loc_06A8:
+-	JEQ	r7, 4, loc_06B5
+-	PNAMADD
+-	ADDI	r7, 1
++	PNAMADD	; also increases r7, stores result (0 = fail, 1 = success) in r55
++	JEQ	r55, 0, loc_06CC
++
+ loc_06B5:
+ 	CMD28
+ 	JP	loc_0338
+ 
+ loc_06B9:
+-	JEQ	r7, 0, loc_06CC
++	PNAMDEL	; also decreases r7, stores result (0 = fail, 1 = success) in r55
++	JEQ	r55, 0, loc_06CC
+ 	SFXFM	2
+-	SUBI	r7, 1
+-	PNAMDEL
++
+ 	JP	loc_06B5
+ 
+ loc_06CC:
+@@ -520,7 +520,7 @@
+ 	JP	loc_06B5
+ 
+ loc_06D2:
+-	JEQ	r7, 0, loc_06CC
++	JEQ	r7, 0x8000, loc_06CC	; check against length == 0, but has to take the "ASCII support" bit into account
+ 	SFXFM	1
+ 	MOVI	r38, 0
+ 	MOVI	r394, 0
+@@ -616,7 +616,7 @@
+ 	JP	loc_080D
+ 
+ loc_07E4:
+-	JEQ	r3, 0x6382, loc_07EE
++	JEQ	r3, 0x0044, loc_07EE	; check for ASCII 'D' (was originally checking for 8263, i.e. full-width 'D')
+ 	JP	loc_080D
+ 
+ loc_07EE:

@@ -1,0 +1,18 @@
+--- a/A201B.ASM	2024-10-10 21:14:05.012532500 +0200
++++ b/A201B.ASM	2024-10-10 23:11:16.831312700 +0200
+@@ -1551,7 +1551,6 @@
+ 	BTST	r22, 7
+ 	JP	loc_2471
+ 	JP	loc_2455
+-
+ loc_2471:
+ 	CMD29
+ 	CMD0F	2
+@@ -1559,6 +1558,7 @@
+ 	CMD20	3
+ 	IMGLD	0x0010, 0x0000, "X0210"
+ 	IMGLD	0x0011, 0x0000, "X0211"
++	MOVI	r298, 1		; [bugfix] change Eagle's title to "Knight"
+ 	MOVI	r16, 10
+ 	MOVR	r16, r21
+ 	IMGLD	0x0012, 0x3C2A, "X0000"

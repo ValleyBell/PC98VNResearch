@@ -1,0 +1,104 @@
+--- a/A101F.ASM	2024-10-23 23:24:47.440000000 +0200
++++ b/A101F.ASM	2025-03-18 00:59:06.684893000 +0100
+@@ -144,12 +144,10 @@
+ 	CALL	sub_08CD
+ 	CALL	sub_2904
+ 	JP	loc_00F5
+-
+ loc_030D:
+ 	CALL	sub_08CD
+ 	CALL	sub_2904
+ 	JP	loc_00F5
+-
+ loc_0316:
+ 	CALL	sub_08CD
+ 	CALL	sub_2904
+@@ -165,11 +163,13 @@
+ 	BLIT2	0x0024, 96, 96, 0x11A2
+ 	JEQ	r299, 125, loc_0357
+ 	JEQ	r299, 130, loc_0360
++	CALL	uloc_1140	; [BUGFIX] jump to Suzu's "story counter 120" dialogue
++	CALL	sub_2904
++	JP	loc_00F5
+ loc_0357:
+ 	CALL	sub_132F
+ 	CALL	sub_2904
+ 	JP	loc_00F5
+-
+ loc_0360:
+ 	CALL	sub_1428
+ 	CALL	sub_2904
+--- a/A700A.ASM	2024-10-23 23:24:53.100000000 +0200
++++ b/A700A.ASM	2025-03-18 00:19:20.997697300 +0100
+@@ -338,13 +338,13 @@
+ 	JEQ	r45, 1, loc_090A
+ 	CMD1F	9
+ loc_090A:
++	CALL	story_set120	; [BUGFIX] update story flags to at least 120
+ 	MOVI	r44, 65535
+ 	MOVI	r13, 7
+ 	MOVI	r14, 7
+ 	MOVI	r12, 0
+ 	MOVI	r15, 12
+ 	JP	loc_3E9E
+-
+ loc_0926:
+ 	CMD20	9
+ 	IMGLD	0x0012, 0x3C2A, "X0000"
+@@ -371,31 +371,31 @@
+ 	MOVI	r15, 7
+ 	JP	loc_3E87
+ 
+-uloc_09C1:	; unused
+-	CMD20	9
+-	IMGLD	0x0012, 0x3C2A, "X0000"
+-	MOVI	r11, 8
+-	IMGLD	0x0010, 0x0000, "X02C0"
+-	IMGLD	0x0011, 0x0000, "X02C1"
+-	MOVI	r16, 15
+-	MOVR	r16, r21
+-	TXTCOL	4, 6
+-	IMGLD	0x0100, 0x0000, "X0100"
+-	PRINT2	0x0D29, "無迷宮"
+-	CMD0F	2
+-	BLIT1	0x642A, 112, 17, 0x19A5, 2
+-	TXTCOL	4, 6
+-	PRINT2	0x19A5, "１２Ｆ　無回廊"
+-	TXTCOL	1, 0
+-	JEQ	r45, 1, uloc_0A40
+-	CMD1F	9
+-uloc_0A40:
+-	MOVI	r44, 65535
+-	MOVI	r13, 7
+-	MOVI	r14, 7
+-	MOVI	r12, 0
+-	MOVI	r15, 12
+-	JP	loc_3E9E
++;uloc_09C1:	; unused
++;	CMD20	9
++;	IMGLD	0x0012, 0x3C2A, "X0000"
++;	MOVI	r11, 8
++;	IMGLD	0x0010, 0x0000, "X02C0"
++;	IMGLD	0x0011, 0x0000, "X02C1"
++;	MOVI	r16, 15
++;	MOVR	r16, r21
++;	TXTCOL	4, 6
++;	IMGLD	0x0100, 0x0000, "X0100"
++;	PRINT2	0x0D29, "無迷宮"
++;	CMD0F	2
++;	BLIT1	0x642A, 112, 17, 0x19A5, 2
++;	TXTCOL	4, 6
++;	PRINT2	0x19A5, "１２Ｆ　無回廊"
++story_set120:
++	JLT	r299, 120, ss120_set
++	JP	ss120_ret
++ss120_set:	; Note: We need to only set *some* of the flags to not break the state of the "story >= 75" side quests.
++	MOVI	r107, 120	; Noah's Bar
++	MOVI	r131, 120	; Lady of the Black Snake
++	MOVM	r110, r119, 120	; floor 12F locations (optional due to dialogue fallback, but let's be strict here)
++	MOVI	r299, 120	; global story counter
++ss120_ret:
++	RET
+ 
+ loc_0A5C:
+ 	CMD0F	2

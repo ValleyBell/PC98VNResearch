@@ -195,7 +195,6 @@ Commands
 	The function returns as soon as either a key is pressed or the mouse gets moved.
 	Input:
 	- register 38 - mode? (checked for 0, 1)
-		mode 1/3 will show the list of saved games
 	- register 25 - ?? (mode 0 only)
 	- register 26 - ?? (mode 0 only)
 	Output:
@@ -224,6 +223,11 @@ Commands
 2A CMD2A - set mouse cursor image
 	Input:
 	- register 26 - cursor image ID (0..4)
+		0 = sword
+		1 = hand
+		2 = talk
+		3 = magnifying glass
+		4 = trash can
 	no parameters
 	This calls INT 68h, routine AH=0Bh with parameter AL = [register 26]
 2B BGMPLAY - play music
@@ -237,7 +241,7 @@ Commands
 2D CMD2D - ??
 	2 bytes - register ID 1
 	2 bytes - register ID 2
-	This calls INT 68h, routine AH=6 with parameters BX = [register of 1st parameter], DX = [register of wnd parameter].
+	This calls INT 68h, routine AH=6 with parameters BX = [register of 1st parameter], DX = [register of 2nd parameter].
 2E MAPWRT - write map data
 	2 bytes - register ID for map X position
 	2 bytes - register ID for map Y position

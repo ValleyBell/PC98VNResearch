@@ -1,0 +1,164 @@
+--- a/BATTLE_1.ASM	2024-07-24 16:14:34.886491600 +0200
++++ b/BATTLE_1.ASM	2024-10-10 21:11:00.915372100 +0200
+@@ -756,13 +756,13 @@
+ 	JEQ	r343, 65535, loc_0C61
+ 	MOVR	r343, r371
+ 	JP	loc_0DE9
+-
+ loc_0D72:
+ 	MOVI	r357, 1
+ 	CALL	sub_5300
+ 	JEQ	r345, 65535, loc_0C61
+ 	MOVR	r345, r362
+-	JEQ	r362, 6, loc_0DE9
++	JEQ	r362, 5, loc_0DE9	; selected "Sanpa Shikou" spell - skip character selection (heals everyone)
++	JEQ	r362, 6, loc_0DE9	; selected "Inryuu Meppa" spell - skip character selection (heals everyone)
+ 	CALL	sub_4376
+ 	PRINT2R	r335, "忍術を唱える相手を選択してください。"
+ 	CALL	sub_4B38
+@@ -2011,22 +2011,22 @@
+ 	CMD29
+ 	SFXFM	29
+ 	WAIT	60
+-	MOVR	r368, r341
+-	JEQ	r341, 1, loc_20F1
+-	JEQ	r341, 2, loc_20F9
+-	JEQ	r341, 3, loc_2101
+-	JEQ	r341, 4, loc_2109
++
++	; [BUGFIX] make it revive+heal all party members instead of only a single target
++
++
++
+ loc_20F1:
+ 	ADDI	r4342, 30
+-	JP	loc_210E
++
+ 
+ loc_20F9:
+ 	ADDI	r4363, 30
+-	JP	loc_210E
++
+ 
+ loc_2101:
+ 	ADDI	r4384, 30
+-	JP	loc_210E
++
+ 
+ loc_2109:
+ 	ADDI	r4405, 30
+--- a/Z0002.ASM	2024-07-27 07:42:14.769115100 +0200
++++ b/Z0002.ASM	2024-08-10 13:37:31.773370500 +0200
+@@ -3685,7 +3685,7 @@
+ 	JEQ	r41, 1, loc_3275
+ 	JEQ	r41, 2, loc_32F2
+ 	JEQ	r41, 3, loc_3385
+-	JEQ	r41, 4, loc_3472
++	JEQ	r41, 4, loc_3487	; [BUGFIX] allow "Sanpa Shikou" to be used (was originally jumping to loc_3472, i.e. "unuseable")
+ 	JEQ	r41, 5, loc_3418
+ 	JP	loc_3472
+ 
+@@ -3715,9 +3715,9 @@
+ loc_30AC:
+ 	ADDR	r4565, r4363
+ 	CMPR	r4364, r4363
+-	JEQ	r55, 1, loc_30BD
+-loc_30BD:
++	JEQ	r55, -1, loc_30BD	; [BUGFIX] heal Tear by specified amount of HP instead of just healing fully
+ 	MOVR	r4364, r4363
++loc_30BD:
+ 	ADDR	r4565, r4384
+ 	CMPR	r4385, r4384
+ 	JEQ	r55, 1, loc_30D6
+@@ -3758,9 +3758,9 @@
+ loc_313F:
+ 	ADDR	r4565, r4363
+ 	CMPR	r4364, r4363
+-	JEQ	r55, 1, loc_3150
+-loc_3150:
++	JEQ	r55, -1, loc_3150	; [BUGFIX] heal Tear by specified amount of HP instead of just healing fully
+ 	MOVR	r4364, r4363
++loc_3150:
+ 	ADDR	r4565, r4384
+ 	CMPR	r4385, r4384
+ 	JEQ	r55, 1, loc_3169
+@@ -3882,7 +3882,7 @@
+ 	JP	loc_3472
+ 
+ loc_32FD:
+-	MOVI	r4565, 100
++	MOVI	r4565, 50	; [BUGFIX] Insui Shourai: The spell originally restored 100 HP instead of 50.
+ 	MOVI	r4566, 5
+ 	CMPR	r4566, r4386
+ 	JEQ	r55, 1, loc_3321
+@@ -3899,9 +3899,9 @@
+ loc_333A:
+ 	ADDR	r4565, r4363
+ 	CMPR	r4364, r4363
+-	JEQ	r55, 1, loc_334B
+-loc_334B:
++	JEQ	r55, -1, loc_334B	; [BUGFIX] heal Tear by specified amount of HP instead of just healing fully
+ 	MOVR	r4364, r4363
++loc_334B:
+ 	ADDR	r4565, r4384
+ 	CMPR	r4385, r4384
+ 	JEQ	r55, 1, loc_3364
+@@ -3925,8 +3925,8 @@
+ 	JP	loc_3472
+ 
+ loc_3390:
+-	MOVI	r4565, 500
+-	MOVI	r4566, 100
++	MOVI	r4565, 100	; [BUGFIX] Shuuha Shijin: restore 100 HP instead of 500
++	MOVI	r4566, 10	; [BUGFIX] Shuuha Shijin: The spell originally used 100 MP, instead of 10.
+ 	CMPR	r4566, r4386
+ 	JEQ	r55, 1, loc_33B4
+ 	JEQ	r55, 65535, loc_3472
+@@ -3942,9 +3942,9 @@
+ loc_33CD:
+ 	ADDR	r4565, r4363
+ 	CMPR	r4364, r4363
+-	JEQ	r55, 1, loc_33DE
+-loc_33DE:
++	JEQ	r55, -1, loc_33DE	; [BUGFIX] heal Tear by specified amount of HP instead of just healing fully
+ 	MOVR	r4364, r4363
++loc_33DE:
+ 	ADDR	r4565, r4384
+ 	CMPR	r4385, r4384
+ 	JEQ	r55, 1, loc_33F7
+@@ -3970,6 +3970,7 @@
+ loc_3423:
+ 	MOVI	r4565, 500
+ 	MOVI	r4566, 100
++loc_342D:
+ 	CMPR	r4566, r4386
+ 	JEQ	r55, 1, loc_33B4
+ 	JEQ	r55, 65535, loc_3472
+@@ -4003,17 +4004,16 @@
+ 	CALL	sub_20C6
+ 	JP	loc_2512
+ 
+-uloc_3487:	; unused
+-	MOVI	r34, 0
+-	JP	loc_269D
+-
+-uloc_348F:	; unused
+-	MOVI	r34, 1
+-	JP	loc_269D
+-
+-uloc_3497:	; unused
+-	MOVI	r34, 2
+-	JP	loc_269D
++loc_3487:
++	BTST	r4394, 4	; spell enabled?
++	JP	loc_3492	; yes - jump
++	JP	loc_3472
++
++loc_3492:
++	MOVI	r4565, 30	; restore 30 HP
++	MOVI	r4566, 50	; use 50 MP
++	JP	loc_342D
++
+ 
+ uloc_349F:	; unused
+ 	MOVI	r34, 3

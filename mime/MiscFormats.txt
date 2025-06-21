@@ -20,9 +20,9 @@ r15 - current floor
 	13 = "13F"
 	14 = character building maze
 
-r26 - currently mouse cursor (0..4)
+r26 - current mouse cursor (0..4)
 	0 = sword
-	1 = hand
+	1 = hand (unused ingame)
 	2 = talk
 	3 = magnifying glass
 	4 = trash can

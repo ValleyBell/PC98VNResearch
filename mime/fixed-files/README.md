@@ -2,6 +2,7 @@
 
 This folder contains a bunch of fixed files for the game.
 
+- [scenarios](scenarios/README.md] - fixes and improvements for game scripts
 - [Z1000.DAT](Z1000.DAT) - a fix for the "new game" file of the MIME v2 update
   - When they added more passable walls for the v2 update, they broke the 1F maze map at coordinate (1,15). You can leave the map there by going south with no way to return.
   - You can also leave the map in 3F at coordinate (14,15).

@@ -1,0 +1,42 @@
+--- a/A405_.ASM	2024-07-27 07:42:10.869109700 +0200
++++ b/A405_.ASM	2024-09-22 19:54:14.782864200 +0200
+@@ -396,11 +396,11 @@
+ 	CMD29
+ 	CMD0F	2
+ 	BLIT1	0x0030, 256, 96, 0x5A18, 2
+-	CALL	sub_1C10
+-	MOVI	r375, 54
+-	CALL	sub_2DD3
+-	CALL	sub_1C10
+-	JEQ	r55, 1, loc_0CA3
++	BTST	r174, 15	; check that we completed the "broken boy doll" event
++	JP	loc_0CA3	; bit set - requirement not met
++	;JP	loc_086C	; bit clear - continue
++
++loc_086C:
+ 	CMD0F	2
+ 	BLIT1	0x5A18, 256, 96, 0x0030, 1
+ 	TALKDGN	"【エルデリカ】「そう言えば、ティア‥‥灰迷宮で『壊れた男の子の人形』を拾ったでしょ？」"
+--- a/A607_.ASM	2024-09-22 20:55:03.166816400 +0200
++++ b/A607_.ASM	2024-09-22 21:31:47.688427000 +0200
+@@ -402,8 +402,8 @@
+ 	CMD0F	2
+ 	BLIT1	0x0030, 256, 96, 0x5A18, 2
++	BCLR	r174, 15	; set "got boy doll" flag
+ 	MOVI	r167, 61
+ 	JP	loc_1D19
+-
+ loc_0946:
+ 	IMGLD	0x0012, 0x0024, "WA004"
+ 	CMD0F	2
+@@ -570,9 +570,9 @@
+ 	CMD29
+ 	CMD0F	2
+ 	BLIT1	0x0030, 256, 96, 0x5A18, 2
++	BCLR	r174, 15	; set "got boy doll" flag
+ 	MOVI	r167, 61
+ 	JP	loc_1D19
+-
+ loc_0D4A:
+ 	IMGLD	0x0012, 0x0024, "WA004"
+ 	CMD0F	2

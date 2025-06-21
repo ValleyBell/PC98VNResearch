@@ -1,0 +1,11 @@
+--- a/Z0001.ASM	2024-10-23 23:24:55.080000000 +0200
++++ b/Z0001.ASM	2024-12-21 18:35:43.297540900 +0100
+@@ -5589,7 +5589,7 @@
+ 	JP	loc_3F57
+ 
+ loc_3F50:
+-	JEQ	r14, 2, loc_4629
++	JEQ	r14, 6, loc_4629	; [BUGFIX] fix trigger location of character build question WN-3
+ loc_3F57:
+ 	JEQ	r13, 0, loc_3F61
+ 	JP	loc_3F68

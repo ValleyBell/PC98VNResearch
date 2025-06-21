@@ -1,0 +1,98 @@
+--- a/BATTLE_1.ASM	2024-07-24 16:14:34.886491600 +0200
++++ b/BATTLE_1.ASM	2024-08-18 21:22:01.148096200 +0200
+@@ -7302,10 +7302,9 @@
+ 	MOVR	r221, r193
+ 	MOVR	r222, r194
+ 	MOVR	r223, r195
+-	MOVI	r274, 0x6583
+-	MOVI	r275, 0x4283
+-	MOVI	r276, 0x4183
+-	MOVI	r277, 23644
++	MOVI	r274, 0x6554	; 'Te'
++	MOVI	r275, 0x7261	; 'ar'
++	MOVI	r276, 0x5C5C	; [end]
+ 	MOVI	r55, 0
+ 	RET
+ 
+@@ -7316,9 +7315,10 @@
+ 	MOVR	r225, r193
+ 	MOVR	r226, r194
+ 	MOVR	r227, r195
+-	MOVI	r274, 0xD195
+-	MOVI	r275, 0xA091
+-	MOVI	r276, 23644
++	MOVI	r274, 0x6548	; 'He'
++	MOVI	r275, 0x7A6E	; 'nz'
++	MOVI	r276, 0x756F	; 'ou'
++	MOVI	r277, 0x5C5C	; [end]
+ 	MOVI	r55, 0
+ 	RET
+ 
+@@ -7329,12 +7329,12 @@
+ 	MOVR	r229, r193
+ 	MOVR	r230, r194
+ 	MOVR	r231, r195
+-	MOVI	r274, 0x4783
+-	MOVI	r275, 0x8B83
+-	MOVI	r276, 0x6683
+-	MOVI	r277, 0x8A83
+-	MOVI	r278, 0x4A83
+-	MOVI	r279, 23644
++	MOVI	r274, 0x6C45	; 'El'
++	MOVI	r275, 0x6564	; 'de'
++	MOVI	r276, 0x796C	; 'ly'
++	MOVI	r277, 0x6163	; 'ca'
++	MOVI	r278, 0x5C5C	; [end]
++	;MOVI	r279, 0x5C5C	; keep number of lines the same, so that the TSVs don't break
+ 	MOVI	r55, 0
+ 	RET
+ 
+--- a/BATTLE_2.ASM	2024-07-24 16:14:34.966491700 +0200
++++ b/BATTLE_2.ASM	2024-07-26 06:15:48.773848400 +0200
+@@ -1685,10 +1685,9 @@
+ 	MOVR	r221, r193
+ 	MOVR	r222, r194
+ 	MOVR	r223, r195
+-	MOVI	r274, 0x6583
+-	MOVI	r275, 0x4283
+-	MOVI	r276, 0x4183
+-	MOVI	r277, 23644
++	MOVI	r274, 0x6554	; 'Te'
++	MOVI	r275, 0x7261	; 'ar'
++	MOVI	r276, 0x5C5C	; [end]
+ 	MOVI	r55, 0
+ 	RET
+ 
+@@ -1699,9 +1698,10 @@
+ 	MOVR	r225, r193
+ 	MOVR	r226, r194
+ 	MOVR	r227, r195
+-	MOVI	r274, 0xD195
+-	MOVI	r275, 0xA091
+-	MOVI	r276, 23644
++	MOVI	r274, 0x6548	; 'He'
++	MOVI	r275, 0x7A6E	; 'nz'
++	MOVI	r276, 0x756F	; 'ou'
++	MOVI	r277, 0x5C5C	; [end]
+ 	MOVI	r55, 0
+ 	RET
+ 
+@@ -1712,12 +1712,12 @@
+ 	MOVR	r229, r193
+ 	MOVR	r230, r194
+ 	MOVR	r231, r195
+-	MOVI	r274, 0x4783
+-	MOVI	r275, 0x8B83
+-	MOVI	r276, 0x6683
+-	MOVI	r277, 0x8A83
+-	MOVI	r278, 0x4A83
+-	MOVI	r279, 23644
++	MOVI	r274, 0x6C45	; 'El'
++	MOVI	r275, 0x6564	; 'de'
++	MOVI	r276, 0x796C	; 'ly'
++	MOVI	r277, 0x6163	; 'ca'
++	MOVI	r278, 0x5C5C	; [end]
++	;MOVI	r279, 0x5C5C	; keep number of lines the same, so that the TSVs don't break
+ 	MOVI	r55, 0
+ 	RET
+ 
