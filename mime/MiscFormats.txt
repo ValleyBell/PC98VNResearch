@@ -194,14 +194,14 @@ The file contains a list of item entries. Each entry is 24h bytes long.
 Pos	Len	Description
 00	02	item ID
 			The ID begins with 0 and is increased by 1 with every entry.
-02	02	flags
-			Bit 1 (0002h) - consumable?
-			Bit 2 (0004h) - key item?
+02	02	flags (unused)
+			Bit 1 (0002h) - consumable
+			Bit 2 (0004h) - key item
 04	14	item name (Shift-JIS string, terminated/padded with backslashes, i.e. byte 5Ch)
 18	02	category (can be 00..07)
 			0 - unused slot
 			1 - consumable (HP/MP/... restoration)
-			2 - single-use item (magic stones and other)
+			2 - special item (magic stones, key items, ...)
 			3 - weapon (right hand)
 			4 - weapon/shield (left hand)
 			5 - armor
@@ -217,15 +217,18 @@ Pos	Len	Description
 			Bit 2 (0004h): Tear
 			Bit 3 (0008h): Eagle
 1E	02	parameter 1
-		category 1/2: status increment value (HP/MP/... depends on sub-type)
+		category 1/2: status increment value (HP/MP/..., depends on sub-type)
+		category 2, sub-type 23: teleport target map position X
 		category 3/7: attack increase
 		category 4/5/6: unused
 20	02	parameter 2
-		category 1/2: ??
+		category 1/2: unused
+		category 2, sub-type 23: teleport target map position Y
 		category 3: unused
 		category 4..7: defense increase
 22	02	parameter 3
-		category 1/2: ??
+		category 1/2: unused
+		category 2, sub-type 23: teleport target map ID
 		category 3..6: unused
 		category 7: agility increase
 

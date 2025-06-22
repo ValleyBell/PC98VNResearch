@@ -8,6 +8,7 @@
 - [Character Building](CharacterBuilding.md) (separate file)
 - [Debug Mode](#debug-mode)
 - [Food and Drinks](#food-and-drinks)
+- [Items](Items.md)
 - [Magic Tablet](#magic-tablet)
 - [Maps and locations](Maps.md) (separate file)
 - [Night Safe 777](#night-safe-777)
@@ -476,7 +477,7 @@ The prices are determined by a random number in the range of `[1..226]`.
 |  219  | Face Mask             | |
 |  220  | Ribbon                | |
 |  268  | Agile Piercings       | |
-|  252  | Hero's Cloak          | |
+|  252  | Coin of Power         | |
 |   74  | Wind Rune             | |
 |   77  | Water Rune            | |
 |   80  | Fire Rune             | |
