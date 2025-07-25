@@ -59,6 +59,27 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - select "start from beginning" in the main menu
     - You can also do the search/replace process in the PC-98 emulator's RAM directly while in the main menu. In this case, no decryption is necessary.
   - Note: The game seems a bit buggy and corrupts the main save file after the staff roll finishes the 2nd time, making the game crash while loading the main menu.
+- Foresight Dolly
+  - skip name selection screen
+    - in `NAMEIN.EXE`, search for `E8 58 01 E8 0A 00`
+    - overwrite these (and following) bytes with `58 58 B0 00 A2 97 0C E8 A3 FF 33 C0 CB`
+    - This overwrites the function that draws the main screen (dimmed background + letters). It instead sets the default name and returns.
+    - Assenbly code:
+
+      ```
+      CS:02BD 58          POP     AX          ; return from CS:02BD
+      CS:02BE 58          POP     AX          ; return from CS:0013
+      CS:02BF B0 00       MOV     AL, 0
+      CS:02C1 A2 97 0C    MOV     0C97h, AL   ; set first byte of manually entered name to 0
+      CS:02C4 E8 A3 FF    CALL    026Ah       ; CopySetOrDefaultName
+      CS:02C7 33 C0       XOR     AX, AX      ; success return code
+      CS:02C9 CB          RETF                ; return to parent executable
+      ```
+
+  - skip from name selection to ending
+    - in `PROCON.EXE`, search for `E8 3B 00 E8 41 00`
+    - overwrite the first 2 bytes with `EB 0C`
+    - Note: It is recommend to skip the name selection screen for a nicer screen transition.
 - Frontier
   - jump to ending from main menu
     - Notes:
@@ -306,6 +327,53 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
   - jump to ending from main menu
     - while at the menu selection screen (file `A0_000.SO3`), search for `A:\START.SO3` and overwrite it with `A:\END.SO3` + a `00` byte  
       This will jump directly to the credits screen after confirming the character name.
+- Sorcer Kingdom
+  - jump to ending from title menu
+    - while at the initial menu screen (file `SELECT.MES`), search for `sopn_000.mes1` and overwrite it with `end_001.mes1` + a `00` byte (The scenario list is stored in ´START.MES`.)  
+      This will jump directly to the ending scenes.
+    - TODO: This will get stuck.
+  - misc script info:
+    - known commands:
+      - `L1` - load register?
+      - `L2` - load?
+      - `L4` - conditional load/conditional jump?
+      - `J2` - load MES script as subroutine
+      - `W5` - load PDT graphics file
+      - `M0` - load+play music
+      - `M1` - fade music out
+      - `M2` - stop music
+      - `M3` - dummy
+      - `M4` - start music
+      - `R` - return from script
+    - list of valid 1-byte script commands:
+      - byte 00h, byte 01h, byte 02h, byte 03h, byte 04h, `R`
+    - list of valid 2-byte script commands:
+
+      ```
+      A0 D0 F0 I0 J0 L0 M0 T0 U0
+      A1 D1 F1 I1 J1 L1 M1 T1 U1 W1
+      A2       I2 J2 L2 M2    U2 W2
+      A3       I3 J3 L3 M3    U3 W3
+      A4    F4 I4    L4 M4       W4
+      A5    F5 I5    L5 M5    U5 W5
+      A6    F6                U6 W6
+            F7                U7 W7
+            F8                U8 W8
+            F9                U9 W9
+            FA                   WA
+            FB                UB WB
+            FC                   WC
+            FD                UD WD
+            FE                UE WE
+                                 WF
+            FG                   WG
+            FH                UH WH
+            FI                UI WI
+            FJ                UJ WJ
+            FK                UK WK
+                                 WL
+      ```
+
 - Street Mahjong 2
   - [StreetMahjong2_Patches.7z](StreetMahjong2_Patches.7z) contains a partial disassembly + various tiny patches for the main executable
     - `JANTAKU+BOB.EXE` - always trigger "Bob" easter egg cutscene before a match
