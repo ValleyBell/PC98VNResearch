@@ -11,6 +11,7 @@
   It was a byproduct of me trying to figure out where the one untitled song is used.
   (It is used in S05\_3, S09\_8 and S10\_4.)
 - [PM2_SaveFormat.txt](PM2_SaveFormat.txt) - Princess Maker 2 save game format description
+- [rs-bnd_packer.py](rs-bnd_packer.py) - archive (un-)packer for `.BND` archives used by games published by Right Stuff [^1]
 - [twilight_packer.py](twilight_packer.py) - archive (un-)packer for archives used by the game "Twilight", published by Studio Twinkle [^1]
   - [twilight_decompress.py](twilight_decompress.py) - original Python port of the Twilight decompression code
 - Twilight `TW.EXE` disassembly: [ASM file](TW.asm) / [IDB database](TW.idb)

@@ -79,6 +79,7 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
   - skip from name selection to ending
     - in `PROCON.EXE`, search for `E8 3B 00 E8 41 00`
     - overwrite the first 2 bytes with `EB 0C`
+    - Important: The game features multiple endings and this will result in the bad ending.
     - Note: It is recommend to skip the name selection screen for a nicer screen transition.
 - Frontier
   - jump to ending from main menu
