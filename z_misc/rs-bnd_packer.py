@@ -32,12 +32,16 @@ TOC data:
 
 Notes:
 - All values are stored in Little Endian.
-- Files may be LZSS-compressed and begin with a 4-byte value indicating the decompressed file size.
+- [Forsight Dolly specific] Files may be LZSS-compressed and begin with a 4-byte value indicating the decompressed file size.
   The compressed data follows right after that.
   Whether or not the file is compressed depends on what the game expects for a specific BND file. There is no flag that indicates compression.
   Files that need decompression are internally loaded using a "CALL 27D0h".
   LZSS decompression with: lzss-tool -a o4 -n 0x00
-- When loading files from BND archives, the internal file numbering starts with 0 for the first file. (size at offset 02h)
+  Outside of BND archives, compressed files have an SLD extension.
+- [Revery: Izanai no Masuishō specific] Files may be compressed using a custom LZ-style compression that is different from LZSS.
+- Internal file numbering:
+  - Foresight Dolly: The internal file numbering starts with 0 for the first file.
+  - Reverie: The internal file numbering starts with 1 for the first file. ID 0 is reserved for loading from non-archive files.
 - Due to how the size calculation works, the maximum size of files stored inside the archive is 0FC00h bytes. (size 0FC00h will overflow to 0 during the padding calculation)
 
 """

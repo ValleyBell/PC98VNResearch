@@ -25,6 +25,7 @@ A list of various games and their known engine versions can be found in [game-li
 
 ## see also
 
+- [list of file compression algorithms](compression-list.md)
 - [unsorted tools/documentation](z_misc/README.md)
 - [various small game hacks](z_hacks/README.md)
 
