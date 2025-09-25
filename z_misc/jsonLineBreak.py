@@ -1,0 +1,501 @@
+#!/usr/bin/env python3
+import sys
+import typing
+import argparse
+import json
+import hyphen	# requires pip package "PyHyphen"
+
+config = {}
+var_dict = {
+	"words": [
+		#{"key": "{c}", "length": 8},
+	]
+}
+hyp_en = None
+
+def load_json(fn_in: str) -> dict:
+	with open(fn_in, "rt", encoding="utf-8") as f:
+		return json.load(f)
+
+def write_json(fn_out: str, data: dict) -> None:
+	with open(fn_out, "wt", encoding="utf-8") as f:
+		json.dump(data, f, indent=2, ensure_ascii=False)
+	return
+
+def get_cjk_char_width(c: str) -> int:
+	if len(c) == 2 and c[1] == '\uF87F':
+		return 1	# half-width ASCII mirror and Katakana
+	# This matches the usual PC-98 font handling better.
+	ccode = ord(c)
+	if (ccode < 0x80) or (ccode == 0x00A5):	# ASCII or Yen sign
+		return 1
+	elif ccode == 0xF87F:
+		return 0	# meta-code for special character combinations
+	elif (ccode >= 0xFF61) and (ccode <= 0xFF9F):	# halfwidth Katakana
+		return 1
+	else:
+		return 2	# everything else should be considered 2 characters wide
+
+def do_textsize_check(tb_size, line_id, lines, text_size, xpos):
+	global config
+	
+	(tb_width, tb_height) = tb_size
+	if config.textsize_check >= 1:
+		(xsize, ysize) = text_size
+		if len(lines) > 0 and xpos <= 0:
+			ysize -= 1	# ignore last line when empty
+		if xsize <= tb_width and ysize <= tb_height:
+			return
+		print(f"{line_id}: New text ({xsize}x{ysize}) " \
+				f"exceeds text box! (text box: {tb_width}x{tb_height})")
+	else:
+		return
+	
+	# show line data
+	#print(f"    old: {old_txt}")
+	print(f"    text: {lines}")
+	return
+
+def split_keep(text: str, sep: str) -> list:
+	parts = text.split(sep)
+	for idx in range(len(parts) - 1):
+		parts[idx] += sep
+	return parts
+
+TXTFLAG_SPACE		= 0x01	# character is a space
+TXTFLAG_LINE_BREAK	= 0x02	# line break after this character
+TXTFLAG_SPC_BREAK	= 0x04	# special line break character
+TXTFLAG_NO_BREAK	= 0x08	# prevent line break at this character
+TXTFLAG_LWORD_BEGIN	= 0x10	# "long word" can be a concatenated word with trailing punctiation ("abc-def.")
+TXTFLAG_LWORD_END	= 0x20
+TXTFLAG_CWORD_BEGIN	= 0x40	# "core word" is just a single word that consists only of alphabet letters
+TXTFLAG_CWORD_END	= 0x80
+
+def parse_text(text: str) -> list:
+	global config
+	global var_dict
+	
+	# split text data into "tokens", with annotated width/height/...
+	ptext = []
+	state_space = 0x01
+	state_alpha = 0x00
+	pos = 0
+	while pos < len(text):
+		text_var = None
+		for tv in var_dict["words"]:
+			tvkey = tv["key"]
+			tkvlen = len(tvkey)
+			if text[pos : pos+tkvlen] == tvkey:
+				text_var = tv
+				break
+		
+		chrlen = 1
+		chrwidth = 0
+		flags = 0x00
+		state_space = (state_space << 1) & 0x33
+		state_alpha = (state_alpha << 1) & 0x03
+		if text_var is not None:
+			chrlen = len(text_var["key"])
+			chrwidth = text_var["length"]
+			# afterwards, we process it as a normal "word" (including line splitting etc.)
+			flags |= (TXTFLAG_CWORD_BEGIN | TXTFLAG_CWORD_END)
+			state_space |= 0x10
+		elif text[pos] == '\t':	# tab
+			chrwidth = 8
+			state_space |= 0x01
+		elif text[pos] in ['\n', '\r']:	# new line
+			chrwidth = 0
+			flags |= TXTFLAG_LINE_BREAK
+			state_space |= 0x20	# enforce LWORD_END
+		elif ord(text[pos]) >= 0x20:
+			ccstr = text[pos]
+			if (pos + 1 < len(text)) and (text[pos + 1] == '\uF87F'):
+				ccstr += text[pos + 1]
+				chrlen += 1
+			
+			if ccstr in "\u201C\u201D\u2018\u2019":
+				if config.quote_mode == 0:
+					chrwidth = 2	# in mode 0, they will be full-width
+				else:
+					chrwidth = 1	# the "reinsert" script will convert those to half-width ASCII
+			#elif ccstr == "\u2026":
+			#	chrwidth = 3	# the "reinsert" script will convert this to "..."
+			else:
+				chrwidth = get_cjk_char_width(ccstr)
+				if ccstr == '[':
+					pos2 = text.find(']', pos + 1)
+					if (pos2 >= 0) and (pos2 - pos) == 5:
+						bracket_txt = text[pos+1 : pos2]
+						try:
+							ccode = int(bracket_txt, 0x10)
+							if ccode >= 0x00 and ccode <= 0xFF:
+								# half-width letters
+								chrwidth = 1
+								chrlen = (pos2 + 1) - pos
+							elif ccode >= 0x8140 and ccode <= 0xEFFC:
+								# full-width letters
+								chrwidth = 2
+								chrlen = (pos2 + 1) - pos
+						except ValueError:
+							pass
+			
+			state_space |= 0x01 if ccstr.isspace() else 0x10
+			if ccstr.isalpha():
+				state_alpha |= 0x01
+			#if ccstr == '】':
+			#	# Shift-JIS closing bracket (817A): special code for "person name END"
+			#	flags |= (TXTFLAG_SPC_BREAK | TXTFLAG_LWORD_END)
+		
+		if (state_space & 0x01):
+			flags |= TXTFLAG_SPACE
+			flags |= TXTFLAG_NO_BREAK	# prevent line breaks before spaces
+		if (state_space & 0x03) == 0x02:	# transition space -> non-space
+			flags |= TXTFLAG_LWORD_BEGIN
+		elif (state_space & 0x30) == 0x20:	# transition non-space -> space
+			ptext[-1]["flags"] |= TXTFLAG_LWORD_END
+		if state_alpha == 0x01:
+			flags |= TXTFLAG_CWORD_BEGIN
+		elif state_alpha == 0x02:
+			ptext[-1]["flags"] |= TXTFLAG_CWORD_END
+		
+		if (flags & (TXTFLAG_LINE_BREAK | TXTFLAG_SPC_BREAK)):
+			state_space = 0x01	# enforce LWORD_BEGIN at next letter/control character
+		
+		ptext.append({
+			"data": text[pos : pos+chrlen],
+			"pos": pos,
+			"width": chrwidth,
+			"flags": flags,
+		})
+		pos += chrlen
+	
+	state_space = (state_space << 1) & 0x33
+	state_alpha = (state_alpha << 1) & 0x03
+	if (state_space & 0x30) == 0x20:	# transition non-space -> space
+		ptext[-1]["flags"] |= TXTFLAG_LWORD_END
+	if state_alpha == 0x02:
+		ptext[-1]["flags"] |= TXTFLAG_CWORD_END
+	return ptext
+
+def extract_word_tokens(tokens: list, startIdx: int, flagBegin: int, flagEnd: int) -> tuple:
+	beginIdx = startIdx
+	while beginIdx > 0:
+		if tokens[beginIdx]["flags"] & flagBegin:
+			break
+		beginIdx -= 1
+	
+	endIdx = beginIdx
+	while endIdx < len(tokens):
+		if tokens[endIdx]["flags"] & flagEnd:
+			endIdx += 1	# the "END" flag marks the last letter in the word, but we return the index *after* it
+			break
+		endIdx += 1
+	
+	return (beginIdx, endIdx)
+
+def has_alpha(text: str) -> bool:
+	for tchr in text:
+		if tchr.isalpha():
+			return True
+	return False
+
+def add_breaks_to_line(text: str, text_type: str, tbox_size: list, line_id: str) -> tuple:
+	global config
+	global var_dict
+	
+	ptext = parse_text(text)
+	
+	# calculate quick text size for early returns
+	tbox_ybase = 0
+	xpos = 0
+	max_xpos = xpos
+	for (ptid, ptinfo) in enumerate(ptext):
+		xpos += ptinfo["width"]
+		if (ptinfo["flags"] & TXTFLAG_LINE_BREAK):
+			max_xpos = max([xpos, max_xpos])
+			tbox_ybase += 1
+			xpos = 0
+	max_xpos = max([xpos, max_xpos])
+	
+	if tbox_size is not None:
+		(tb_width, tb_height) = tbox_size
+	else:
+		(tb_width, tb_height) = [int(x) for x in config.tbox_size.split("x")]
+	
+	multiline_text = False
+	if text_type == "txt":
+		if tb_height > 1:
+			multiline_text = True	# line breaks may be added to longer text paragraphs
+	
+	# split text data into multiple lines for the TSV
+	line_xbase = 0
+	tbox_ybase = 0
+	xpos = line_xbase
+	max_xpos = xpos
+	lines = [""]
+	# We are trying to insert automatic line breaks intelligently, based on the text box width and word spacing.
+	for (ptid, ptinfo) in enumerate(ptext):
+		chrwidth = ptinfo["width"]
+		flags = ptinfo["flags"]
+		if (flags & TXTFLAG_LINE_BREAK):
+			ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)
+			lines[-1] += ptinfo["data"]
+			xpos += chrwidth
+			max_xpos = max([xpos, max_xpos])
+			
+			# Instead of actually starting a new line by adding a new string to the "lines" variable,
+			# we just "simulate" starting a new line by modifying tbox_ybase.
+			# This way we don't need to care about moving trailing '\n' characters.
+			tbox_ybase -= 1
+			xpos = line_xbase
+			continue
+		
+		can_add_linebreaks = multiline_text and not (flags & TXTFLAG_NO_BREAK)
+		#print(f"CPos {ptinfo['pos']}, XPos {xpos}, Lines {len(lines)}, NextChr: '{ptinfo['data']}' (width {chrwidth}), LastLine: {lines[-1]}")
+		
+		if can_add_linebreaks and (xpos + chrwidth > tb_width):
+			ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)	# make token search below work properly
+			
+			break_mode = None
+			(lwBegIdx, lwEndIdx) = extract_word_tokens(ptext, ptid, TXTFLAG_LWORD_BEGIN, TXTFLAG_LWORD_END)
+			(cwBegIdx, cwEndIdx) = extract_word_tokens(ptext, ptid, TXTFLAG_CWORD_BEGIN | TXTFLAG_LWORD_BEGIN, TXTFLAG_CWORD_END | TXTFLAG_LWORD_END)
+			if (ptext[cwBegIdx]["linepos"][2] > ptext[lwBegIdx]["linepos"][2]) and \
+				(ptext[cwBegIdx - 1]["data"][-1] == '-'):
+				# When the last word ended with a hyphen, assume we can break after that as if it was a space.
+				# (comparing the X position is a harder requirement than comparing the index)
+				lwBegIdx = cwBegIdx
+			lw_lpos = ptext[lwBegIdx]["linepos"][1]	# character position (in *line*) of the beginning of the last "word"
+			lw_xpos = ptext[lwBegIdx]["linepos"][2]	# text X position of the beginning of the last "word"
+			
+			#print(f"    split ({xpos + chrwidth} > {tb_width}), word chr-pos {lw_lpos}, word X-pos {lw_xpos}, maxlen {tb_width*0.75-4}")
+			if config.hyphenation and ((xpos - lw_xpos) > 2):
+				# try doing hyphenation on the current word
+				
+				# The hyphenation library has issues with "concatenated-words" and can crash on them,
+				# so let's just give it the "main" word.
+				phrase = "".join([ptitem["data"] for ptitem in ptext[cwBegIdx : cwEndIdx]])
+				if has_alpha(phrase):	# The phrase *needs* at least one actual letter.
+					if ptid < cwEndIdx:
+						# Line end happens in the middle of the word: just take the position as split point.
+						# The library may split at earlier points to make space for the required hyphen.
+						hyp_split_pos = sum([len(ptitem["data"]) for ptitem in ptext[cwBegIdx : ptid]])
+					else:
+						# Line end happens during punctuation after the word: split point = before last character.
+						hyp_split_pos = len(phrase) - 1
+					
+					#cw_xpos = ptext[cwBegIdx]['linepos'][2]
+					#print(f"Line-1: {lines[-1]}\nPhrase: {phrase}\nWordXPos: {cw_xpos}, XPos: {xpos}, BreakCharPos: {hyp_split_pos}")
+					try:
+						word_hyp = hyp_en.wrap(phrase, hyp_split_pos)
+					except:
+						print(f'Error hyphenating "{phrase}", wrap at <{hyp_split_pos}')
+						word_hyp = []
+					if len(word_hyp) > 1:
+						break_mode = 2	# break using hyphenation
+						hyp_w0pos = ptext[cwBegIdx]["linepos"][1]
+						# determine word split point in phrase
+						rem_phrase = word_hyp[1]
+						for hyp_w1idx in range(cwEndIdx, cwBegIdx, -1):
+							ptitem = ptext[hyp_w1idx - 1]
+							if len(rem_phrase) == 0 or not rem_phrase.endswith(ptitem["data"]):
+								break
+							rem_phrase = rem_phrase[0 : -len(ptitem["data"])]
+						hyp_w1pos = ptext[hyp_w1idx]["linepos"][1]
+			
+			if break_mode is None:
+				# fallback when no hyphenation was used
+				if (lw_lpos <= 0) or lines[-1][:lw_lpos].isspace():
+					# (a) there were no spaces OR
+					# (b) the only spaces were indentation
+					break_mode = 0	# break in the middle of the word
+				elif lw_xpos < (tb_width*0.75 - 4):
+					# the last word is very long (more than 30% of the line)
+					#     (approximating "30%" with "25% + 4 characters" here for better behaviour with short text boxes)
+					break_mode = 0	# break in the middle of the word
+				else:
+					break_mode = 1	# insert a line break at the beginning of the last word (and strip spaces)
+			
+			if break_mode == 0:
+				# (a) there were no spaces OR
+				# (b) the only spaces were indentation OR
+				# (c) the last word is very long (more than 30% of the line)
+				#     (approximating "30%" with "25% + 4 characters" here for better behaviour with short text boxes)
+				# -> just break in the middle of the word
+				#print(f"Line break after: {str(lines)}")
+				lines.append("")	# start new line
+				ptinfo["flags"] |= TXTFLAG_LWORD_BEGIN
+				xpos = line_xbase
+			elif break_mode == 1:
+				# insert a line break at the beginning of the last word (and strip spaces)
+				#print(f"Word-Line break after: {str(lines)}, XPos {xpos} -> {xpos - lw_xpos}")
+				#print(f"Line-Beginning: Word Pos {lw_lpos}, Word XPos {lw_xpos}, \"{lines[-1][:lw_lpos]}\"")
+				rem_line = lines[-1][lw_lpos:]
+				lines[-1] = lines[-1][:lw_lpos]
+				lines.append(rem_line)
+				ptext[lwBegIdx]["flags"] |= TXTFLAG_LWORD_BEGIN
+				for ptMoveId in range(lwBegIdx, ptid):
+					ptlp = ptext[ptMoveId]["linepos"]
+					ptext[ptMoveId]["linepos"] = (len(lines) - 1, ptlp[1] - lw_lpos, ptlp[2] - lw_xpos + line_xbase)
+				xpos = xpos - lw_xpos + line_xbase
+			elif break_mode == 2:
+				rem_line = lines[-1][hyp_w1pos:]
+				lines[-1] = lines[-1][:hyp_w0pos] + word_hyp[0]
+				lines.append(rem_line)
+				lw_lpos = ptext[hyp_w1idx]["linepos"][1]
+				lw_xpos = ptext[hyp_w1idx]["linepos"][2]
+				ptext[hyp_w1idx]["flags"] |= TXTFLAG_LWORD_BEGIN
+				for ptMoveId in range(hyp_w1idx, ptid):
+					ptlp = ptext[ptMoveId]["linepos"]
+					ptext[ptMoveId]["linepos"] = (len(lines) - 1, ptlp[1] - lw_lpos, ptlp[2] - lw_xpos + line_xbase)
+				xpos = xpos - lw_xpos + line_xbase
+		
+		ptinfo["linepos"] = (len(lines) - 1, len(lines[-1]), xpos)	# (line index/Y position, character index, screen X position)
+		lines[-1] += ptinfo["data"]
+		xpos += chrwidth
+		if not (flags & TXTFLAG_SPACE):
+			max_xpos = max([xpos, max_xpos])
+	do_textsize_check((tb_width, tb_height), line_id, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
+	
+	# strip trailing spaces on all lines but the last one
+	for lid in range(len(lines) - 1):
+		lines[lid] = lines[lid].rstrip()
+	return ('\r'.join(lines), (max_xpos, len(lines) - tbox_ybase))
+
+def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
+	is_newline = False
+	last_non_spc = '\x00'
+	last_chr = '\x00'
+	pos = 0
+	keep_next_nl = True
+	while pos < len(text):
+		chrlen = 1
+		cur_chr = text[pos]
+		if cur_chr in ['\n', '\r']:	# new line / scroll line
+			is_newline = True
+		elif ord(cur_chr) >= 0x0020:
+			ccode = None
+			if cur_chr == '[':
+				pos2 = text.find(']', pos + 1)
+				if (pos2 >= 0) and (pos2 - pos) == 5:
+					bracket_txt = text[pos+1 : pos2]
+					try:
+						ccode = int(bracket_txt, 0x10)
+						if ccode >= 0x00 and ccode <= 0xFF:
+							# half-width letters
+							cur_chr = '\x00'
+							chrlen = (pos2 + 1) - pos
+						elif ccode >= 0x8140 and ccode <= 0xEFFC:
+							# full-width letters
+							cur_chr = '\x00'
+							chrlen = (pos2 + 1) - pos
+						else:
+							ccode = None
+						#print(f"Found hex code: text {bracket_txt}, code 0x{ccode:X}, chrlen {chrlen}")
+					except ValueError:
+						pass
+			if ccode is None:
+				keep_next_nl = False	# when the actual text starts, start removing line breaks
+		
+		if is_newline:
+			is_newline = False
+			next_pos = pos + chrlen
+			#print(f"Next: {text[next_pos : next_pos+2]}")
+			if keep_next_nl:
+				pass	# keep at the beginning of the text
+			elif (len(last_non_spc) == 1) and last_non_spc in SENTENCE_END_CHRS:
+				pass	# keep when the last character is a "sentence/paragraph end" character
+			elif (len(last_non_spc) == 1) and (ord(last_non_spc) in range(0x1F000, 0x20000)):
+				pass	# keep when the last character is a symbol or emoji character
+			else:
+				# fuse lines
+				if get_cjk_char_width(text[pos - 1]) == 1:
+					# ASCII text: replace newline with a space
+					text = text[:pos] + " " + text[next_pos:]
+				else:
+					# full-width glyphs: just remove newline
+					text = text[:pos] + text[next_pos:]
+				chrlen = 0
+		last_chr = cur_chr
+		if not cur_chr.isspace():
+			last_non_spc = last_chr
+		pos += chrlen
+	
+	return text
+
+def line_breaks_remove(tsv_data: list) -> list:
+	global config
+	
+	tsv_data = tsv_data.copy()
+	
+	# For each group, clean up the text by removing "\r" followed by more letters (with optional line-end between).
+	SENTENCE_END_CHRS = ".?!\"»’‛”‟›‼⁈❢。？！〉》」』・"
+	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2500, 0x2800)])	# add various symbols
+	SENTENCE_END_CHRS += "".join([chr(x) for x in range(0x2900, 0x2C00)])	# add more arrows
+	SENTENCE_END_CHRS = set(SENTENCE_END_CHRS)	# convert to set for faster lookup
+	for filetexts in tsv_data.values():
+		for txtset in filetexts:
+			if True:	#text_type == "txt":
+				txtset[config.key] = remove_break_from_line(txtset[config.key], SENTENCE_END_CHRS)
+	
+	return tsv_data
+
+def line_breaks_add(tsv_data: list) -> list:
+	global config
+	global hyp_en
+	
+	tsv_data = tsv_data.copy()
+	
+	if config.hyphenation:
+		hyp_en = hyphen.Hyphenator('en_GB')
+	for (filename, filetexts) in tsv_data.items():
+		for (txt_id, txtset) in enumerate(filetexts):
+			line_id = f"{filename}[{txt_id}]"
+			(text, tsize) = add_breaks_to_line(txtset[config.key], "txt", None, line_id)
+			txtset[config.key] = text
+	
+	return tsv_data
+
+def main(argv):
+	global config
+	
+	print("JSON Line-Break Tool")
+	aparse = argparse.ArgumentParser()
+	apgrp = aparse.add_mutually_exclusive_group(required=True)
+	apgrp.add_argument("-r", "--remove", action="store_true", help="remove line breaks")
+	apgrp.add_argument("-a", "--add", action="store_true", help="add line breaks according to text box sizes")
+	aparse.add_argument("-k", "--key", type=str, help="JSON key name of text to modify", default="en")
+	aparse.add_argument("-T", "--tbox-size", type=str, help="text box size in format \"123x456\" (width x height)", default="32x3")
+	aparse.add_argument("-c", "--textsize-check", type=int, help="0 = no check, 1 = check against textbox [default]", default=1)
+	aparse.add_argument("-q", "--quote-mode", type=int, help="mode for slanted quotation marks,\n" \
+			"0 = full-width [default],\n1 = half-width", default=0)
+	aparse.add_argument("-p", "--hyphenation", action="store_true", help="apply hyphenation to words when breaking lines (saves screen space)")
+	aparse.add_argument("in_file", help="input file (.TSV)")
+	aparse.add_argument("out_file", help="output file (.TSV)")
+	
+	config = aparse.parse_args(argv[1:])
+	
+	try:
+		tsv_data = load_json(config.in_file)
+	except IOError:
+		print(f"Error loading {config.in_file}")
+		return 1
+	
+	if config.remove:
+		tsv_out = line_breaks_remove(tsv_data)
+	elif config.add:
+		tsv_out = line_breaks_add(tsv_data)
+	else:
+		print("No mode selected.")
+		return 1
+	
+	try:
+		write_json(config.out_file, tsv_out)
+		print("Done.")
+	except IOError:
+		print(f"Error writing {config.out_file}")
+		return 1
+	return 0
+
+if __name__ == "__main__":
+	sys.exit(main(sys.argv))
+# vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab:

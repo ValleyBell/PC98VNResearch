@@ -1,5 +1,25 @@
 # various unsorted tools and documents
 
+- [jsonLineBreak.py](jsonLineBreak.py) - a tool to insert (and remove) line breaks in JSON text translation files that follow this structure:
+
+  ```json
+  {
+    "abc.txt": [
+      {"en": "This is a pretty long text that needs to be broken down into multiple lines."},
+      {"en": "This is another text."}
+    ],
+    "def.msg": [
+      {"en": "More text."}
+    ]
+  }
+  ```
+
+  Features:
+
+  - specify the text box size via `-T` parameter
+  - warn when the text overflows the text box
+  - optional hyphenation via `-p` parameter (Note: requires "PyHyphen" pip package)
+
 - [uk2DlbUnpack.py](uk2DlbUnpack.py) - `DLB` archive unpacker for the format used by the *AyPio UK2* engine [^1]
 - [dshellDlbUnpack.py](dshellDlbUnpack.py) - `DLB` archive unpacker for the format used by the *Four･Nine D-SHELL* engine [^1]
 - [DragonHalf.txt](DragonHalf.txt) - notes about file formats used by the game "Dragon Half", published by Micro Cabin
