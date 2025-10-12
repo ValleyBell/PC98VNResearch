@@ -48,6 +48,14 @@
 
 [^1]: format documentation is at the top of the source file
 
+# C-Lab Logo
+
+various files extracted from `CLABLOGO.EXE` from the game Rusty
+
+- [CLABLOGO.M](CLABLOGO.M) - logo music, PMD format
+- [CLABLOGO.PPS](CLABLOGO.PPS) - PPS sample for for use with the logo music, contains the speech sample "Copyright by C-Lab Corporation"
+- [CLABLOGO.WAV](CLABLOGO.WAV) - speech sample converted to WAV
+
 ## Hatchake Ayayo-san 2/3
 
 I was helping *danham* from the PC-9800 Series Central Discord server by researching these games a bit.
