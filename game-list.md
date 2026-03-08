@@ -2,7 +2,7 @@
 
 | Game name | Developer | Release | Engine |
 |:----------|:----------|:----------|:----------|
-| [ANGEL<br/>エンジェル](https://vndb.org/v8554) | IDES | 1993-10-01 | Adv98V  Version 1.70.57(R8) | |
+| [ANGEL<br/>エンジェル](https://vndb.org/v8554) | IDES | 1993-10-01 | Adv98V  Version 1.70.57(R8) |
 | [Angel☆Night \~Yamiyo o Kakeru Tenshi-tachi no Monogatari\~<br/>えんじぇる☆ないと ～闇夜を翔ける天使たちの物語～](https://vndb.org/v8646) | Four･Nine | 1996-04-26 | PC-98 D-SHELL v0.92 |
 | [Can Can Bunny Extra<br/>きゃんきゃんバニー　エクストラ](https://vndb.org/v4560) | IDES | 1993-06-25 | Adv98V  Version 1.70.57(R8) |
 | [Can Can Bunny Spirits<br/>きゃんきゃんバニー スピリッツ](https://vndb.org/v6480) | Kirara | 1991-08-10 | Adv for PC-9801V  Version 1.70.39 |
@@ -10,18 +10,18 @@
 | [Custom Mate<br/>カスタムメイト](https://vndb.org/v8834) | IDES | 1993-09-17 | Adv98V  Version 1.70.57(R8) |
 | [Chuushaki: Hirasawa Nurse School<br/>注射器](https://vndb.org/v8633) | AyPio | 1996-07-26 | AyPio UK2 (late version) "DREAM SYSTEM" |
 | [Concert<br/>コンサート](https://vndb.org/v8828) | AyPio | 1994-04-15 | AyPio UK2 (early version) |
-| [Dengeki Nurse 2 \~More Sexy\~<br/>電撃ナース２ ～モアセクシー～](https://vndb.org/v8678) | IDES | 1994-07-29 | Adv98V  Version 1.73.60(R8) |
 | [Dengeki Nurse<br/>電撃ナース](https://vndb.org/v8676) | IDES | 1992-09-22 | Adv98V  Version 1.70.54 |
+| [Dengeki Nurse 2 \~More Sexy\~<br/>電撃ナース２ ～モアセクシー～](https://vndb.org/v8678) | IDES | 1994-07-29 | Adv98V  Version 1.73.60(R8) |
 | [DESIRE - Haitoku no Rasen<br/>DESIRE 背徳の螺旋](https://vndb.org/v151) | C's Ware | 1994-07-22 | C's Ware AGS |
 | [Eimmy to Yobanaide<br/>エイミーと呼ばないでっ](https://vndb.org/v734) | C's Ware | 1995-05-19 | C's Ware AGS |
-| [Escalation '95 \~Onee-sama tte Yonde Ii Desu ka?\~<br/>エスカレーション　’９５　～お姉さまって呼んでいいですか？～](https://vndb.org/v10875) | Melody | 1995-03-04 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.40<br>Note: calls itself "[ESC] Escalation Adventure Driver" |
+| [Escalation '95 \~Onee-sama tte Yonde Ii Desu ka?\~<br/>エスカレーション　’９５　～お姉さまって呼んでいいですか？～](https://vndb.org/v10875) | Melody | 1995-03-04 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.40<br/>Note: calls itself "[ESC] Escalation Adventure Driver" |
 | [Etsuraku no Gakuen<br/>悦楽の学園](https://vndb.org/v740) | C's Ware | 1994-02-25 | C's Ware AGS |
 | [Eve \~Burst Error\~](https://vndb.org/v147) | C's Ware | 1995-11-22 | C's Ware AGS |
 | [Fechi / Feti<br/>ふぇち](https://vndb.org/v8877) | Cat's Pro. | 1994-03-18 | [MAX] Adventure Scenario Driver for PC-9801 Ver1.26 |
 | [Gao Gao! 1st \~Radical Sequence\~<br/>ＧＡＯＧＡＯ！１ｓｔ \~ラジカルシークエンス\~](https://vndb.org/v8694) | Four･Nine | 1994-01-07 | Four･Nine System-98 v1.0 |
 | [Gao Gao! 2nd \~Pandora Wood\~<br/>ＧＡＯＧＡＯ！２ｎｄ \~パンドラの森\~](https://vndb.org/v8695) | Four･Nine | 1994-04-16 | Four･Nine System-98 v1.1 |
 | [Gao Gao! 3rd \~Wild Force\~<br/>ＧＡＯＧＡＯ！３ｒｄ \~ワイルドフォース\~](https://vndb.org/v8696) | Four･Nine | 1994-10-29 | Four･Nine System-98 v3.00 |
-| [Gao Gao! 4th Canaan \~Yakusoku no Chi\~<br/>カナン ～約束の地～](https://vndb.org/v8697) | Four･Nine | 1997-04-18 | Four･Nine System-98 v3.10 |
+| [Gao Gao! 4th Canaan \~Yakusoku no Chi\~<br/>カナン ～約束の地～](https://vndb.org/v8697) | Four･Nine | 1997-04-18 | Four･Nine System-98 v3.01<br/>Note: The engine identifies itself as v3.10. However EXE is dated 1994-11-04 and is a lot more similar to v3.00 than to any other v3.10. |
 | Gao Gao! Optional Disc<br/>ＧＡＯＧＡＯ！オプショナルディスク | Four･Nine | 1995 | Four･Nine System-98 v3.10 |
 | [H+<br/>エッチプラス](https://vndb.org/v8707) | Desire | 1994-07-20 | Four･Nine System-98 "Desire Special Version" |
 | [Hacchake Ayayo-san 2 - Ikenai Holiday - Ayayo's Love Affair<br/>はっちゃけ あやよさん２ いけないホリデイ ＡＹＡＹＯ＇Ｓ ＬＯＶＥ ＡＦＦＡＩＲ](https://vndb.org/v8893) | HARD | 1990-09-14 | HARD custom |
