@@ -8,7 +8,7 @@ import hyphen	# requires pip package "PyHyphen"
 DEBUG_OUTPUT_PATH = None
 #DEBUG_OUTPUT_PATH = "/tmp/linebrk_"
 
-TEXTCOL_FIE = 0
+TEXTCOL_FILE = 0
 TEXTCOL_LINE = 1
 TEXTCOL_LABEL = 2
 TEXTCOL_TYPE = 3
@@ -97,7 +97,7 @@ def get_cjk_char_width(c: str) -> int:
 	else:
 		return 2	# everything else should be considered 2 characters wide
 
-def do_textsize_check(tb_size, tsv_cols, line_id, lines, text_size, xpos):
+def do_textsize_check(tb_size, line_id, lines, text_size, xpos):
 	global config
 	
 	(tb_width, tb_height) = tb_size
@@ -298,7 +298,7 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> tuple:
 	max_xpos = max([xpos, max_xpos])
 	
 	if line_cols[TEXTCOL_TYPE] == "sel":
-		# For "selection" lines, thte text box size is determined by the game.
+		# For "selection" lines, the text box size is determined by the game.
 		# However the box drawing code breaks with uneven box sizes, so we do a few simple checks here.
 		if (xpos % 2) == 1:
 			print(f"TSV line {1+line_id}: Text width {xpos} will cause broken box drawing!")
@@ -307,7 +307,7 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> tuple:
 	
 	tbox_size = line_cols[TEXTCOL_TBOX].split('@')[0]
 	if not "x" in tbox_size:
-		return (text, (max_xpos, tbox_ybase))	# not text box size set - skip these as well
+		return (text, (max_xpos, tbox_ybase))	# no text box size set - skip these as well
 	(tb_width, tb_height) = [int(x) for x in tbox_size.split("x")]
 	
 	multiline_text = False
@@ -460,7 +460,7 @@ def add_breaks_to_line(text: str, line_cols: list, line_id: int) -> tuple:
 					xpos = 14
 				line_xbase = xpos
 				# stay on the same line
-	do_textsize_check((tb_width, tb_height), line_cols, line_id, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
+	do_textsize_check((tb_width, tb_height), line_id, lines, (max_xpos, len(lines) - tbox_ybase), xpos)
 	
 	# strip trailing spaces on all lines but the last one
 	for lid in range(len(lines) - 1):
@@ -476,7 +476,7 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 	while pos < len(text):
 		chrlen = 1
 		cur_chr = text[pos]
-		if (text[pos] == '\\') and (pos + 1 < len(text)):
+		if (cur_chr == '\\') and (pos + 1 < len(text)):
 			ctrl_chr = text[pos + 1]
 			cur_chr += ctrl_chr
 			chrlen += 1
@@ -499,7 +499,7 @@ def remove_break_from_line(text: str, SENTENCE_END_CHRS: set) -> str:
 				is_newline = True
 			elif ctrl_chr == '\n':	# new TSV line
 				pass
-		elif ord(text[pos]) >= 0x0020:
+		elif ord(cur_chr) >= 0x0020:
 			keep_next_nl = False	# when the actual text starts, start removing line breaks
 		
 		if is_newline:

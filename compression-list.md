@@ -8,11 +8,24 @@
 | MAX Adventure Scenario Driver | Melody | LZSS | also applies to Night Slave, used for files with "MAXPACK" header<br/>nametable initialized with patterns<br/>`lzss-tool -a "sMAXPACK,b00,o2,c4,o4" -n p` |
 | Merry Go Round | Mischief | LZSS | used by `.OVL` files<br/>nametable initalized with 00s<br/>`lzss-tool -a o2 -n 0x00` |
 | MIME | Studio Twin'kle | LZSS | used by most `.DAT` files<br/>nametable initialized with patterns<br/>`lzss-tool -a c4,o4 -n p` |
-| Revery: Izanai no Masuishō | Right Stuff | custom | used by `.COD` files and inside `.BND` archives<br/>custom LZ-style compression that stores all control bytes in one data block and then data+reference words in a separate block |
+| Nooch III: Saigo no Seisen | Softhouse Bonbee Bonbon | LZSS | used by `.PDT` files<br/>nametable initalized with 00s<br/>`lzss-tool -a bFF,b02,c4,o4 -n 0x00` (Note: The parameter `c4` is not really correct, as the game stores (full file size - 1) there.) |
+| Revery: Izanai no Masuishō | Right Stuff | custom | used by `.COD` files and inside `.BND` archives<br/>custom LZ-style compression that stores all control words in one data block and then data+reference words in a separate block |
 | Shinmei KENJI engine | various | LZSS | used by `.##1`/`.##2` files, some `.##2` may or may not be archives, not all of them are compressed<br/>nametable initialized with patterns<br/>`lzss-tool -a c4,o4 -n p` |
-| System-98 | Four･Nine | LZSS | used by `.CAT`/`.LIB` files, `.CAT` files with "Cat1" signature even compress the archive TOC<br/>non-standard nametable start offset (0x001), non-standard reference word nibble order, nametable initalized with 00s but stream don't use preinitialized data<br/>`lzss-tool -a o4 -n n -C 0 -R 0x03 -O 0x001 -E 1` |
+| System-98 | Four･Nine | LZSS | used by `.CAT`/`.LIB` files, `.CAT` files with "Cat1" signature even compress the archive TOC<br/>non-standard nametable start offset (0x001), non-standard reference word nibble order, nametable initalized with 00s but stream don't use preinitialized data<br/>`lzss-tool -a o4 -n n -R 0x03 -O 0x001 -E 1` |
 | Twilight | Studio Twin'kle | custom | used inside `.DAT` files<br/>custom compression that uses various binary trees |
 | various | Forest | LZSS | used inside `.FA1` archives<br/>non-standard LZSS with 16-bit control words |
+| various | FUGA System | LZSS | used by various files and inside `.BND`/`.FM`/`.GS` archives, can be identified by "FLZ0" signature<br/>nametable initalized with 00s<br/>`lzss-tool -e -a sFLZ0,o2,c2 -n 0x00` |
+| various | Software House Parsley | LZSS | see FUGA System |
 | various | Wolf Team | LZSS | used on all platforms, file header values are Little/Big Endian depending on the platform<br/>nametable initialized with patterns<br/>`lzss-tool -a c4L,o4L -n p` or `lzss-tool -a c4B,o4B -n p` |
-| Waku Waku Mahjong Panic! | Four･Nine | LZSS | used by various files, can be identified by "eLZ0" signature<br/>details see System-98<br/>`lzss-tool -a "seLZ0,o4" -n n -C 0 -R 0x03 -O 0x001 -E 1` |
+| Waku Waku Mahjong Panic! | Four･Nine | LZSS | used by various files, can be identified by "eLZ0" signature<br/>details see Four･Nine System-98<br/>`lzss-tool -a "seLZ0,o4" -n n -R 0x03 -O 0x001 -E 1` |
 | Xak III | Microcabin | LZSS | used by `.BPL`/`.CMP`/`.GSP`/`.RCP` files<br/>nametable initalized with 00s, non-standard reference word nibble order<br/>`lzss-tool -n 0x00 -R 0x00` |
+
+The LZSS reference implementation by Haruhiko Okumura uses the following lzss-tool parameters:
+
+- `-n 0x20` (nametable initialized with spaces)
+- `-C 0` (control word bit order: lowest bit first)
+- `-R 0x01` (reference word format: Little Endian, bytes `CD AB` -> length `B`, nametable offset `ACD`)
+- `-O 0xFEE` (initial nametable write offset)
+- `-E 0` (no end-of-stream marker)
+
+The lists above may omit these values when they are matching the defaults.
