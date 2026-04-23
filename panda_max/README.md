@@ -30,13 +30,23 @@ I did a fair amount of research on it in order to help BabaJeanmel with a proper
     - You can use `\r` in the text files for explicit line breaks.
 - `ENDING.EXE` disassembly: [ASM file](NS_ENDING.asm) / [IDB database](NS_ENDING.idb)
 
+## Heart Heat Girls
+
+Fuzion from the "PC-9800 Series Central" Discord did some research on this game and wrote useful tools for it.
+
+- [hhg-mdr.py](hhg-mdr.py) - a tool to decode/encode MDR script files used by "Heart Heat Girls" (probably works with other games that use the MAX engine as well)
+  - Note: This needs `maxpack.py` in the same folder for de- and recompression.
+- [maxpack.py](maxpack.py) - decompress and recompress the MAXPACK format
+
 ## Notes
+
+These notes are about the PANDA HOUSE games in general and are not specific to any of the games listed above.
 
 - Scenario files (`.MDR`) use a simple `XOR 0FFh` scrambling algorithm that is applied to all bytes. (Note: Night Slave MDR files are stored unencrypted.)  
   You can use [xordec](https://github.com/ValleyBell/ExtractorsDecoders/blob/master/xordec.c) to de-/reencrypt them: `xordec 0xFF "input.mdr" "output.bin"`
 - When files begin with `"MAXPACK"+00h`, they are compressed. The compression can be used with all files, inside and outside of `PCK` archives.
   The compression is usual LZSS, but the nametable is initializated with various different patterns. (The initialization used is very common for Japanese developers.)
 - The `EXDD` (Expanded Disk Driver) executable that is responsible for file loading.
-  It handles decompression and `PCK` archives.
+  It handles MAXPACK decompression and `PCK` archives.
 - Some of the `.COM` and `.EXE` files are encrypted. Those can be easily identified using the "PIYO" signature that the encryption tool adds.  
   These executables can be decrypted using [piyo\_dec](https://github.com/ValleyBell/ExtractorsDecoders/blob/master/piyo_dec.c).
