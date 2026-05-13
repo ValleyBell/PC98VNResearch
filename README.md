@@ -13,11 +13,18 @@ In the long run, this information may help with the translation of some of these
 
 | Engine name | Developer | Research information |
 |:------------|:----------|:-------|
-| System-98   | Four･Nine | folder [four-nine\_system98](four-nine_system98) |
-| DIANA       | Four･Nine | folder [four-nine\_system98](four-nine_system98) (It is derived from System-98.) |
 | AGS         | C's Ware  | <https://github.com/XenonTranslation>, [updated tools](https://cdn.discordapp.com/attachments/231949854463623168/1008244535383556136/cswaretools2.zip), [Discord message by Tamamoball](https://discord.com/channels/231947749862539264/231949854463623168/1008244535672975361) |
+| Adv98V      | Fairytale | <https://github.com/EK720/lime-juice> |
+| DIANA       | Four･Nine | folder [four-nine\_system98](four-nine_system98) (It is derived from System-98.) |
 | MAX         | PANDA HOUSE | folder [panda\_max](panda_max) |
-| MIME        | Studio Twin'kle | folder [mime](mime) |
+| System-98   | Four･Nine | folder [four-nine\_system98](four-nine_system98) |
+
+## Game specifics
+
+| Game name                 | Developer         | Research information |
+|:--------------------------|:------------------|:---------------------|
+| Dragoon Armor for Adult   | Fairytale         | folder [DragoonArmor](DragoonArmor) |
+| MIME                      | Studio Twin'kle   | folder [mime](mime) |
 
 ## Game list
 
