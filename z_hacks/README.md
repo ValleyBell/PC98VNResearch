@@ -4,6 +4,15 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
 
 **Note:** In most cases, file names and strings are terminated using a `00` byte. Keep in mind to append a `00` byte especially after file names.
 
+- Akai Suishou no Hitomi
+  - skip to Makoto ending
+    - unpack `Hitomi_Patches.7z`
+    - copy `POS06_OP.SCP` into the game's root folder (`HITOMI/` on hard disk installation)
+    - copy `START2.SCP` into the game's `SCP` folder (`HITOMI/SCP/` on hard disk installation)
+    - boot the game (ignore the graphical glitch during the logo screen - it's an artifact of skipping the title screen)
+    - enter a name and start the game
+    - advance the text a few times, then it will jump to the ending
+    - Note: The `.TXT` files are decrypted `.SCP` files and are only included for reference.
 - Amaranth II
   - view an arbitrary cutscene at the beginning
     - open `AMA2.EXE` and search for `E8 7F 01 C6 06 60 06 30`
@@ -79,7 +88,12 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
   - skip from name selection to ending
     - in `PROCON.EXE`, search for `E8 3B 00 E8 41 00`
     - overwrite the first 2 bytes with `EB 0C`
-    - Important: The game features multiple endings and this will result in the bad ending.
+    - Important: The game features multiple endings and this will result in the bad ending with no extra cutscene after the "And..." screen.
+      - The variable that controls the ending is located in PC-98 memory, offset `9FF0:000C`. It is checked just before the music fades out.
+      - The "ending mode" value defaults to `FF`.
+      - The various endings can be accessed by setting the value to `00`..`11`.
+      - Values `00`..`08` result in a "good" ending. (return to original world)
+      - Values `09`..`11` result in a "bad" ending. (stay in alternate world)
     - Note: It is recommend to skip the name selection screen for a nicer screen transition.
 - Frontier
   - jump to ending from main menu
@@ -151,6 +165,10 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
     - register 185 contains the chapter ID (1..28)
     - register 186 contains the scene ID (1+, range depends on chapter)
     - The ending is chapter 28, scene 7.
+- Grail Hunter, The
+  - show credits upon starting the game
+    - rename `ENDING.EXE` to `OPENING.EXE`
+    - then start the game and select "イニシャルスタート" (initial start) -> "プロローグから始める" (start with prologue)
 - Irium
   - jump to ending from main menu
     - while on the main menu (NOT in a sub-menu like music mode), search for `A:\IRMEMO.SCC` and overwrite it with `A:\B_BOSSB.SCC` + a `00` byte
@@ -384,6 +402,13 @@ In this folder I'm collecting small hacks I did for various games. (not everythi
       - patch: search for `83 C4 12 83 7E 06 00`, replace with `83 C4 12 E9 C6 19 00` (disassembly location `seg002:05C0`, before `loc_1A853`)
     - `JANTAKU+ENDING.EXE` - go to Ending instead of starting a match
       - patch: search for `83 C4 12 83 7E 06 00`, replace with `83 C4 12 E9 46 1C 00` (disassembly location `seg002:05C0`, before `loc_1A853`)
+- Tokyo Twilight Busters: Kindan no Ikenie Teito Jigoku Hen
+  - show ending upon boot
+    - rename `EDM.BIN` to `OPM.BIN`
+    - then start the game
+  - show Game Over screen upon boot
+    - rename `BDM.BIN` to `OPM.BIN`
+    - then start the game
 - Urban Soldier
   - `.BIN` files are scene scripts and can be decompressed using [kenji_dec](https://github.com/ValleyBell/ExtractorsDecoders/blob/master/kenji_dec.c)
   - jump to various scenes after selecting a player
