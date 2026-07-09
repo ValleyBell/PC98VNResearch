@@ -91,7 +91,7 @@ def font_text_write(config) -> int:
 	
 	if config.utf_8:
 		text_enc = "utf-8"
-	if config.shift_jis:
+	elif config.shift_jis:
 		text_enc = "cp932"
 	else:
 		text_enc = None
