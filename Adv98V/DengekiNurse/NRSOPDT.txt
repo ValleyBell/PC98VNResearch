@@ -1,0 +1,74 @@
+Dengeki Nurse Opening Script Format
+-----------------------------------
+Format used by NRSOPDTA.DAT and NRSOPDTB.DAT.
+
+Note: NRSOPDTA and NRSOPDTB are different versions of the opening.
+The "A" version has a faster running animation for the Dengeki Nurse.
+The "B" version has a slower running animation, likely intended for weaker PCs.
+
+
+Header:
+16x 2 bytes - scene pointers (2 bytes per pointer, Little Endian, absolute)
+?? bytes - scene data
+
+The data for one scene consists of a series of commands.
+
+[loop]
+  2 bytes - command ID
+  ? bytes - data (depends on command)
+[end]
+2 bytes - command ID 0FFFFh
+
+
+Commands:
+FFFF - scene end
+0000 bbaa - wait until frame bbaa is reached
+0001 - set GDC read/write plane to 0
+0002 - set GDC read/write plane to 1
+0003 - set GDC display plane to 0
+0004 - set GDC display plane to 1
+0005..0009 - fill GDC pixel RAM
+	0005 - start = coord (  0,  0) / offset 0000h, size = (640, 400)
+	0006 - start = coord ( 56, 16) / offset 0507h, size = (104, 296)
+	0007 - start = coord ( 16, 16) / offset 0502h, size = (184, 296)
+	0008 - start = coord (488, 16) / offset 053Dh, size = (104, 296)
+	0009 - start = coord (448, 16) / offset 0538h, size = (184, 296)
+000A..0020 - show image
+	000A - nsopra.wsb
+	000B - nsoprb.wsb
+	000C..0011 - nsoprc.wsb, frames 0..5
+	0012..0016 - nsoprd.wsb, frames 0..4
+	0017 - nsop1.wsb
+	0018 - nsop1a.wsb
+	0019 - nsop2.wsb
+	001A - nsop2a.wsb
+	001B - nsop3.wsb
+	001C - nsop3a.wsb
+	001D - nsop4.wsb
+	001E - nsop4a.wsb
+	001F - nsop5.wsb
+	0020 - nsop5a.wsb
+0021 - ?? (related to nsop5.wsb)
+0022 - ?? (related to nsop5a.wsb)
+0023 - ?? (graphic related)
+0024..0030 - draw staff text
+0031..0032 - clear staff text
+	0031 - clear left side
+	0031 - clear right side
+0033 - clear lyrics text
+0034..0041 - draw lyrics text, lines 1..14
+0042..00FB - karaoke colouring: change colour of one syllable from white (colour 7) to yellow (colour 6)
+	0042..0058 - screen 1
+	0059..006B - screen 2
+	006C..007E - screen 3
+	007F..008E - screen 4/11
+	008F..00A0 - screen 5
+	00A1..00AD - screen 6/7/13/14
+	00AE..00C4 - screen 8
+	00C5..00D5 - screen 9
+	00D6..00E8 - screen 10
+	00E9..00FB - screen 12
+00FC - ?? (calls INT 0F4h, AH=11h)
+00FD - ?? (calls INT 0F4h, AH=03h)
+00FE - ?? (calls INT 0F4h, AH=02h)
+00FF - draw "Hit Return Key" text

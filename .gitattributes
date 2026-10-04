@@ -1,0 +1,17 @@
+*.md text
+*.txt text
+*.tsv text
+
+*.asm text
+*.py text
+
+*.com -text
+*.exe -text
+*.idb -text
+
+*.7z -text
+*.bin -text
+*.dat -text
+*.pkl -text
+
+*.png -text

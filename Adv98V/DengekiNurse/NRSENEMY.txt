@@ -1,0 +1,295 @@
+Dengeki Nurse Battle Data Format
+--------------------------------
+Format used by NRSENEMY.DAT.
+
+Note that the "enemy" definitions include the "player" characters (Dengeki Nurse, Electrode #2) as well.
+
+The file consists of 17 enemy definitions, each 38h bytes long.
+The structure of the data differs slightly between player and enemy data.
+Before loading the data, the program NRSFIGHT.CMD checks the "player" flag (offset 19h, bit 0/mask 01h) to determine which sort of definition to load.
+One exception is the "Electrode #2", which is always loaded using the "Enemy" data layout.
+
+Player Data:
+Pos	Len	Description
+00h	18h	character name (Shift-JIS encoded, padded with 00s, does NOT need to be null-terminated)
+18h	1	character ID (00h = Dengeki Nurse)
+19h	1	flags
+		Bit 0 (01h): has initial turn (set for Dengeki Nurse and Electrode #2, clear for enemy)
+		Bit 1 (02h): player-controlled (set for Dengeki Nurse and Electrode #2, clear for enemy)
+		Bit 2 (04h): HP/ATK/DEF text position (set for Dengeki Nurse, clear for enemy/Electrode #2)
+		Bit 3 (08h): no HP/ATK/DEF text update (set for Electrode #2, clear for Dengeki Nurse)
+		Bit 4-7 (F0h): always 0
+1Ah	2	initial health points
+1Ch	2	maximum health points
+1Eh	2	initial attack points
+20h	2	initial defense points
+22h	2	immunity flags
+24h	1	unused, usually 09 (copied to Player Memory +3Eh, then never used)
+25h	1	unused, usually 09 (copied to Player Memory +3Fh, then never used)
+26h	1	unused, usually 00 (copied to Player Memory +40h, then never used)
+27h	1	unused, usually 08 (copied to Player Memory +36h, then never used)
+28h	1	unused, usually 08 (copied to Player Memory +37h, then never used)
+29h	1	unused, usually 08 (copied to Player Memory +38h, then never used)
+2Ah	1	unused, usually 08 (copied to Player Memory +39h, then never used)
+2Bh	1	unused, usually 08 (copied to Player Memory +3Ah, then never used)
+2Ch	1	unused, usually 08 (copied to Player Memory +3Bh, then never used)
+2Dh	1	unused, usually 08 (copied to Player Memory +3Ch, then never used)
+2Eh	1	unused, usually 08 (copied to Player Memory +41h, then never used)
+2Fh	1	unused, usually 09 (copied to Player Memory +42h, then never used)
+30h	8	unused
+
+Enemy Data:
+Pos	Len	Description
+00h	18h	character name (Shift-JIS encoded, padded with 00s, does NOT need to be null-terminated)
+18h	1	character ID (01h..0Fh = enemy, 10h = Electrode #2)
+19h	1	flags (see Player data)
+1Ah	2	initial/maximum health points
+1Ch	2	initial attack points
+1Eh	2	initial defense points
+20h	2	immunity flags
+22h	1	unused copy of character ID (copied to Enemy Memory +2Fh, then never used)
+23h	1	unused copy of character ID (copied to Enemy Memory +30h, then never used)
+24h	1	unused copy of character ID (copied to Enemy Memory +31h, then never used)
+25h	1	chance of doing critical hits with strong attacks (in percent)
+26h	0Bh	Action 00h..0Ah probability (in percent)
+31h	7	unused
+
+RAM layout while NRSFIGHT.CMD is running:
+
+Player Memory (DS:38BF, 58h bytes)
+38BF	+00..18	character name
+38D8	+19	character ID
+38D9	+1A	character flags
+		Bit 0 (01h) - is player character (used for choosing dialog lines)
+		Bit 1 (02h) - player-controlled
+		Bit 2 (04h) - HP/ATK/DEF text position (0 = left, 1 = right)
+		Bit 3 (08h) - protected by Electrode #2 + prevent HP/ATK/DEF text update
+		Bit 4-7 (F0h): unused
+38DA	+1B..1C	current health points
+38DC	+1D..1E	initial health points
+38DE	+1F..20	current health points (last shown value)
+38E0	+21..22	current attack points
+38E2	+23..24	initial attack points
+38E4	+25..27	current attack points (last shown value)
+38E6	+27..28	current defense points
+38E8	+29..2A	initial defense points
+38EA	+2B..2C	current defense points (last shown value)
+38EC	+2D..2E	immunity flags
+		Bit  0 (0001h) - immune against attack 10 (Dengeki Punch)
+		Bit  1 (0002h) - immune against attack 11 (Dengeki Scalpel Shuriken)
+		Bit  2 (0004h) - immune against attack 12 (Dengeki Kick)
+		Bit  3 (0008h) - immune against attack 13 (Dengeki Laser Scalpel)
+		Bit  4 (0010h) - immune against attack 14 (Dengeki Bazooka)
+		Bit  5 (0020h) - immune against attack 0B (Plasma Flash)
+		Bit  6 (0040h) - immune against attack 02 (paralysis) and attack 0A-04
+		Bit  7 (0080h) - immune against attack 03 (attack reduction)
+		Bit  8 (0100h) - immune against attack 04 (defense reduction)
+		Bit  9 (0200h) - immune against attack 00 (strong enemy attack)
+		Bit 10 (0400h) - immune against attack 01 (weak enemy attack)
+		Bit 11 (0800h) - immune against attack 02-01, 02-03, 02-04, 02-05, 02-07, 02-0C, 02-0E, 02-0F
+		Bit 12 (1000h) - immune against attack 02-02, 02-08, 02-09, 02-0B, 02-0D
+		Bit 13 (2000h) - immune against attack 02-06, 02-0A
+		Bit 14 (4000h) - immune against attack 0A-01 (plot twist), 0A-03 (Bacillus 50), 0A-04 (Mahiro Horumu)
+		Bit 15 (8000h) - unused
+39EE	+30..42	unused
+3902	+43	current Plasma Charge level
+3903	+44	current Plasma Charge level (last shown value)
+3904	+45..46	status flags
+		Bit  9 (0200h) - Electrode #2 in use
+		Bit 10 (0400h) - paralyzed
+		Bit 11 (0800h) - drugs unuseable
+		Bit 12 (1000h) - Plasma Charge unuseable ("can't concentrate")
+		Bit 13 (2000h) - Plasma Flash unuseable
+		Bit 14 (4000h) - Electrode #2 unuseable ("can't fight no more")
+3906	+47	paralysis timer
+		Counts down once each round. When 0, the "paralyzed" flag is removed.
+3907	+48	"ability unuseable" timer
+		Counts down once each round. When 0, the flags for "drugs unuseable", "Plasma Charge unuseable" and "Plasma Flash unuseable" are removed.
+3908	+49..4A	points of reduction for health
+390A	+4B..4C	points of reduction for attack
+390C	+4D..4E	points of reduction for defense
+390E	+4F	attack flags
+		Bit 0 (01h) - take attack
+		Bit 1 (02h) - dodge attack
+		Bit 2 (04h) - dodge / no effect
+		Bit 3 (08h) - take multi-attack
+3915	+56	critical hit state (1 = doing a critical hit)
+
+Enemy Memory (DS:3917, 58h bytes)
+3917	+00..+18	character name
+3930	+19	character ID
+3931	+1A	character flags
+3932	+1B..1C	current health points
+3934	+1D..1E	initial health points
+3936	+1F..20	current health points (last shown value)
+3938	+21..22	current attack points
+393A	+23..24	initial attack points
+393C	+25..27	current attack points (last shown value)
+393E	+27..28	current defense points
+3940	+29..2A	initial defense points
+3942	+2B..2C	current defense points (last shown value)
+3944	+2D..2E	immunity flags
+3946	+2F..31	unused
+3949	+32	chance in % of doing a critical hit to the opponent
+394A	+33..42	action probabilities
+395A	+43..44	unused
+395C	+45..46	status flags
+		Bit  0 (0001h) - disable actions 3,4,8,9 - true when current HP < (initial HP * 20%)
+		Bit  1 (0002h) - disable actions 6,7 - true when current HP >= initial HP
+		Bit  2 (0004h) - disable action 3 - true when attack == 0
+		Bit  3 (0008h) - disable action 8 - true when attack >= 100
+		Bit  4 (0010h) - disable action 4 - true when defense == 0
+		Bit  5 (0020h) - disable action 9 - true when defense == 100
+		Bit  8 (0100h) - ?? - true when current HP == initial HP
+		Bit 10 (0400h) - disable action 5 - true when paralyzed
+395E	+47	paralysis time
+395F	+48	unused ("ability unuseable" timer)
+3960	+49..4A	points of reduction for health
+3962	+4B..4C	points of reduction for attack
+3964	+4D..4E	points of reduction for defense
+3966	+4F	attack flags
+		Bit 0 (01h) - take attack
+		Bit 1 (02h) - dodge attack
+		Bit 2 (04h) - dodge / no effect
+		Bit 3 (08h) - take multi-attack
+396D	+56	critical hit state (1 = doing a critical hit)
+
+Electrode #2 Memory (DS:396F, 58h bytes)
+
+
+Action IDs:
+00	Normal Attack (medium enemy attack)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 70% chance of success, 30% chance of dodge.
+		When it is not dodged, the target may be immune, nullifying the attack.
+		There is a character-specifc chance of a critical hit. [see Memory+32h]
+		target damage(health) = random(10..15) + (critical hit -> +10) + attack points - target defense
+01	Weird Attack (weak enemy attack)
+		When the target is paralyzed, then the attack always hits.
+		Else the target may be immune, nullifying the attack.
+		target damage(health) = random(8..10) + attack points - target defense
+02	character-specifc attack
+	This attack depends on the character ID. (00h..0Fh, see Player/Enemy Memory +19h)
+02-00	unused (ID is used by Dengeki Nurse)
+02-01	brainbuster
+		target damage(health) = random(15..18) + attack points - target defense
+02-02	mysterious dance
+		target damage(defense) = random(3..5)
+02-03	custom guillotine
+		target damage(health) = random(18..22) + attack points - target defense
+02-04	butt strike
+		target damage(health) = random(15..18) + attack points - target defense
+		[same effect as 02-01]
+02-05	yo-yo hell spin
+		target damage(health) = random(18..22) + attack points - target defense
+		[same effect as 02-03]
+02-06	hundred-strike scoop
+		The target gets the "drugs unuseable" status.
+		ability unuseable = random(2..3) turns.
+02-07	NASA's AI rock-thrower
+		target damage(health) = random(15..18) + attack points - target defense
+		[same effect as 02-01]
+02-08	shamisen strings
+		target damage(attack) = random(7..10)
+02-09	hairpin with rattlesnake venom
+		target damage(defense) = random(7..10)
+02-0A	mystic art "Lavender Aroma"
+		The target gets the "Plasma Charge unuseable" status.
+		ability unuseable = random(1..3) turns.
+02-0B	
+		The target gets the "paralyzed" status.
+		paralysis time = random(2..5) turns.
+02-0C	
+		target damage(health) = random(18..22) + attack points - target defense
+02-0D	
+		target plasma charge level = 0
+02-0E	
+		target damage(health) = random(18..22) + attack points - target defense
+		[same effect as 02-0C]
+02-0F	
+		target damage(health) = random(22..25) + attack points - target defense
+03	use Mescaline D (lower attack)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 80% chance of success, 20% chance of dodge.
+		target damage(attack) = random(1..5)
+04	use Barium Z (lower defense)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 80% chance of success, 20% chance of dodge.
+		target damage(defense) = random(1..5)
+05	use Mahiro Horumu Powder (paralyze)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 60% chance of success, 40% chance of dodge.
+		The target gets the "paralyzed" status.
+		paralysis time = random(2..3) turns.
+06	use Vitamin N (heal)
+		health gain = random(10..20)
+07	use Vitamin N Super (full heal)
+		health gain = maximum HP
+08	use Protein V (increase attack)
+		attack gain = random(1..5)
+09	use Kirara Kotei Solution (increase defense)
+		attack gain = random(1..5)
+0A	call Black Cross Syringe Kamikaze Unit
+	This is a special attack. (00h..06h, see Player/Enemy Memory +50h)
+	The action is determined randomly using fixed probabilities.
+0A-00	plow into the target (strong attack, chance 30%)
+		target damage(health) = random(10..15)
+0A-01	plot twist (attack/defense swap, chance 10%)
+		This swaps the source and target's attack and defense points.
+		Electrode #2 protects against this.
+0A-02	get stabbed with Vitamin N Super (full heal, chance 20%)
+		health gain = maximum HP
+0A-03	get hit by Bacillus 50 (transfer HP, chance 10%)
+		source health gain = target health / 2
+		The source health can overshoot its maximum health points by up to 50 points.
+		target damage(health) = target health / 2
+		Electrode #2 protects against this.
+0A-04	Mahiro Horumu (paralysis, chance 20%)
+		The target gets the "paralyzed" status.
+		paralysis time = random(2..3) turns.
+		Electrode #2 protects against this.
+0A-05	powerful EM wave (reduce Plasma Charge, chance 10%)
+		The target's charge level gets divided by 2.
+0A-06	do nothing
+0B	-- (unused)
+0C	-- (unused)
+0D	Plasma Flash (very strong attack)
+		When the target is paralyzed, then the attack always hits.
+		Else the target may be immune, nullifying the attack.
+		target damage(health) = floor((charge level - 50) / 10) * 5 + random(15..20)
+0E	deploy Electrode #2
+		The player gets the "Electrode #2 in use" flag.
+0F	Plasma Charge
+		plasma charge gain = random(15..25)
+10	Dengeki Punch (weak attack)
+		When the target is paralyzed, then the attack always hits.
+		Else the target may be immune, nullifying the attack.
+		Plasma Charge being >= 50% results in a small attack boost.
+		There is a 5% chance of a critical hit.
+		target damage(health) = random(1..5) + (charged -> +5) + attack points - target defense
+11	Dengeki Scalpel Shuriken (weak multi-attack)
+		When the target is paralyzed, then the attack always hits.
+		Else the target may be immune, nullifying the attack.
+		The attack can hit random(1..3) times.
+		target damage(health) = random(3..5)
+		Each hit gets a separate damage calculation. The damage ignores any attack or defense values.
+12	Dengeki Kick (medium attack)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 75% chance of success, 25% chance of dodge.
+		When it is not dodged, the target may be immune, nullifying the attack.
+		Plasma Charge being >= 50% results in a small attack boost.
+		There is a 20% chance of a critical hit.
+		target damage(health) = random(5..9) + (charged -> +5) + (critical hit -> +10) + attack points - target defense
+13	Dengeki Laser Scalpel (weak attack, lower attack, lower defense)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 70% chance of success, 30% chance of dodge.
+		When it is not dodged, the target may be immune, nullifying the attack.
+		target damage(health) = random(4..6)
+		target damage(attack) = random(2..3)
+		target damage(defense) = random(2..3)
+14	Dengeki Bazooka (very strong attack)
+		When the target is paralyzed, then the attack always hits.
+		Else there is a 70% chance of success, 30% chance of dodge.
+		When it is not dodged, the target may be immune, nullifying the attack.
+		target damage(health) = random(22..30)
+		The damage ignores any attack or defense values.
