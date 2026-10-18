@@ -1,7 +1,8 @@
 # Monster Talks
 
-Every group of monsters on every floor has its own line.
+Every group of monsters on every floor has a specific line.  
 The only exceptions are bosses, which you always have to fight.
+These have their text message in italics.
 
 There is a total of 134 different talks. 3 of them are unused.
 

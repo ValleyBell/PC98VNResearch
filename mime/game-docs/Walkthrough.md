@@ -380,7 +380,7 @@ Recommended level: 48
 
 ### Curing White Lily
 
-- After fighting Arachne the first time, visit the Totem Pole @12,4.
+- After fighting Arachne the first time, visit the Totem Pole @4F:12,4.
 - Clear the medicine mixing puzzle to receive the "Hokekemoh Cure". (see "Totem Pole minigames" section for details)
 - Visit Black/White Lily @1F:15,0 and give her the medicine.
 

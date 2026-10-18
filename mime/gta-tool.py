@@ -19,8 +19,8 @@ def decode_palette(gtaPal: bytes) -> bytes:
 		val = gtaPal[pos] ^ (0xFF - remBytes)	# equivalent calculation
 		nib_low = (val >> 0) & 0x0F	# MIME uses 00..0F internally
 		nib_high = (val >> 4) & 0x0F
-		palData.append(nib_low << 4)	# output 00..F0 instead, as this is what the PI format expects
-		palData.append(nib_high << 4)
+		palData.append(nib_low * 0x11)	# the PI format has whole bytes, so scale up to 00..FF
+		palData.append(nib_high * 0x11)
 		pos += 1
 		remBytes -= 1
 	return bytes(palData)
@@ -107,11 +107,11 @@ def auto_int(x):
 def main(argv):
 	global config
 	
-	print("MIME GTA tool")
+	print("MIME GTA conversion tool")
 	aparse = argparse.ArgumentParser()
 	apgrp = aparse.add_mutually_exclusive_group(required=True)
-	apgrp.add_argument("-d", "--decode", action="store_true", help="decode GTA file into BMP/PNG/...")
-	apgrp.add_argument("-e", "--encode", action="store_true", help="encode BMP/PNG/... into GTA")
+	apgrp.add_argument("-d", "--decode", action="store_true", help="convert image from GTA to PI format")
+	apgrp.add_argument("-e", "--encode", action="store_true", help="convert image from PI to GTA format")
 	aparse.add_argument("-f", "--flags", type=auto_int, default=0xFFFF, help="set image flags for output GTA file")
 	aparse.add_argument("-i", "--input", type=str, required=True, help="input file")
 	aparse.add_argument("-o", "--output", type=str, required=True, help="output file")
