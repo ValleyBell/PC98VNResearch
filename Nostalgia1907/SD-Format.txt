@@ -1,0 +1,175 @@
+Nostalgia 1907 - SD script format
+=================================
+The script files consist of a series of commands. It has no file header.
+
+Commands
+--------
+01 str - draw text string into text box 1 then wait for key press
+02 str - draw text string into text box 1
+03 byte byte byte - ??
+04 str int - define single choice, str = text to be displayed, int = jump target offset when choice is taken
+05 - show choices (text box 1?)
+06 - show choices (text box 3?)
+07 - start choice selection
+08 int - subroutine call, int = target offset
+09 int - jump, int = target offset
+0A - undefined
+0B byte ... [byte int] - compare variables (for conditional jump)
+	The first set of parameters is a variable-length array that consists of bytes that are 80..FF. The maximum length is 4 bytes. (more bytes will cause memory corruption)
+	Any byte 00..7F terminates the array and is not(!) part of the data. (see disasembly, sub_1013C)
+	Depending on the result, the next 3 bytes (which are expected to be a "jump" command) are skipped.
+0C - undefined
+0D - undefined
+0E - undefined
+0F byte - ??
+10 byte str str - draw person name (1st str) and dialogue text (2nd str)
+11 - undefined
+12 str - load some file
+13 str int int - load some image file
+14 str - load some file
+15 - undefined
+16 byte int int - conditional call to parameter 2/3 (??)
+17 - ?? (can do recursive script execution)
+18 - undefined
+19 str - load "kasuke.pbd", then load some file
+1A str byte - load some file
+1B - quit (stops script execution)
+1C - some sort of return? (return from command 16?)
+1D - ??
+1E - undefined
+1F byte byte - ??
+20 str - draw location name, music mode 0:
+	This command will temporarily stop the music.
+	The music will be restarted when the next dialogue is displayed.
+21 str - draw location name, music mode 1:
+22 - undefined
+23 - undefined
+24 - undefined
+25 - undefined
+26 str str - draw person name (1st str) and dialogue text (2nd str)
+27 str - draw dialogue text
+28 byte - ?? (dialogue related)
+29 byte str str - combines command 28 with 26, draws person name and dialogue text
+2A byte - wait N frames
+2B byte - ??
+2C - dummy / no operation
+2D byte byte - set variable
+	[param2] = 00..7F -> variable [param1] = [param2]
+	[param2] = 80..FF -> variable [param1] = variable [param2]
+2E byte byte - add to variable
+	[param2] = 00..7F -> variable [param1] = variable [param1] + [param2]
+	[param2] = 80..FF -> variable [param1] = variable [param1] + variable [param2]
+2F byte byte - subtract from variable
+	[param2] = 00..7F -> variable [param1] = variable [param1] - [param2]
+	[param2] = 80..FF -> variable [param1] = variable [param1] - variable [param2]
+30 byte byte [int ...] - index-based jump
+	param1 = variable to read the index from
+	param2 = number of pointers N
+	param3 = list of N pointers
+	This takes the index stored in variable <param1>.
+	When the index is 0, execution continues as normal.
+	When the index is 1, it jumps to param3_pointers[index - 1].
+31 - dummy / no operation
+32 - return from subroutine
+33 - undefined
+34 byte [...] - various sub-commands
+34 00 - ??
+34 01 byte int int int int - ??
+34 02 - dummy / no operation
+34 03 byte byte - ??
+34 04 str - draw location name (different Y coordinate than command 20/21?)
+34 05 byte byte - ??
+34 06 - dummy / no operation
+34 07 byte byte - ??
+34 08 byte - ??
+34 09 byte - ??
+34 0A..0B - dummy / no operation
+34 0C byte int - ??
+34 0D byte - ??
+34 0E str - load some file
+34 0F..11 - dummy / no operation
+34 12 byte str - show text [param3] at coordinates X = [param1], Y = 21
+	Coordinates are in 18x18 blocks. Text is printed to text box 6.
+34 13 - dummy / no operation
+34 14 byte byte str - show text [param3] at coordinates X = [param1], Y = [param2]
+	Coordinates are in 18x18 blocks. Text is printed to text box 6.
+34 15 - dummy / no operation
+34 16 byte - ??
+34 17 str - wait for file to exist
+	This is used for waiting for a disk swap.
+34 18 byte - save game handling
+	param1 == 0 -> read script variables (0x80 bytes) from "cut.pbd"
+	param1 == 1 -> write script variables (0x80 bytes) to "cut.pbd"
+	param1 == 2 -> clear script variables by setting them to 0, then write them to "cut.pbd"
+34 19 byte int - ?? (time related)
+34 1A..1D - dummy / no operation
+34 1E str int int - load some file
+34 1F - some graphics fill
+34 20 - ??
+34 21 - ??
+34 22 byte byte - ??
+34 23 str byte - check whether file exists and write result to variable [param2]
+	[param1] is usually a .no2/.no3/.no4
+	The result is 0 = not existing, 1 = existing.
+	This is used for checking, if the correct floppy disk is inserted.
+34 24 byte byte - ??
+34 25 str byte int int - load some file
+34 26 byte byte - ??
+34 27 str - load some file
+34 28 byte byte - ??
+34 29 byte byte - ??
+34 2A..31 - dummy / no operation
+34 32 - ??
+34 33 - ??
+34 34..3B - dummy / no operation
+34 3C - ??
+34 3D - ??
+34 3E - ??
+34 3F - ??
+34 40..45 - dummy / no operation
+34 46 - dummy (calls an empty function)
+34 47..4F - dummy / no operation
+34 50 - ?? (graphics related)
+34 51 - ?? (graphics related)
+34 52..59 - dummy / no operation
+34 5A - ?? (graphics related)
+34 5B..FF - dummy / no operation
+35 int - jump (same as 09)
+36 - undefined
+37 byte byte byte byte - set palette entry
+	param 1 = index (00h..0Fh), param 2 = red (00h..0Fh), param 3 = green (00h..0Fh), pararm 4 = blue (00h..0Fh)
+38 byte - apply palette
+	param 1 = fade speed (number of frames to wait between each step), 0 = show instantly, 1 = fastest, 255 = slowest
+39 byte - ?? (text box related)
+3A byte - ?? (text box related)
+3B str - load script file
+	Note: The game engine automatically appends the ".sd" file extension to the file name.
+3C - quit (stops script execution) (same as 1B, but has separate code for it)
+
+
+Undefined commands will instantly terminate the script execution.
+
+Parameters:
+- byte: 1-byte value
+- int: 2-byte value
+- str: text string, terminated with a 00 byte
+
+
+Person names:
+These text strings will be right-padded with spaces up to length 7. (full-width characters)
+It will also set the "indent" flag for following dialogue text.
+
+
+Dialogue Text:
+These text strings are a bit special.
+If they are directly preceeded by a "person name", then they are indented respectively. (usually with X=7)
+The text gets line-wrapped automatically with proper indentation.
+After drawing the dialogue line, the game waits for the user to press a key. (by default)
+
+ASCII characters are not drawn, but are used as control codes at the end of the strings.
+The following control codes are supported:
+- "W" and "w": don't wait for text input and directly continue with the script
+	Note: MUST be placed at the end of the string.
+- ";" (semicolon): dialogue continuation - keep current indentation for the next dialogue line and don't wait for text input
+	Note: This can be placed anywhere but it is usually placed at the end of the string.
+The scripts also use "k" at the end, but the game doesn't handle this code.

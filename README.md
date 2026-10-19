@@ -25,6 +25,7 @@ In the long run, this information may help with the translation of some of these
 |:--------------------------|:------------------|:---------------------|
 | Dragoon Armor for Adult   | Fairytale         | folder [DragoonArmor](DragoonArmor) |
 | MIME                      | Studio Twin'kle   | folder [mime](mime) |
+| Nostalgia 1907            | Sur De Wave       | folder [Nostalgia1907](Nostalgia1907) |
 
 ## Game list
 
