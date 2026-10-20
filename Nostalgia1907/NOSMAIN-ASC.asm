@@ -274,12 +274,17 @@ dt_tb1a_main_loop:
 	jnz	short dt_tb1a_check_ctrl
 	jmp	near dt_tb1a_fin
 
+	times 4 nop	; NOPs to allow "jz short" below
+
 dt_tb1a_check_ctrl:
-	mov	al, [di]
-	cmp	al, 0Ah
+	mov	ax, [di]
+	cmp	al, 0Ah		; ASCII newline
 	jz	short dt_tb1a_nextline
+	cmp	al, 20h		; ASCII space
+	jz	short dt_tb1a_drawchr
+	cmp	ax, 4081h	; Shift-JIS full-width space
+	jz	short dt_tb1a_drawchr
 	jmp	short dt_tb1a_linex_check
-	
 
 	times 6D1Ch-11-($-$$-CODE_BASE_OFS) db 90h
 dt_tb1a_linex_check:
@@ -294,12 +299,15 @@ dt_tb1a_nextline:
 	incbin "NOSMAIN.DEC.EXE", $, 6D7Dh-($-$$-CODE_BASE_OFS)
 dt_tb1a_drawchr:
 	lea	di, [bp-0Ch]	; buffer
-	push	di		; function parameter
+	push	di		; function parameter + backup
 	call	DrawString_Wait
-	add	sp, byte 2
+	pop	di
+	cmp	byte [di], 20h
+	jb	short j_dt_tb1a_main_loop	; prevent control characters from advancing X position
 	mov	cx, [bp-02h]	; bufLen
 	add	[bp-14h], cx	; relPosX
 	add	[TextBoxes + 12h*1 + tb_txPosX], cx
+j_dt_tb1a_main_loop:
 	jmp	dt_tb1a_main_loop
 	
 	times 6D9Ah-($-$$-CODE_BASE_OFS) db 90h

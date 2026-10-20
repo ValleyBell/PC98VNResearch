@@ -1,6 +1,6 @@
 # Nostalgia 1907
 
-This folder contains various research information regarding the game "Nostalgia 1907" developed by Sur De Wave.
+This folder contains various research information regarding the game "Nostalgia 1907" developed by Sur Dé Wave.
 
 I did the research to help BNK to make an English translation of the game.
 
@@ -47,3 +47,5 @@ I did the research to help BNK to make an English translation of the game.
     - fl bytes: FM instrument data
     - ? bytes: SSG instrument data?
     - ? bytes: sequence data
+- The system disk contains a leftover scenario script called `DEMO.SD`, which was probably intended as an advertisement demonstration.
+  Unfortunately, the script stops after showing the "Sur Dé Wave" logo, because nearly all of the required graphics files are missing.
