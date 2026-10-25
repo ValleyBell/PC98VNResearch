@@ -14,5 +14,6 @@
 | nekoex_98   | [Neko Manma EX<br/>ねこまんまEX](https://vndb.org/v37151) | Four･Nine | `SYS98B.EXE`<br/>1993-05-10 | \<\< System98 TYPE-B Version 0.E / Copyright (c) 1993 By F.Ohtsuki. \>\> |
 | nightsft_98 | [Night Shifter<br/>ナイトシフター](https://vndb.org/v8982) | Four･Nine | `SYS98C.COM`<br/>1993-09-04 | ｫﾃSYSTEM-98 TYPE-C full assembler version 1.1<br/>開発者 えぬぱぱ頭羅 ～フォア☆ナイン～ 1993 |
 | vr_date_98  | [VR Date - May Club<br/>Ｖ．Ｒ．デート 五月倶楽部メイクラブ](https://vndb.org/v190) | Desire | `SYS98.EXE`<br/>1995-08-25 | desire-system version 3.12<br/>Copyright (c) desire 1993-1995. All rights reserved. |
+| --          | [VR Date - May Club<br/>Ｖ．Ｒ．デート 五月倶楽部メイクラブ](https://vndb.org/v190) (Windows version) | Desire | `MAY.BIN`<br/>1999-04-03 | ＤＩＡＮＡ for Ｗｉｎ　《ＷＩＮＤＹ》 v1.01 |
 
 The dates refer to the file date of the executable, not the game's release date.

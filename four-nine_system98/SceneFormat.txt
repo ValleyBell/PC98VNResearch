@@ -1,7 +1,11 @@
 System-98 Scene Format
 ----------------------
-The first 100h bytes appear to be reserved for comments and are unencrypted.
-The actual script data begins at offset 100h and is encrypted with a simple "XOR 01h" algorithm.
+The first 100h bytes appear to be reserved for comments or a script description and are unencrypted.
+The actual script data begins at offset 100h and is encrypted.
+System-98 v1..v3 encrypts with a simple "XOR 01h" on every byte.
+
+The Windows version (v4) data can be decrypted by subtracting 1 from every even byte and adding 1 to every odd byte.
+It also lacks the 100h bytes of comment for normal scripts. Submodule scripts keep the comment field however.
 
 [loop]
 2 bytes - command ID
@@ -15,22 +19,31 @@ Commands
 --------
 00 DOSEXIT - exit to DOS, return code 0
 	no parameters
-01 - [v1.xx] text box related
+01 - [v1.xx] load text box image?
 	2 bytes - text box ID (00h..0Fh)
-	2 bytes - ??
-	2 bytes - ??
-	2 bytes - [HB-pad] ??
+	2 bytes - [HB-pad] update palette (00 = no, 01..FF = yes)
 	2 bytes - file offset of image file name to load
-	-> 0Ah bytes total
-01 - [v3.10] undefined
-02 IMGLOAD - load image
+	2 bytes - [HB-pad] draw mode (0 = opaque, 1 = transparent)
+	-> 08h bytes total
+01 - [v3.00] undefined
+01 WINRETR - [v4] show message box with error code, then exit to Windows
+	2 bytes - register ID, contains the return code
+02 IMGLOAD - [v1..v3] load image
 	2 bytes - destination column (X/8)
 	2 bytes - destination row (Y)
-	2 bytes - [HB-pad] update palette (01..FF)
+	2 bytes - [HB-pad] update palette (00 = no, 01..FF = yes)
 	2 bytes - [HB-pad] GDC plane (write vv to I/O register 0A6h for vv = 00/01, ignored for others)
 	2 bytes - file offset of image file name to load
 	2 bytes - [HB-pad] draw mode (0 = opaque, 1 = transparent)
 	-> 0Ch bytes total
+02 IMGLOAD - [v4] load image
+	2 bytes - destination column (X/8)
+	2 bytes - destination row (Y)
+	2 bytes - load mode? (values 0..3)
+	2 bytes - GDC plane (write vv to I/O register 0A6h for vv = 00/01, ignored for others)
+	2 bytes - file offset of image file name to load
+	2 bytes - draw mode (values 0..3)
+	2 bytes - ??
 03 TBOPEN - open text box
 	2 bytes - text box ID (00h..0Fh)
 		Text boxes 00h..07h have no borders and simple opaque backgrounds.
@@ -99,7 +112,7 @@ Commands
 15 PRINT - show text in text box
 	2 bytes - [HB-pad] text box ID
 	2 bytes - file offset of text to be printed
-16 PRINTXY - show text at screen position
+16 PRINTXY - [not v4] show text at screen position
 	2 bytes - X position
 	2 bytes - Y position
 	2 bytes - file offset of text to be printed
@@ -120,7 +133,7 @@ Commands
 	no parameters
 1C BGMSTOP - stop music
 	no parameters
-1D BGMMODE - get music mode
+1D BGMMODE - [not v4] get music mode
 	2 bytes - register ID where the music mode will be stored in
 1E WAITKEY - wait for key press
 	2 bytes - register ID where the key code of the pressed key is written to
@@ -148,7 +161,7 @@ Commands
 		2 bytes - value to be subtracted
 	regID >= 400h
 		4 bytes - value to be subtracted
-26 TXCLR1 - text buffer clear 1
+26 TXCLR1 - [not v4] text buffer clear 1
 	2 bytes - destination column (X/32)
 	2 bytes - destination row (Y/16)
 	2 bytes - columns to fill (width/32)
@@ -169,25 +182,31 @@ Commands
 	dst [short], src [short]: add src to dst
 	dst [short], src [long]: add src to dst while using 2-byte addressing src's register (short ID 400h = long 400h low word, 401 = long 400h high word, etc.)
 	dst [long], src [short]: add src (with high word set to 0) to dst
-29 XYREAD - read value from XY buffer to register
+29 XYREAD - [not v4] read value from XY buffer to register
 	2 bytes - destination register ID
 	2 bytes - register ID with X position
 	2 bytes - register ID with Y position
-2A XYWRT - write value from register into XY buffer
+2A XYWRT - [not v4] write value from register into XY buffer
 	2 bytes - source register ID
 	2 bytes - register ID with X position
 	2 bytes - register ID with Y position
-2B - [v1.xx] save full register buffer to file (2048 bytes)
+2B REGFSVA - [v1.xx] save full register buffer to file (2048 bytes)
 	2 bytes - file offset of file name
-2B - [v3.10] undefined
-2C - [v1.xx] load register buffer from file (2048 bytes)
+2B - [v3.xx] undefined
+2C REGFLDA - [v1.xx] load register buffer from file (2048 bytes)
 	2 bytes - file offset of file name
-2C - [v3.10] undefined
+2C - [v3.xx] undefined
 2D REGCLR - clear registers
 	2 bytes - register ID 1
 	2 bytes - register ID 2
 	Sets all registers from reg1 to reg2 (inclusive) to 0.
-2E - undefined
+2E - [v1.00 .. 3.10, v4] undefined
+2E RNDI - [v3.12] set register = random value
+	2 bytes - maximum range of the random 
+	2 bytes - destination register ID
+	This calculates a random number using a pseudo-random number generator.
+	The result is divided by (range) and the remainder is saved to the register.
+	Thus, the result is effectively 0..(range-1).
 2F BLIT1I - image copy
 	2 bytes - [HB-pad] source GDC plane (0/1/2) -> byte_1D0F6
 	2 bytes - source column (X/8) -> word_1D0F8
@@ -211,7 +230,7 @@ Commands
 34 GPDSET - get graphics plane to display
 	2 bytes - register ID
 	Puts the last value that was written to I/O port 0A4h into the register.
-35 TXFILL - text buffer fill
+35 TXFILL - [not v4] text buffer fill
 	2 bytes - destination column (X/32)
 	2 bytes - destination row (Y/16)
 	2 bytes - columns to fill (width/32)
@@ -221,7 +240,7 @@ Commands
 	-> 0Ch bytes total
 36 GFX36 - ?? (some GFX clear)
 	no parameters
-37 XYFLOAD - load XY buffer from file
+37 XYFLOAD - [not v4] load XY buffer from file
 	2 bytes - file offset of file name
 38 ANDR - "AND" source with destination register
 	2 bytes - destination register ID
@@ -243,7 +262,7 @@ Commands
 	2 bytes - register ID for destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 	Note: Same as 2F, except that parameters are read from registers.
-3B BLIT1RL - image copy
+3B BLIT1RL - [not v4] image copy
 	2 bytes - register ID -> byte_1D0F6
 	2 bytes - register ID for source column (X/8) -> word_1D0F8
 	2 bytes - register ID for source row (Y) -> word_1D0FA
@@ -255,7 +274,7 @@ Commands
 	2 bytes - register ID for destination row (Y) -> word_1D10C
 	-> 0Ah + 06h = 10h bytes total
 	Note: Same as 2F, except that parameters are read from registers.
-3C TXCLR2 - text buffer clear 2
+3C TXCLR2 - [not v4] text buffer clear 2
 	2 bytes - destination column (X/8)
 	2 bytes - destination row (Y)
 	2 bytes - columns to fill (width/8)
@@ -288,19 +307,19 @@ Commands
 43 CMD43 - ?? (screen resolution related?)
 	2 bytes - register ID <- word_1D202
 	2 bytes - register ID <- word_1D204
-44 - [v1.xx] dummy (does nothing)
-44 - [v3.10] undefined
+44 NOP44 - [v1.xx] dummy (does nothing)
+44 - [v3, v4] undefined
 45 CMD45 - [v1.xx] some GFX effect
 	2 bytes - ??
-45 - [v3.10] undefined
+45 - [v3, v4] undefined
 46 - [v1.xx] same as command 56
-46 - [v3.10] undefined
+46 - [v3, v4] undefined
 47 - [v1.xx] same as command 56
-47 - [v3.10] undefined
+47 - [v3, v4] undefined
 48 - [v1.xx] same as command 56
-48 - [v3.10] undefined
+48 - [v3, v4] undefined
 49 - [v1.xx] same as command 56
-49 - [v3.10] undefined
+49 - [v3, v4] undefined
 4A REGFSAV - save register buffer to file
 	2 bytes - [HB-pad] buffer (00 = buffer 1, 1000 bytes, 01..FF = buffer 2, 1048 bytes)
 	2 bytes - file offset of file name
@@ -310,13 +329,20 @@ Commands
 4C CMD4C - ?? (screen resolution related?)
 	2 bytes - ?? -> written to word_1D202
 	2 bytes - ?? -> written to word_1D204
-4D BGMMEAS - get current music measure
+4D BGMMEAS - [not v4] get current music measure
 	2 bytes - register ID that will receive the value
 4E SFXSSG - play SSG sound effect
 	2 bytes - [HB-pad] SSG sound effect number
-4F SFXFM - play FM sound effect
+	[v4] The command has no effect. (but takes the proper number of parameters)
+4F SFXFM - [v1..v3] play FM sound effect
 	2 bytes - [HB-pad] FM sound effect number
-50 BGMSTAT - get BGM status
+	[v3.12] when in MIDI mode, it plays a MIDI sound effect (via MMDE driver)
+4F SFXWAV - [v4] play WAV sound effect
+	2 bytes - sound effect number (0 = silence, 1..9999 = valid)
+	2 bytes - play mode (0 = silence, 1 = play once, 2+ = loop)
+	When both, the effect number and the play mode are > 0, then a sound effect is played using the "sndPlaySound" Windows API.
+	The file name is "seQIIII.wav", with Q being a global quality setting ("se=#" line in configuration INI file) and IIII being the 4-digit effect number.
+50 BGMSTAT - [not v4] get BGM status
 	2 bytes - register ID that will receive the value
 51 ANDI - "AND" value with destination register
 	2 bytes - destination register ID
@@ -374,7 +400,7 @@ Commands
 5F STRTIME - set string to current date/time
 	2 bytes - destination string ID
 	Gets the current date/time via DOS calls 2Ah/2Ch and prints it as "YYYY-MM-DD HH:MM:SS" into the destination string.
-60 FILETM - get file date/time
+60 FILETM - [not v4] get file date/time
 	2 bytes - register ID, will get return code (0 = success, 1 = failure)
 	2 bytes - destination string ID
 	2 bytes - file offset of file name
@@ -413,17 +439,17 @@ Commands
 	Note: Same as 63, except that parameters are read from registers.
 65 - undefined
 66 - undefined
-67 GFX67 - ?? (GFX related)
+67 GFX67 - [not v4] ?? (GFX related)
 	2 bytes - [HB-pad] ??
 	2 bytes - [HB-pad] ??
 	2 bytes - [HB-pad] ??
 	2 bytes - [HB-pad] ??
 	-> 08h bytes total
-68 GFX68 - ?? (GFX related)
+68 GFX68 - [not v4] ?? (GFX related)
 	2 bytes - register ID
 	2 bytes - register ID
-69 - [v1.xx] undefined
-69 GFX69 - [v3.10] ?? (GFX related)
+69 - [v1.xx, v4] undefined
+69 GFX69 - [v3.xx] ?? (GFX related)
 	2 bytes - register ID reg1, content description:
 		Bits 0..2 (0007): bit mask index (0 = 80h, 1 = 40h, ..., 7 = 01h)
 		Bits 3..15 (FFF8): value
@@ -445,22 +471,22 @@ Commands
 	2 bytes - destination register ID
 	2 bytes - source string ID
 	Puts the length of the source string (without terminator character) into the destination register.
-6F - [v1.xx] convert long to 2 short registers
+6F MOVRLI - [v1.xx] convert 1 long-word to 2 short registers
 	2 bytes - destination register ID [short]
 	2 bytes - source register ID [long]
 	Reads src, then puts the high word into src+0 and the low word into src+1. (effectively swapping the words)
-6F - [v3.10] undefined
-70 - [v1.xx] read 2 short registers and save into 1 long-word register
+6F - [v3.xx, v4] undefined
+70 MOVRIL - [v1.xx] read 2 short registers and save into 1 long-word register
 	2 bytes - destination register ID [long]
 	2 bytes - source register ID [short]
 	Reads src+0 and src+1 and writes it into dst with src+0 = high word, src+1 = low word.
-70 - [v3.10] undefined
-71 - [v1.xx] compare two long registers
+70 - [v3.xx, v4] undefined
+71 CMPRL - [v1.xx] compare two long registers
 	2 bytes - register ID of reg1 [long]
 	2 bytes - register ID of reg2 [long]
 	Same as command 0C, except that two long registers are compared with their full 4-byte longwords.
 	Additionally, the result is saved in register 0. (unlike command 0C)
-71 - [v3.10] undefined
+71 - [v3.xx, v4] undefined
 72 FRMSTI - set script frame counter
 	2 bytes - value for script frame counter
 73 FRMGTR - get script frame counter
@@ -485,7 +511,7 @@ Commands
 78 IDLEXY - set "idle animation" X/Y position
 	2 bytes - X position
 	2 bytes - Y position
-79 - [v1.00] undefined
+79 - [v1.00, v4] undefined
 79 CMD79 - [v1.10+] ?? (copies data to some buffer at the end of the script data)
 	2 bytes - file offset of data
 		Data format:
@@ -506,7 +532,7 @@ Commands
 7C - undefined
 7D - undefined
 7E - undefined
-7F DOSRETR - exit to DOS, return code based on register content
+7F DOSRETR - [not v4] exit to DOS, return code based on register content
 	2 bytes - register ID, contains the return code
 80 STRFLD - load strings from file
 	2 bytes - string ID
@@ -516,19 +542,19 @@ Commands
 	2 bytes - string ID
 	2 bytes - file offset of file name
 	Opens the file and writes the two (!) strings [string ID+0] and [string ID+1] as two lines, separated by 0Dh 0Ah (CRLF). Also adds an 1Ah (EOF) character.
-82 GFX82 - ?? (writes to GVRAM Plane 0/1/2/3)
+82 GFX82 - [not v4] ?? (writes to GVRAM Plane 0/1/2/3)
 	no parameters
-83 GFX83 - ?? (GFX related)
+83 GFX83 - [not v4] ?? (GFX related)
 	2 bytes - register ID
-84 GFX84 - ?? (some GFX transition effect)
+84 GFX84 - [not v4] ?? (some GFX transition effect)
 	no parameters
-85 GFX85 - ?? (some GFX transition effect)
+85 GFX85 - [not v4] ?? (some GFX transition effect)
 	no parameters
-86 PTDATA - set all Portrait Data
+86 PTDATA - [not v4] set all Portrait Data
 	2 bytes - file offset of portrait data (coordinates / palette)
 	The data is 30h portrait * 12h bytes/portrait = 360h bytes long. All data values are 2-byte words.
 	The 12h data per items equals the same as the parameters to command 87 after the index.
-87 PTDAT1 - set single Portrait Data
+87 PTDAT1 - [not v4] set single Portrait Data
 	2 bytes - Portrait index (00..3F)
 	2 bytes - [HB-pad] source GDC plane (0..2) (for I/O port 0A6h when reading the image)
 	2 bytes - portrait start column (X/8) in portrait collection image
@@ -541,12 +567,12 @@ Commands
 	2 bytes - [HB-pad] palette 0E: blue
 	-> 14h bytes total
 	This defines the properties of one portrait image.
-88 PTDSTI - set Portrait destination
+88 PTDSTI - [not v4] set Portrait destination
 	2 bytes - [HB-pad] destination GDC plane (0..2)
 	2 bytes - destination start column (X/8)
 	2 bytes - destination start row (Y)
 	This sets the destination plane and coordinates for when portraits are drawn.
-89 PTPOSA - [v1.10+] set all Portrait start positions
+89 PTPOSA - [v1.10+, not v4] set all Portrait start positions
 	2 bytes - file offset of portrait data
 	The data is 30h items * 06h bytes/item = 120h bytes long. All data values are 2-byte words.
 	The data contains the same information as the data in for command 86. However this command stores it in the same way as the engine's internal storage.
@@ -554,41 +580,95 @@ Commands
 		2 bytes - [HB-pad] source GDC plane (0..2)
 		2 bytes - portrait start column (X/8) in portrait collection image
 		2 bytes - portrait start row (Y) in portrait collection image
-8A PTPOS1R - [v1.10+] set Portrait start position
+8A PTPOS1R - [v1.10+, not v4] set Portrait start position
 	2 bytes - register ID: portrait index
 	2 bytes - register ID: source GDC plane (0..2)
 	2 bytes - register ID: start column (X/8)
 	2 bytes - register ID: start row (Y)
-8B PTDSTR - [v1.10+] set Portrait destination
+8B PTDSTR - [v1.10+, not v4] set Portrait destination
 	2 bytes - register ID: destination GDC plane (0..2)
 	2 bytes - register ID: start column (X/8)
 	2 bytes - register ID: start row (Y)
 	Note: Same as 88, except that parameters are read from registers.
-8C GFX8C - [v1.10+] ?? (GFX related)
+8C GFX8C - [v1.10+, not v4] ?? (GFX related)
 	no parameters
-8D GFX8D - [v3.10] ?? (GFX related)
+8D GFX8D - [v3.xx, not v4] ?? (GFX related)
 	no parameters
-8E GFX8E - [v3.10] ?? (GFX related)
+8E GFX8E - [v3.xx, not v4] ?? (GFX related)
 	no parameters
+8F LDSUBSC - [v3.12+] load sub scene file
+	2 bytes - load offset? (the low byte is multiplied by 4 for some reason)
+	          [v4] 0 = overwrite main scene data (0x0000..0x3FFF), 1 = overwrite sub scene (0x4000..0x7FFF)
+	2 bytes - file offset of file name
+	Note: This loads a scene submdule. Script execution continues as normal after loading.
+90 POPCALL - [v3.12] removes the last "subroutine return" pointer
+	The return address is popped from an internal stack.
+	But unlike the RET command, it does not jump back.
+90 POPCALL - [v4] resets the subroutine stack index
+	This clears the entire subroutine stack.
+91 SNDMODE - [v3.12+] change sound mode and reload sound drivers
+	2 bytes - register ID for sound mode
+		0 = no sound
+		1 = OPN sound
+		2 = OPNA sound
+		3 = MIDI sound
+	2 bytes - destination register ID for result code
+		0 = success
+		-1 = ?
+		-2 = ?
+		-3 = ?
+	[v4] The command has no effect. (but takes the proper number of parameters)
+92 NAMECHG - [v3.12] call "NAMCHG.EXE" executable
+93 GETKEY - [v3.12] get key press state
+	2 bytes - register ID where the key code of the pressed key is written to
+94 NOP [v3.12] - dummy instruction, does nothing
+95 GFX95 - [v3.12] GFX related
+	8*2 bytes - ??
+96 GFX96 - [v3.12] GFX related
+	2 bytes - ??
+	2 bytes - ??
+97 SHOWEND - [v3.12] call "ENDING.EXE" executable
+98 CMD98 - [v3.12 only, not v4] ??
+	2 bytes - destination register ID for ??
+	2 bytes - destination register ID for ??
+	2 bytes - destination register ID for ??
+	2 bytes - destination register ID for ??
+	2 bytes - destination register ID for ??
+F0 HALT - [v4] show "halt" message and exit
+FA CDPLAY - play CD audio music
+	2 bytes - CD audio track number (0 = 1st track, 1 = 2nd track, etc.)
+FB CDFADE - [v4] fade music out
+	no parameters
+FC CDSTOP - [v4] stop music
+	no parameters
+FD CMDFD - [v4] ??
+	2 bytes - ??
+FE CMDFE - [v4] ?? (full screen / windowed mode switch?)
+	2 bytes - [HB-pad] ??
 
 "Undefined" commands will print the message "Executed undefined system reserved instruction" and then exit to DOS with return code 1.
 [HB-pad] - The high byte of the 2-byte word is used for padding only and is ignored by the engine.
 [short] - 2-byte register (ID 000h..3FFh)
 [long] - 4-byte register (ID 400h..40Ah)
 
-System-98 v1.00 supports commands 00..88.
-System-98 v1.10 supports commands 00..8C.
-System-98 v3.10 supports commands 00..8E.
+System-98 v1.00 (Gaogao 1) supports commands 00..88.
+System-98 v1.10 (Gaogao 2) supports commands 00..8C.
+System-98 v3.00 (Gaogao 3, Canaan) supports commands 00..8E.
+System-98 v3.12 (Lilith) supports commands 00..98.
+System-98 v4.00 (May Club for Win31) supports commands 00..97, F0 and FA..FE.
+
+Note: v1.00 to v3.0x support 4-byte long-word registers.
+Support for those was removed with v3.10 and register IDs 400h..407h refer to global settings.
 
 File names
 ----------
-- The first byte of a file name seems to be the disk drive or data archive ID and is usually ignored by the game engine. Aside from that, file names are usual null-terminated strings.
+- The first byte of a file name seems to be the disk drive or data archive ID and is usually ignored by the game engine. (It can be 0!) Aside from that, file names are usual null-terminated strings.
 
 Text box strings
 ----------------
 - Strings use Shift-JIS encoding. They may include non-standard NEC-specific JIS characters, as well as custom ones from GAO4.FNT.
 - [v1.xx] All Shift-JIS characters are assumed to be full-width. (16 pixels wide) Half-width characters are supported using byte codes 20h..7Fh (ASCII) and A0h..DFh (half-width Katakana).
-- [v3.10] Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
+- [v3.00] Shift-JIS characters 8541 .. 869E are assumed to be half-width. (8 pixels wide) All others are assumed to be full-width characters. (16 pixels wide)
 - Special characters:
   - 00h - end string
   - 01h - wait for key press (shows idle animation), then clear text box
@@ -597,24 +677,46 @@ Text box strings
   - 04h ii - print register string ii (00/01 = character names)
   - 05h aa bb - print integer register bbaa (printed as decimal numbers, full-width Shift-JIS 854F..8558)
   - 06h - [v1.00] ignored
-  - 06h pp - [v1.10+] overlay portrait (pp can be 00..3F), draws transparent portrait on top of the existing one)
+  - 06h pp - [v1.10..v3.00] overlay portrait (pp can be 00..3F), draws transparent portrait on top of the existing one)
+  - 06h pp - [v3.12+] behaves like 08h xx
   - 07h - [v1.00] ignored
-  - 07h - [v1.10+] clear portrait
+  - 07h - [v1.10..v3.00] clear portrait
+  - 07h pp - [v3.12+] behaves like 08h xx
+  - 07h - [v4.00] ignored
   - 08h - [v1.00] ignored
-  - 08h xx - [v1.10+] ?? (sets byte_1E5C6)
-  - 09h - tab (print 8 spaces)
+  - 08h xx - [v1.10..v3.12] ?? (sets byte_1E5C6)
+  - 08h xx - [v4.00] no effect (parameter is ignored)
+  - 09h - [v1..v3] tab (print 8 spaces)
+  - 09h - [v4.00] tab (round X position up to a multiple of 64)
   - 0Ah - [v1.xx] scroll text by 1 line
-  - 0Ah - [v3.10] no effect
+  - 0Ah - [v3.00] no effect
+  - 0Ah pp - [v3.12+] behaves like 08h xx
   - 0Bh pp - show portrait (pp can be 00..3F), also loads palettes 0Dh and 0Eh from portrait memory
+  - 0Bh pp - [v3.12+] behaves like 08h xx
   - 0Ch - [v1.00] ignored
-  - 0Ch pp - [v1.10+] show portrait (pp can be 00..3F), but does NOT load any palettes
+  - 0Ch pp - [v1.10..v3.00] show portrait (pp can be 00..3F), but does NOT load any palettes
+  - 0Ch pp - [v3.12+] behaves like 08h xx
   - 0Dh - next line
   - 0Eh - [v1.00] ignored
   - 0Eh xx - [v1.10] ?? (related to TextRAM flags)
-  - 0Eh xx - [v3.10] no effect (parameter is ignored)
+  - 0Eh xx - [v3.00+] no effect (parameter is ignored)
   - 0Fh - [v1.xx] ignored
-  - 0Fh cc - [v3.10] special code
-  - 0Fh 00h xx - [v3.10] sets some flag (value can be 00 or 01)
+  - 0Fh cc - [v3.00+] special code
+  - 0Fh 00h xx - [v3.00] sets some flag (value can be 00 or 01)
+  - 0Fh 00h xx - [v3.12] sets some index that is used for drawing (value can be 00..07)
+  - 0Fh 00h xx - [v4.00] sets something related to text boxes (seems to be unused?)
+  - 0Fh 01h - [v3.12+] toggles whether or not "caps lock" can cause instant drawing or not
+  - 0Fh 02h - [v3.12] enables something related to waiting for user input
+  - 0Fh 02h - [v4.00] set textBoxID = 1
+  - 0Fh 03h - [v3.12] reverts 0Fh 02h
+  - 0Fh 03h - [v4.00] set textBoxID = 0
+  - 0Fh 0Ah - [v4.00] ?? (byte_C006 &= 0x08)
+  - 0Fh 0Bh - [v4.00] ?? (byte_C006 |= 0x08)
+  - 1Ah - [v4.00] ?? (some real-time text modification related to idle-animation)
+  - 1Bh ii - [v4.00] print register string ii, but does fewer text box related things
+  - 1Ch - [v4.00] acts like "next line" (0Dh) the first time, then just like a space (20h)
+  - 1Dh - [v4.00] ?? (some real-time text modification related to idle-animation)
+  - 1Eh - [v4.00] ?? (some real-time text modification related to idle-animation)
 
 Menu Data
 ---------

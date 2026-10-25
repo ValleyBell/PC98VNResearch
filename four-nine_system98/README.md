@@ -8,7 +8,8 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 
 - [list of games using the engine](game-list.md)
 - [an archive with all known game executables](executables.7z)
-- [archive unpacking and repacking tool](sys98_packer.py) for `DISK_#.LIB/CAT` files
+- [archive unpacking and repacking tool](sys98_packer.py) for `DISK_#.LIB/CAT` files (PC-98 version archives)
+- [archive unpacking and repacking tool](mayclub_packer.py) for `MAY0_#.DAT/LST` files ("May Club" Windows 95 version archives)
 - decompression tool for the game's LZSS-packed data: [cleaned up version](Decompress.py), [original disassembly translation](Decompress.py.bak)
 - [scenario format description](SceneFormat.txt)
 - [scenario descrambler](ScenarioDecode.py)
@@ -25,7 +26,8 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 - [image format documentation](ImageFormat.txt) and a tool to convert [images files to the .PI format](Graphics2Pi.py)
 - [tool to De-/Interlace Canaan's intro images](PrologueImgInterlace.py)
 - Gaogao 1 `SYS98CPP.COM` v1.00 disassembly ([IDB file](SYS98CPP.idb), [ASM file](SYS98CPP.asm))
-- Gaogao 4 Canaan `SYS98.COM` v3.10 disassembly ([IDB file](SYS98.idb), [ASM file](SYS98.asm))
+- Gaogao 4 Canaan `SYS98.EXE` v3.01 disassembly ([IDB file](SYS98_v301.idb), [ASM file](SYS98_v301.asm)) (Note that the EXE calls itself v3.10, but it really is v3.01.)
+- Lilith `SYS98.EXE` v3.12 disassembly ([IDB file](SYS98_v312.idb), [ASM file](SYS98_v312.asm)) (This is the latest version of the engine released for the PC-98.)
 - Python tool to convert a four･nine font file (`.FNT`) to an image: [font2img.py](font2img.py) (supports BMP/PNG/... through Pillow library)
 - Gaogao 4 font:
   - an [image conversion of GAO4.FNT](GAO4_FNT.PNG)
@@ -34,7 +36,7 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
 ## Extras
 
 - Windows `.bat` scripts to quickly decode data from the game "Canaan".
-- a [patch to support ASCII text](Sys98_v310_ASC-patch.asm) for `SYS98.EXE` v3.10
+- a [patch to support ASCII text](Sys98_v301_ASC-patch.asm) for `SYS98.EXE` v3.01
   - The patch is in ASM format and can be assembled+applied using [NASM](https://www.nasm.us/).
   - A prepatched version is included as [SYS98A31.EXE](SYS98A31.EXE).
 - an English translation patch for parts of the game Canaan can be found in the [canaan-en folder](canaan-en)
@@ -108,6 +110,21 @@ There is also a bit of information on the "DIANA" engine used by Waku Waku Mahjo
   The only exception is MAKEG, which was uncompressed in WMP 1 but is LZ91-compressed in WMP 2.
 - Although only Waku Waku Mahjong Panic! 2 uses encrypted scenario files, WMP 1 seems to support scenario encryption as well. (Maybe it is used on uncompressed files only?)
   Interestingly, WMP 1 does `INC [ofs+0] / DEC [ofs+1]` while WMP 2 does the reverse: `DEC [ofs+0] / INC [ofs+1]`
+
+## "WINDY" engine (System-98 Windows version)
+
+- The Windows version of "May Club" uses System-98 formats for scenarios and images as well.
+- It calls itself "DIANA for Win «WINDY»", but the scenario format is the same as used by System-98 v3.10 with only few differences.
+  The DIANA scenario format used by WWMP 1 and 2 differs from that.
+- Scenario files are encrypted using the same algorithm that "Waku Waku Mahjong Panic! 2" uses:  
+  For every set of 2 bytes, subtract 1 from the first byte and add 1 to the second byte. (`DEC [ofs+0] / INC [ofs+1]`)
+- "Normal" scenario files don't have a comment at the beginning.  
+  Submodules (e.g. `MAY_SUB.S`) *do* have a comment field of 0x100 bytes at the beginning. The comment itself is unencrypted, but the padding (which consists of `FF` bytes) is encrypted.
+- Archive files consist of a pair of `.LST` and `.DAT` files.
+  - `.LST` (list) contains the file list
+  - `.DAT` (data) contains the actual file data
+  - The archive format is uncompressed and unencrypted.
+- `MAY.BIN` is the actual main executable. It is encrypted by XORing all bytes with `FF`.
 
 ## Thanks
 

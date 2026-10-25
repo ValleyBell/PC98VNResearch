@@ -1,0 +1,1 @@
+place contents of "V.R. Date - May Club" (PC-98 version) game directory here (e.g. SYS98.EXE, DISK_?.CAT, DISK_?.LIB, *.S files)

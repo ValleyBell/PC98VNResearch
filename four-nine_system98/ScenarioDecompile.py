@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# TODO: determine exact version
+#	- commands 01/2B/2C/45/46/47/48/49/6F/70/71 -> v1 (NOT v3)
+#	- commands 79/7A/7B/89/8A/8B/8C -> v1.10/V3 (NOT v1.00)
+#	- commands 69/8D/8E -> v3.00 (NOT v1)
+#	- commands 8F/90/... -> v3.10
+#	- no initial comment -> v4 (Windows)
 import sys
 import os
 import struct
@@ -29,6 +35,7 @@ SCPT_TXTSEL = 0x15	# text/menu selection list
 SCPT_FONTDAT = 0x16	# font data
 SCPT_86DAT = 0x17	# data for command 86
 SCPT_89DAT = 0x18	# data for command 89
+SCPT_PAD = 0x1F		# padding for 2-byte alignment
 
 SCPT_REG_INT = 0x80	# register: integer
 SCPT_REG_LNG = 0x81	# register: long
@@ -40,150 +47,333 @@ SC_EXEC_SPC = 0xFF	# special handling
 
 LBLFLG_UNUSED = 0x01
 
-SCENE_CMD_LIST = {
-	0x00: ("DOSEXIT", [], SC_EXEC_END),
-	0x01: (None     , []),
-	0x02: ("IMGLOAD", [SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_FNAME, SCPT_BYTE]),
-	0x03: ("TBOPEN" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x04: ("TBCLOSE", [SCPT_INT]),
-	0x05: ("TBCLEAR", [SCPT_INT]),
-	0x06: ("PALAPL" , []),
-	0x07: ("PALBW"  , [SCPT_INT, SCPT_INT]),
-	0x08: ("PALFADE", [SCPT_INT, SCPT_INT]),
-	0x09: ("PALLCKT", [SCPT_BYTE]),
-	0x0A: ("JP"     , [SCPT_JUMP], SC_EXEC_END),
-	0x0B: ("CMPR"   , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x0C: ("CMPI"   , [SCPT_REG_INT, SCPT_INT]),
-	0x0D: ("JEQ"    , [SCPT_JUMP]),
-	0x0E: ("JLT"    , [SCPT_JUMP]),
-	0x0F: ("JGT"    , [SCPT_JUMP]),
-	0x10: ("JGE"    , [SCPT_JUMP]),
-	0x11: ("JLE"    , [SCPT_JUMP]),
-	0x12: ("JNE"    , [SCPT_JUMP]),
-	0x13: ("JTBL"   , [SCPT_REG_INT], SC_EXEC_SPC),
-	0x14: ("PALCSET", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x15: ("PRINT"  , [SCPT_BYTE, SCPT_STR]),
-	0x16: ("PRINTXY", [SCPT_INT, SCPT_INT, SCPT_STR]),
-	0x17: (None     , []),
-	0x18: ("MOVI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x19: ("MOVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x1A: ("BGMPLAY", [SCPT_FNAME]),
-	0x1B: ("BGMFADE", []),
-	0x1C: ("BGMSTOP", []),
-	0x1D: ("BGMMODE", [SCPT_REG_INT]),
-	0x1E: ("WAITKEY", [SCPT_REG_INT]),
-	0x1F: ("LDSCENE", [SCPT_FNAME], SC_EXEC_END),
-	0x20: ("GV02"   , []),
-	0x21: ("WAIT"   , [SCPT_REG_INT]),
-	0x22: ("CHRDLY" , [SCPT_REG_INT]),
-	0x23: (None     , []),
-	0x24: ("ADDI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x25: ("SUBI"   , [SCPT_REG_IL, SCPT_ILVAR]),
-	0x26: ("TXCLR1" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
-	0x27: ("ADDR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x28: ("SUBR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x29: ("XYREAD" , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),	# TODO: all REG_INT
-	0x2A: ("XYWRT"  , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),	# TODO: all REG_INT
-	0x2B: (None     , []),
-	0x2C: (None     , []),
-	0x2D: ("REGCLR" , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x2E: (None     , []),
-	0x2F: ("BLIT1I" , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x30: (None     , []),
-	0x31: (None     , []),
-	0x32: ("PRINTR" , [SCPT_BYTE, SCPT_REG_INT]),
-	0x33: ("GPDGET" , [SCPT_REG_INT]),
-	0x34: ("GPDSET" , [SCPT_REG_INT]),
-	0x35: ("TXFILL" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INTH]),
-	0x36: ("GFX36"  , []),
-	0x37: ("XYFLOAD", [SCPT_FNAME]),
-	0x38: ("ANDR"   , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x39: ("ORR"    , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x3A: ("BLIT1R" , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x3B: ("BLIT1RL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x3C: ("TXCLR2" , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
-	0x3D: ("MULR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x3E: ("DIVR"   , [SCPT_REG_IL, SCPT_REG_IL]),
-	0x3F: ("CMD3F"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x40: ("MENUSEL", [SCPT_REG_INT, SCPT_REG_INT, SCPT_TXTSEL, SCPT_JUMP], SC_EXEC_SPC),
-	0x41: ("CMD41"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
-	0x42: ("CMD42"  , [SCPT_BYTE]),
-	0x43: ("CMD43"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x44: (None     , []),
-	0x45: ("CMD45"  , [SCPT_INT]),
-	0x46: (None     , []),
-	0x47: (None     , []),
-	0x48: (None     , []),
-	0x49: (None     , []),
-	0x4A: ("REGFSAV", [SCPT_BYTE, SCPT_FNAME]),
-	0x4B: ("REGFLD" , [SCPT_BYTE, SCPT_FNAME]),
-	0x4C: ("CMD4C"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x4D: ("BGMMEAS", [SCPT_REG_INT]),
-	0x4E: ("SFXSSG" , [SCPT_BYTE]),
-	0x4F: ("SFXFM"  , [SCPT_BYTE]),
-	0x50: ("BGMSTAT", [SCPT_REG_INT]),
-	0x51: ("ANDI"   , [SCPT_REG_INT, SCPT_INTH]),
-	0x52: ("ORI"    , [SCPT_REG_INT, SCPT_INTH]),
-	0x53: ("STRCAT" , [SCPT_REG_STR, SCPT_REG_STR]),
-	0x54: ("CALL"   , [SCPT_JUMP]),
-	0x55: ("RET"    , [], SC_EXEC_END),
-	0x56: ("STRCMPR", [SCPT_REG_STR, SCPT_REG_STR]),
-	0x57: ("STRNCPY", [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
-	0x58: ("STRCPYC", [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
-	0x59: ("STRCPYI", [SCPT_REG_STR, SCPT_STR]),
-	0x5A: ("STRCLR" , [SCPT_REG_STR]),
-	0x5B: ("STRCPY" , [SCPT_REG_STR, SCPT_REG_STR]),
-	0x5C: (None     , []),
-	0x5D: (None     , []),
-	0x5E: ("CMD5E"  , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x5F: ("STRTIME", [SCPT_REG_STR]),
-	0x60: ("FILETM" , [SCPT_REG_INT, SCPT_REG_STR, SCPT_FNAME]),
-	0x61: ("XYFSAVE", [SCPT_FNAME]),
-	0x62: ("CMD62"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x63: ("BLIT2I" , [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x64: ("BLIT2R" , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x65: (None     , []),
-	0x66: (None     , []),
-	0x67: ("GFX67"  , [SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
-	0x68: ("GFX68"  , [SCPT_REG_INT, SCPT_REG_INT]),
-	0x69: ("GFX69"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x6A: ("CMD6A"  , [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x6B: ("CMD6B"  , [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x6C: (None     , []),
-	0x6D: (None     , []),
-	0x6E: ("STRLEN" , [SCPT_REG_INT, SCPT_REG_STR]),
-	0x6F: (None     , []),
-	0x70: (None     , []),
-	0x71: (None     , []),
-	0x72: ("FRMSTI" , [SCPT_INT]),
-	0x73: ("FRMGTR" , [SCPT_REG_INT]),
-	0x74: ("FRMJPI" , [SCPT_INT, SCPT_JUMP]),
-	0x75: ("FONTCHR", [SCPT_INTH, SCPT_FONTDAT]),
-	0x76: ("IDLECHR", [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
-	0x77: ("IDLEDLY", [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
-	0x78: ("IDLEXY" , [SCPT_INT, SCPT_INT]),
-	0x79: ("CMD79"  , [SCPT_DATA2]),
-	0x7A: ("FRMSTR" , [SCPT_REG_INT]),
-	0x7B: ("FRMJPR" , [SCPT_REG_INT, SCPT_JUMP]),
-	0x7C: (None     , []),
-	0x7D: (None     , []),
-	0x7E: (None     , []),
-	0x7F: ("DOSRETR", [SCPT_REG_INT], SC_EXEC_END),
-	0x80: ("STRFLD" , [SCPT_REG_STR, SCPT_FNAME]),
-	0x81: ("STRFSAV", [SCPT_REG_STR, SCPT_FNAME]),
-	0x82: ("GFX82"  , []),
-	0x83: ("GFX83"  , [SCPT_REG_INT]),
-	0x84: ("GFX84"  , []),
-	0x85: ("GFX85"  , []),
-	0x86: ("PTDATA" , [SCPT_86DAT]),
-	0x87: ("PTDAT1" , [SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
-	0x88: ("PTDSTI" , [SCPT_BYTE, SCPT_INT, SCPT_INT]),
-	0x89: ("PTPOSA" , [SCPT_89DAT]),
-	0x8A: ("PTPOS1R", [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
-	0x8B: ("PTDSTR" , [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
-	0x8C: ("GFX8C"  , []),
-	0x8D: ("GFX8D"  , []),
-	0x8E: ("GFX8E"  , []),
+
+SCNVER_ALL = (None, )
+SCNVER_100 = (100, )	# v1.00 only
+SCNVER_110 = (110, )	# v1.10 only (not v1.00, not v3/v4)
+SCNVER_11P = (110, 300, 310, 312, 400)	# v1.01 and later
+SCNVER_1XX = (100, 110)	# v1.xx
+SCNVER_312 = (312, )	# v3.12 only
+SCNVER_31P = (312, 400)	# v3.12 only
+SCNVER_3XX = (300, 310, 312)	# v3.xx (not v1, not v4)
+SCNVER_400 = (400, )	# v4 only
+
+SCENE_CMD_LIST_PC98 = {
+	0x00: ("EXIT",    SCNVER_ALL, [], SC_EXEC_END),
+	0x01: ("TBIMG"  , SCNVER_1XX, [SCPT_INT, SCPT_BYTE, SCPT_FNAME, SCPT_BYTE]),
+	0x02: ("IMGLOAD", SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_FNAME, SCPT_BYTE]),
+	0x03: ("TBOPEN" , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x04: ("TBCLOSE", SCNVER_ALL, [SCPT_INT]),
+	0x05: ("TBCLEAR", SCNVER_ALL, [SCPT_INT]),
+	0x06: ("PALAPL" , SCNVER_ALL, []),
+	0x07: ("PALBW"  , SCNVER_ALL, [SCPT_INT, SCPT_INT]),
+	0x08: ("PALFADE", SCNVER_ALL, [SCPT_INT, SCPT_INT]),
+	0x09: ("PALLCKT", SCNVER_ALL, [SCPT_BYTE]),
+	0x0A: ("JP"     , SCNVER_ALL, [SCPT_JUMP], SC_EXEC_END),
+	0x0B: ("CMPR"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x0C: ("CMPI"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_INT]),
+	0x0D: ("JEQ"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x0E: ("JLT"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x0F: ("JGT"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x10: ("JGE"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x11: ("JLE"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x12: ("JNE"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x13: ("JTBL"   , SCNVER_ALL, [SCPT_REG_INT], SC_EXEC_SPC),
+	0x14: ("PALCSET", SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x15: ("PRINT"  , SCNVER_ALL, [SCPT_BYTE, SCPT_STR]),
+	0x16: ("PRINTXY", SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_STR]),
+	0x17: (None     , SCNVER_ALL, []),
+	0x18: ("MOVI"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_ILVAR]),
+	0x19: ("MOVR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x1A: ("BGMPLAY", SCNVER_ALL, [SCPT_FNAME]),
+	0x1B: ("BGMFADE", SCNVER_ALL, []),
+	0x1C: ("BGMSTOP", SCNVER_ALL, []),
+	0x1D: ("BGMMODE", SCNVER_ALL, [SCPT_REG_INT]),
+	0x1E: ("WAITKEY", SCNVER_ALL, [SCPT_REG_INT]),
+	0x1F: ("LDSCENE", SCNVER_ALL, [SCPT_FNAME], SC_EXEC_END),
+	0x20: ("GV02"   , SCNVER_ALL, []),
+	0x21: ("WAIT"   , SCNVER_ALL, [SCPT_REG_INT]),
+	0x22: ("CHRDLY" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x23: (None     , SCNVER_ALL, []),
+	0x24: ("ADDI"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_ILVAR]),
+	0x25: ("SUBI"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_ILVAR]),
+	0x26: ("TXCLR1" , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
+	0x27: ("ADDR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x28: ("SUBR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x29: ("XYREAD" , SCNVER_ALL, [SCPT_REG_INT, SCPT_INT, SCPT_INT]),	# TODO: all REG_INT
+	0x2A: ("XYWRT"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_INT, SCPT_INT]),	# TODO: all REG_INT
+	0x2B: ("REGFSVA", SCNVER_1XX, [SCPT_FNAME]),
+	0x2C: ("REGFLDA", SCNVER_1XX, [SCPT_FNAME]),
+	0x2D: ("REGCLR" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x2E: ("RNDI"   , SCNVER_312, [SCPT_INT, SCPT_REG_INT]),
+	0x2F: ("BLIT1I" , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
+	0x30: (None     , SCNVER_ALL, []),
+	0x31: (None     , SCNVER_ALL, []),
+	0x32: ("PRINTR" , SCNVER_ALL, [SCPT_BYTE, SCPT_REG_INT]),
+	0x33: ("GPDGET" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x34: ("GPDSET" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x35: ("TXFILL" , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INTH]),
+	0x36: ("GFX36"  , SCNVER_ALL, []),
+	0x37: ("XYFLOAD", SCNVER_ALL, [SCPT_FNAME]),
+	0x38: ("ANDR"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x39: ("ORR"    , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x3A: ("BLIT1R" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x3B: ("BLIT1RL", SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x3C: ("TXCLR2" , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE]),
+	0x3D: ("MULR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x3E: ("DIVR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x3F: ("CMD3F"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x40: ("MENUSEL", SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_TXTSEL, SCPT_JUMP], SC_EXEC_SPC),
+	0x41: ("CMD41"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
+	0x42: ("CMD42"  , SCNVER_ALL, [SCPT_BYTE]),
+	0x43: ("CMD43"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x44: ("NOP44"  , SCNVER_1XX, []),
+	0x45: ("CMD45"  , SCNVER_1XX, [SCPT_INT]),
+	0x46: (None     , SCNVER_ALL, []),
+	0x47: (None     , SCNVER_ALL, []),
+	0x48: (None     , SCNVER_ALL, []),
+	0x49: (None     , SCNVER_ALL, []),
+	0x4A: ("REGFSAV", SCNVER_ALL, [SCPT_BYTE, SCPT_FNAME]),
+	0x4B: ("REGFLD" , SCNVER_ALL, [SCPT_BYTE, SCPT_FNAME]),
+	0x4C: ("CMD4C"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x4D: ("BGMMEAS", SCNVER_ALL, [SCPT_REG_INT]),
+	0x4E: ("SFXSSG" , SCNVER_ALL, [SCPT_BYTE]),
+	0x4F: ("SFXFM"  , SCNVER_ALL, [SCPT_BYTE]),
+	0x50: ("BGMSTAT", SCNVER_ALL, [SCPT_REG_INT]),
+	0x51: ("ANDI"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_INTH]),
+	0x52: ("ORI"    , SCNVER_ALL, [SCPT_REG_INT, SCPT_INTH]),
+	0x53: ("STRCAT" , SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR]),
+	0x54: ("CALL"   , SCNVER_ALL, [SCPT_JUMP]),
+	0x55: ("RET"    , SCNVER_ALL, [], SC_EXEC_END),
+	0x56: ("STRCMPR", SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR]),
+	0x57: ("STRNCPY", SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
+	0x58: ("STRCPYC", SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
+	0x59: ("STRCPYI", SCNVER_ALL, [SCPT_REG_STR, SCPT_STR]),
+	0x5A: ("STRCLR" , SCNVER_ALL, [SCPT_REG_STR]),
+	0x5B: ("STRCPY" , SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR]),
+	0x5C: (None     , SCNVER_ALL, []),
+	0x5D: (None     , SCNVER_ALL, []),
+	0x5E: ("CMD5E"  , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x5F: ("STRTIME", SCNVER_ALL, [SCPT_REG_STR]),
+	0x60: ("FILETM" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_STR, SCPT_FNAME]),
+	0x61: ("XYFSAVE", SCNVER_ALL, [SCPT_FNAME]),
+	0x62: ("CMD62"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x63: ("BLIT2I" , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
+	0x64: ("BLIT2R" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x65: (None     , SCNVER_ALL, []),
+	0x66: (None     , SCNVER_ALL, []),
+	0x67: ("GFX67"  , SCNVER_ALL, [SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
+	0x68: ("GFX68"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x69: ("GFX69"  , SCNVER_3XX, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x6A: ("CMD6A"  , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x6B: ("CMD6B"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x6C: (None     , SCNVER_ALL, []),
+	0x6D: (None     , SCNVER_ALL, []),
+	0x6E: ("STRLEN" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_STR]),
+	0x6F: ("MOVRLI" , SCNVER_1XX, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x70: ("MOVRIL" , SCNVER_1XX, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x71: ("CMPRL"  , SCNVER_1XX, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x72: ("FRMSTI" , SCNVER_ALL, [SCPT_INT]),
+	0x73: ("FRMGTR" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x74: ("FRMJPI" , SCNVER_ALL, [SCPT_INT, SCPT_JUMP]),
+	0x75: ("FONTCHR", SCNVER_ALL, [SCPT_INTH, SCPT_FONTDAT]),
+	0x76: ("IDLECHR", SCNVER_ALL, [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
+	0x77: ("IDLEDLY", SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x78: ("IDLEXY" , SCNVER_ALL, [SCPT_INT, SCPT_INT]),
+	0x79: ("CMD79"  , SCNVER_11P, [SCPT_DATA2]),
+	0x7A: ("FRMSTR" , SCNVER_11P, [SCPT_REG_INT]),
+	0x7B: ("FRMJPR" , SCNVER_11P, [SCPT_REG_INT, SCPT_JUMP]),
+	0x7C: (None     , SCNVER_ALL, []),
+	0x7D: (None     , SCNVER_ALL, []),
+	0x7E: (None     , SCNVER_ALL, []),
+	0x7F: ("EXITR",   SCNVER_ALL, [SCPT_REG_INT], SC_EXEC_END),
+	0x80: ("STRFLD" , SCNVER_ALL, [SCPT_REG_STR, SCPT_FNAME]),
+	0x81: ("STRFSAV", SCNVER_ALL, [SCPT_REG_STR, SCPT_FNAME]),
+	0x82: ("GFX82"  , SCNVER_ALL, []),
+	0x83: ("GFX83"  , SCNVER_ALL, [SCPT_REG_INT]),
+	0x84: ("GFX84"  , SCNVER_ALL, []),
+	0x85: ("GFX85"  , SCNVER_ALL, []),
+	0x86: ("PTDATA" , SCNVER_ALL, [SCPT_86DAT]),
+	0x87: ("PTDAT1" , SCNVER_ALL, [SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE, SCPT_BYTE]),
+	0x88: ("PTDSTI" , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT]),
+	0x89: ("PTPOSA" , SCNVER_11P, [SCPT_89DAT]),
+	0x8A: ("PTPOS1R", SCNVER_11P, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x8B: ("PTDSTR" , SCNVER_11P, [SCPT_REG_INT, SCPT_INT, SCPT_INT]),
+	0x8C: ("GFX8C"  , SCNVER_11P, []),
+	0x8D: ("GFX8D"  , SCNVER_3XX, []),
+	0x8E: ("GFX8E"  , SCNVER_3XX, []),
+	0x8F: ("LDSUBSC", SCNVER_31P, [SCPT_INTH, SCPT_FNAME]),
+	0x90: ("POPCALL", SCNVER_31P, []),
+	0x91: ("SNDMODE", SCNVER_31P, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x92: ("NAMECHG", SCNVER_31P, []),
+	0x93: ("GETKEY" , SCNVER_31P, [SCPT_REG_INT]),
+	0x94: ("NOP"    , SCNVER_31P, []),
+	0x95: ("GFX95"  , SCNVER_31P, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x96: ("GFX96"  , SCNVER_31P, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x97: ("SHOWEND", SCNVER_31P, []),
+	0x98: ("CMD98"  , SCNVER_312, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+}
+SCENE_CMD_LIST_WIN = {
+	0x00: ("EXIT",    SCNVER_ALL, [], SC_EXEC_END),
+	0x01: ("EXITR",   SCNVER_400, [SCPT_REG_INT], SC_EXEC_END),	# !! different from v1..v3
+	0x02: ("IMGLOAD", SCNVER_400, [SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_BYTE, SCPT_FNAME, SCPT_BYTE, SCPT_BYTE]),	# !! different from v1..v3
+	0x03: ("TBOPEN" , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x04: ("TBCLOSE", SCNVER_ALL, [SCPT_INT]),
+	0x05: ("TBCLEAR", SCNVER_ALL, [SCPT_INT]),
+	0x06: ("PALAPL" , SCNVER_ALL, []),
+	0x07: ("PALBW"  , SCNVER_ALL, [SCPT_INT, SCPT_INT]),
+	0x08: ("PALFADE", SCNVER_ALL, [SCPT_INT, SCPT_INT]),
+	0x09: ("PALLCKT", SCNVER_ALL, [SCPT_BYTE]),
+	0x0A: ("JP"     , SCNVER_ALL, [SCPT_JUMP], SC_EXEC_END),
+	0x0B: ("CMPR"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x0C: ("CMPI"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_INT]),
+	0x0D: ("JEQ"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x0E: ("JLT"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x0F: ("JGT"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x10: ("JGE"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x11: ("JLE"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x12: ("JNE"    , SCNVER_ALL, [SCPT_JUMP]),
+	0x13: ("JTBL"   , SCNVER_ALL, [SCPT_REG_INT], SC_EXEC_SPC),
+	0x14: ("PALCSET", SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x15: ("PRINT"  , SCNVER_ALL, [SCPT_BYTE, SCPT_STR]),
+	0x16: (None     , SCNVER_400, []),
+	0x17: (None     , SCNVER_ALL, []),
+	0x18: ("MOVI"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_ILVAR]),
+	0x19: ("MOVR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x1A: ("BGMPLAY", SCNVER_ALL, [SCPT_FNAME]),
+	0x1B: ("BGMFADE", SCNVER_ALL, []),
+	0x1C: ("BGMSTOP", SCNVER_ALL, []),
+	0x1D: (None     , SCNVER_400, []),
+	0x1E: ("WAITKEY", SCNVER_ALL, [SCPT_REG_INT]),
+	0x1F: ("LDSCENE", SCNVER_ALL, [SCPT_FNAME], SC_EXEC_END),
+	0x20: ("GV02"   , SCNVER_ALL, []),
+	0x21: ("WAIT"   , SCNVER_ALL, [SCPT_REG_INT]),
+	0x22: ("CHRDLY" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x23: (None     , SCNVER_ALL, []),
+	0x24: ("ADDI"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_ILVAR]),
+	0x25: ("SUBI"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_ILVAR]),
+	0x26: (None     , SCNVER_400, []),
+	0x27: ("ADDR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x28: ("SUBR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x29: (None     , SCNVER_400, []),
+	0x2A: (None     , SCNVER_400, []),
+	0x2B: (None     , SCNVER_400, []),
+	0x2C: (None     , SCNVER_400, []),
+	0x2D: ("REGCLR" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x2E: (None     , SCNVER_400, []),
+	0x2F: ("BLIT1I" , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
+	0x30: (None     , SCNVER_ALL, []),
+	0x31: (None     , SCNVER_ALL, []),
+	0x32: ("PRINTR" , SCNVER_ALL, [SCPT_BYTE, SCPT_REG_INT]),
+	0x33: ("GPDGET" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x34: ("GPDSET" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x35: (None     , SCNVER_400, []),
+	0x36: ("GFX36"  , SCNVER_ALL, []),
+	0x37: (None     , SCNVER_400, []),
+	0x38: ("ANDR"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x39: ("ORR"    , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x3A: ("BLIT1R" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x3B: (None     , SCNVER_400, []),
+	0x3C: (None     , SCNVER_400, []),
+	0x3D: ("MULR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x3E: ("DIVR"   , SCNVER_ALL, [SCPT_REG_IL, SCPT_REG_IL]),
+	0x3F: ("CMD3F"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x40: ("MENUSEL", SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_TXTSEL, SCPT_JUMP], SC_EXEC_SPC),
+	0x41: ("CMD41"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_JUMP]),
+	0x42: ("CMD42"  , SCNVER_ALL, [SCPT_BYTE]),
+	0x43: ("CMD43"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x44: (None     , SCNVER_400, []),
+	0x45: (None     , SCNVER_400, []),
+	0x46: (None     , SCNVER_ALL, []),
+	0x47: (None     , SCNVER_ALL, []),
+	0x48: (None     , SCNVER_ALL, []),
+	0x49: (None     , SCNVER_ALL, []),
+	0x4A: ("REGFSAV", SCNVER_ALL, [SCPT_BYTE, SCPT_FNAME]),
+	0x4B: ("REGFLD" , SCNVER_ALL, [SCPT_BYTE, SCPT_FNAME]),
+	0x4C: ("CMD4C"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x4D: (None     , SCNVER_400, []),
+	0x4E: ("SFXSSG" , SCNVER_ALL, [SCPT_BYTE]),
+	0x4F: ("SFXWAV" , SCNVER_400, [SCPT_INT, SCPT_INT]),	# !! different from v1..v3
+	0x50: (None     , SCNVER_400, []),
+	0x51: ("ANDI"   , SCNVER_ALL, [SCPT_REG_INT, SCPT_INTH]),
+	0x52: ("ORI"    , SCNVER_ALL, [SCPT_REG_INT, SCPT_INTH]),
+	0x53: ("STRCAT" , SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR]),
+	0x54: ("CALL"   , SCNVER_ALL, [SCPT_JUMP]),
+	0x55: ("RET"    , SCNVER_ALL, [], SC_EXEC_END),
+	0x56: ("STRCMPR", SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR]),
+	0x57: ("STRNCPY", SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
+	0x58: ("STRCPYC", SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR, SCPT_INT]),
+	0x59: ("STRCPYI", SCNVER_ALL, [SCPT_REG_STR, SCPT_STR]),
+	0x5A: ("STRCLR" , SCNVER_ALL, [SCPT_REG_STR]),
+	0x5B: ("STRCPY" , SCNVER_ALL, [SCPT_REG_STR, SCPT_REG_STR]),
+	0x5C: (None     , SCNVER_ALL, []),
+	0x5D: (None     , SCNVER_ALL, []),
+	0x5E: ("CMD5E"  , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x5F: ("STRTIME", SCNVER_ALL, [SCPT_REG_STR]),
+	0x60: ("FILETM" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_STR, SCPT_FNAME]),
+	0x61: (None     , SCNVER_400, []),
+	0x62: ("CMD62"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x63: ("BLIT2I" , SCNVER_ALL, [SCPT_BYTE, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_BYTE, SCPT_INT, SCPT_INT]),
+	0x64: ("BLIT2R" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x65: (None     , SCNVER_ALL, []),
+	0x66: (None     , SCNVER_ALL, []),
+	0x67: (None     , SCNVER_400, []),
+	0x68: (None     , SCNVER_400, []),
+	0x69: (None     , SCNVER_400, []),
+	0x6A: ("CMD6A"  , SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x6B: ("CMD6B"  , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x6C: (None     , SCNVER_ALL, []),
+	0x6D: (None     , SCNVER_ALL, []),
+	0x6E: ("STRLEN" , SCNVER_ALL, [SCPT_REG_INT, SCPT_REG_STR]),
+	0x6F: (None     , SCNVER_400, []),
+	0x70: (None     , SCNVER_400, []),
+	0x71: (None     , SCNVER_400, []),
+	0x72: ("FRMSTI" , SCNVER_ALL, [SCPT_INT]),
+	0x73: ("FRMGTR" , SCNVER_ALL, [SCPT_REG_INT]),
+	0x74: ("FRMJPI" , SCNVER_ALL, [SCPT_INT, SCPT_JUMP]),
+	0x75: ("FONTCHR", SCNVER_ALL, [SCPT_INTH, SCPT_FONTDAT]),
+	0x76: ("IDLECHR", SCNVER_ALL, [SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH, SCPT_INTH]),
+	0x77: ("IDLEDLY", SCNVER_ALL, [SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT, SCPT_INT]),
+	0x78: ("IDLEXY" , SCNVER_ALL, [SCPT_INT, SCPT_INT]),
+	0x79: (None     , SCNVER_400, []),
+	0x7A: ("FRMSTR" , SCNVER_11P, [SCPT_REG_INT]),
+	0x7B: ("FRMJPR" , SCNVER_11P, [SCPT_REG_INT, SCPT_JUMP]),
+	0x7C: (None     , SCNVER_ALL, []),
+	0x7D: (None     , SCNVER_ALL, []),
+	0x7E: (None     , SCNVER_ALL, []),
+	0x7F: (None     , SCNVER_400, []),
+	0x80: ("STRFLD" , SCNVER_ALL, [SCPT_REG_STR, SCPT_FNAME]),
+	0x81: ("STRFSAV", SCNVER_ALL, [SCPT_REG_STR, SCPT_FNAME]),
+	0x82: (None     , SCNVER_400, []),
+	0x83: (None     , SCNVER_400, []),
+	0x84: (None     , SCNVER_400, []),
+	0x85: (None     , SCNVER_400, []),
+	0x86: (None     , SCNVER_400, []),
+	0x87: (None     , SCNVER_400, []),
+	0x88: (None     , SCNVER_400, []),
+	0x89: (None     , SCNVER_400, []),
+	0x8A: (None     , SCNVER_400, []),
+	0x8B: (None     , SCNVER_400, []),
+	0x8C: (None     , SCNVER_400, []),
+	0x8D: (None     , SCNVER_400, []),
+	0x8E: (None     , SCNVER_400, []),
+	0x8F: ("LDSUBSC", SCNVER_31P, [SCPT_INTH, SCPT_FNAME]),
+	0x90: ("POPCALL", SCNVER_31P, []),
+	0x91: ("SNDMODE", SCNVER_31P, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x92: ("NAMECHG", SCNVER_31P, []),
+	0x93: ("GETKEY" , SCNVER_31P, [SCPT_REG_INT]),
+	0x94: ("NOP"    , SCNVER_31P, []),
+	0x95: ("GFX95"  , SCNVER_31P, [SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT, SCPT_REG_INT]),
+	0x96: ("GFX96"  , SCNVER_31P, [SCPT_REG_INT, SCPT_REG_INT]),
+	0x97: ("SHOWEND", SCNVER_31P, []),
+	0x98: (None     , SCNVER_400, []),
+	0xF0: ("HALT"   , SCNVER_400, [SCPT_REG_INT]),
+	0xFA: ("CDPLAY" , SCNVER_400, [SCPT_FNAME]),
+	0xFB: ("CDFADE" , SCNVER_400, []),
+	0xFC: ("CDSTOP" , SCNVER_400, []),
+	0xFD: ("CMDFD"  , SCNVER_ALL, [SCPT_INT]),
+	0xFE: ("CMDFE"  , SCNVER_ALL, [SCPT_BYTE]),
+	0xFF: (None     , SCNVER_400, []),
 }
 TEXT_CMD_LIST = {
 	0x00: 0,
@@ -192,25 +382,40 @@ TEXT_CMD_LIST = {
 	0x03: 1,
 	0x04: 1,
 	0x05: 2,
-	0x06: 1,
-	0x07: 0,
+	0x06: 1,	# v1.10 .. 3.00
+	0x07: 0,	# v1.10 .. 3.00
 	0x08: 1,
 	0x09: 0,
-	0x0A: 0,
-	0x0B: 1,
-	0x0C: 1,
+	0x0A: 0,	# v1.xx only
+	0x0B: 1,	# v1.00 .. 3.00
+	0x0C: 1,	# v1.10 .. 3.00
 	0x0D: 0,
-	0x0E: 1,
-	0x0F: {
-		0x00: 1,
+	0x0E: 1,	# v1.10 only
+	0x0F: {		# v3.00+
+		0x00: 1,	# v3.00+
+		0x01: 0,	# v3.12+
+		0x02: 0,	# v3.12+
+		0x03: 0,	# v3.12+
 	},
 }
+
+TKTP_INT = 0x01	# integer number (byte/word/dword)
+TKTP_STR = 0x02	# string
+TKTP_NAME = 0x80	# register or label name
+TKTP_REG = 0x81	# register
+TKTP_LBL = 0x82	# label name
+
+TOKEN_ALPHABET = [chr(x) for x in \
+	[x for x in range(0x30, 0x3A)] + \
+	[x for x in range(0x41, 0x5B)] + \
+	[x for x in range(0x61, 0x7B)]] + ["_"]
 
 MODULE_PATH = os.path.dirname(__file__)
 JISCHR_COMMENTS = {}
 necjis = nec_jis_conv.JISConverter()
 config = {}
 MOD_DESC_LEN = 0x100	# first 0x100 bytes are reserved for the module description
+SCENE_CMD_LIST = None
 
 
 def load_additional_font_table(filepath: str) -> int:
@@ -250,14 +455,7 @@ def load_additional_font_table(filepath: str) -> int:
 
 def load_scene_binary(fn_in: str) -> bytes:
 	with open(fn_in, "rb") as f:
-		data = f.read()
-
-	if config.unscrambled:
-		return data
-	else:
-		# remove the "encryption":
-		#   The game engine skips the first 0x100 bytes and XORs all remaining ones with 0x01.
-		return data[:MOD_DESC_LEN] + bytes([x ^ 0x01 for x in data[MOD_DESC_LEN:]])
+		return f.read()
 
 def scene_read_array(scenedata: bytes, usage_mask: list, pos: int, array_size: int, mask: int = 0x01) -> bytes:
 	try:
@@ -355,7 +553,7 @@ def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
 		
 		# parse/skip all parameters
 		first_reg_type = None
-		for par_type in cmd_info[1]:
+		for par_type in cmd_info[2]:
 			if (par_type & ~SCPT_HEX) == SCPT_ILVAR:
 				# variable-size parameter
 				if first_reg_type == SCPT_REG_STR:
@@ -374,18 +572,18 @@ def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
 			
 			if (first_reg_type is None) and (par_type & SCPT_MASK) == SCPTM_REG:
 				if par_type == SCPT_REG_IL:
-					if par_val < 0x400:
+					if (par_val < 0x400) or (config.engine_ver >= 310):
 						first_reg_type = SCPT_REG_INT
 					else:
 						first_reg_type = SCPT_REG_LNG
 				else:
 					first_reg_type = par_type
 		
-		if len(cmd_info) >= 3:
+		if len(cmd_info) >= 4:
 			# stop parsing at certain commands - result will be success
-			if cmd_info[2] == SC_EXEC_END:
+			if cmd_info[3] == SC_EXEC_END:
 				break
-			elif cmd_info[2] == SC_EXEC_SPC:
+			elif cmd_info[3] == SC_EXEC_SPC:
 				if cmd_id == 0x13:	# jump table
 					break
 	return True
@@ -393,8 +591,9 @@ def test_for_code(scenedata: bytes, file_usage: list, startpos: int) -> bool:
 def get_string_size(scenedata: bytes, startpos: int, endpos: int, dtype: int) -> int:
 	pos = startpos
 	if dtype == SCPT_FNAME:
-		if scenedata[pos] < 0x20:	# archive ID
-			pos += 1
+		if (pos + 2 <= endpos):
+			if (scenedata[pos+0] < 0x20) and (scenedata[pos+1] >= 0x20):	# archive ID
+				pos += 1
 		while (pos < endpos) and (scenedata[pos] != 0x00):
 			pos += 1
 		pos += 1	# also count terminator character
@@ -461,27 +660,49 @@ def find_possible_code(scenedata: bytes, file_usage: list, label_list: dict, sta
 					curpos += 1
 	return -1
 
-def parse_scene_binary(scenedata: bytes) -> tuple:
+def check_command_version(cmd_vers: int) -> bool:
+	for ver in cmd_vers:
+		if ver is None:
+			return True	# supported by all versions
+		if ver == config.engine_ver:
+			return True
+	return False
+
+def parse_scene_binary(scenedata: bytes, imported_symbols: dict) -> tuple:
 	if config.base_ofs > 0:
 		# Just adding padding at the beginning to do the offset is not efficient. But
 		# it is the simplest way to do so, considering that many parts of the analysis
 		# code make no difference between "code pointer" offset and "real file offset".
 		scenedata = bytes([0] * config.base_ofs) + scenedata
-	start_ofs = config.base_ofs + MOD_DESC_LEN	# code starts right after the module description text
+	start_ofs = config.base_ofs + config.desc_len	# code starts right after the module description text
 	
 	cmd_list = []	# list[ tuple(file offset, command ID, list[params] ) ]
 	file_usage = [0x00] * len(scenedata)
 	label_list = {}	# dict{ file offset: (label type, flags, label name) }
 	
-	# --- parse description ---
-	mod_desc = scenedata[config.base_ofs : start_ofs]
-	if b'\x00' in mod_desc:
-		mod_desc = mod_desc[:mod_desc.find(b'\x00')]
-	if len(mod_desc) > 0:
-		cmd_list += [(config.base_ofs, -9, mod_desc)]
+	if config.engine_ver != 0:
+		# put engine version
+		cmd_list += [(-9, -9, config.engine_ver)]
+	
+	if config.base_ofs != 0:
+		# put base offset
+		cmd_list += [(-8, -8, config.base_ofs)]
+	
+	if config.desc_len > 0:
+		# --- parse description ---
+		mod_desc = scenedata[config.base_ofs : start_ofs]
+		if b'\x00' in mod_desc:
+			mod_desc = mod_desc[:mod_desc.find(b'\x00')]
+		if len(mod_desc) > 0:
+			cmd_list += [(-7, -7, mod_desc)]
+	
+	cmd_list += [(-6, -6, None)]	# placeholder for includes
 	
 	# --- parse code sections ---
-	label_list[start_ofs] = (SCPT_JUMP, 0x00, f"start_{start_ofs:04X}")
+	if start_ofs < 0x1000:
+		label_list[start_ofs] = (SCPT_JUMP, 0x00, f"start_{start_ofs:04X}")
+	else:
+		label_list[start_ofs] = (SCPT_JUMP, 0x00, None)	# no "start" for sub-modules
 	remaining_code_locs = [start_ofs]
 	curpos = None
 	while True:
@@ -518,28 +739,32 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			continue
 		if cmd_id >= 0x100:
 			# The game engine treats this as command 0x00. (return to DOS)
-			print(f"Found invalid command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
+			print(f"Pos 0x{cmd_pos:04X}: Found invalid command ID 0x{cmd_id:02X}!")
 			file_usage[cmd_pos+0] &= ~0x01	# remove 0x01, keep 0x10 to enforce skip during code test
 			file_usage[cmd_pos+1] &= ~0x01
 			curpos = None	# stop processing here
 			continue
 		if cmd_id not in SCENE_CMD_LIST:
 			# These commands will crash the game.
-			print(f"Found invalid command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
+			print(f"Pos 0x{cmd_pos:04X}: Found invalid command ID 0x{cmd_id:02X}!")
 			cmd_list += [(cmd_pos, -2, [cmd_id])]
 			continue
 		
 		cmd_info = SCENE_CMD_LIST[cmd_id]
 		if cmd_info[0] is None:
 			# The game engine will quit with an error message for these commands.
-			print(f"Found reserved command ID 0x{cmd_id:02X} at offset 0x{cmd_pos:04X}!")
+			print(f"Pos 0x{cmd_pos:04X}: Found reserved command ID 0x{cmd_id:02X}!")
 			cmd_list += [(cmd_pos, -2, [cmd_id])]
 			continue
+		
+		if not check_command_version(cmd_info[1]):
+			print(f"Pos 0x{cmd_pos:04X}: Warning: Command {cmd_info[0]} (ID 0x{cmd_id:02X}) is not supported by engine version {get_version_str(config.engine_ver)}")
+			print(f"Engine: {config.engine_ver}, Cmd Ver: {cmd_info[1]}")
 		
 		# parse command parameters
 		params = []
 		first_reg_type = None
-		for par_type in cmd_info[1]:
+		for par_type in cmd_info[2]:
 			if (par_type & ~SCPT_HEX) == SCPT_ILVAR:
 				# variable-size parameter
 				# The size (2 or 4 bytes) of the parameter depends on destination register.
@@ -560,7 +785,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			
 			if (par_type & SCPT_MASK) == SCPTM_PTR:
 				# pointer parameters: add label for them
-				if par_val >= start_ofs:
+				if par_val >= start_ofs and (par_val not in imported_symbols):
 					label_list[par_val] = (par_type, 0x00, None)
 			if par_type == SCPT_JUMP:
 				# add jump destination to list of locations to be processed
@@ -572,7 +797,7 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			if (first_reg_type is None) and (par_type & SCPT_MASK) == SCPTM_REG:
 				# remember first parameter's register type
 				if par_type == SCPT_REG_IL:
-					if par_val < 0x400:
+					if (par_val < 0x400) or (config.engine_ver >= 310):
 						first_reg_type = SCPT_REG_INT
 					else:
 						first_reg_type = SCPT_REG_LNG
@@ -581,11 +806,11 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 			params += [(par_type, par_val)]
 		cmd_list += [(cmd_pos, cmd_id, params)]
 		
-		if len(cmd_info) >= 3:
+		if len(cmd_info) >= 4:
 			# special handling
-			if cmd_info[2] == SC_EXEC_END:
+			if cmd_info[3] == SC_EXEC_END:
 				curpos = None	# stop processing here
-			elif cmd_info[2] == SC_EXEC_SPC:
+			elif cmd_info[3] == SC_EXEC_SPC:
 				if cmd_id == 0x13:	# jump table
 					# check for previous instruction being "ADDI var, NNN" and set skip_vals to NNN
 					skip_vals = 0
@@ -672,6 +897,13 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 				dtype = guess_data_type(scenedata, curpos, endpos)
 				# Note: accept "-1" as dtype to indicate unknown data types that are also labelled
 				label_list[curpos] = (dtype, LBLFLG_UNUSED, None)
+				
+				if scenedata[curpos] == 0x00 and dtype < 0 and (curpos % 2) == 1:
+					# assume single-byte padding (improved file name detection a LOT)
+					label_list[curpos] = (SCPT_PAD, 0x00, None)
+					endpos = curpos + 1
+					cmd_mode = -10	# decimal data
+			
 			if curpos in label_list:
 				if label_list[curpos][0] == SCPT_JUMP:
 					#mode = MODE_CMD
@@ -738,6 +970,10 @@ def parse_scene_binary(scenedata: bytes) -> tuple:
 		mode = MODE_UNKNOWN
 		curpos = endpos
 	
+	if config.engine_ver > 0:
+		# set final engine version
+		cmd_list[0] = (-9, -9, config.engine_ver)
+	
 	cmd_list.sort(key=lambda cmd: cmd[0])
 	return (cmd_list, file_usage, label_list)
 
@@ -758,6 +994,8 @@ def generate_label_names(label_list: dict) -> None:
 			lbl_prefix = "sel"
 		elif par_type == SCPT_FONTDAT:
 			lbl_prefix = "font"
+		elif par_type == SCPT_PAD:
+			lbl_prefix = "pad"
 		else:
 			lbl_prefix = "unk"
 		lbl_name = f"{lbl_prefix}_{lbl_pos:04X}"
@@ -842,7 +1080,7 @@ def str2asm_ascii(str_data: bytes) -> typing.List[str]:
 		if c >= 0x20 and c <= 0x7E:
 			new_mode = 1
 			c = chr(c)
-			if c in ['"', "'", '\\']:	# escape some special characters
+			if c in ['"', '\\']:	# escape some special characters
 				c_add = '\\' + c
 			else:
 				c_add = c
@@ -919,7 +1157,7 @@ def str2asm_sjis(str_data: bytes) -> typing.List[str]:
 	for c in res_chrs:
 		if type(c) is str:
 			new_mode = 1
-			if c in ['"', "'", '\\']:	# escape some special characters
+			if c in ['"', '\\']:	# escape some special characters
 				c_add = '\\' + c
 			else:
 				c_add = c
@@ -987,7 +1225,15 @@ def get_filename(params: list) -> typing.Union[str, None]:
 	except:
 		return None
 
-def write_asm(cmd_list, label_list, fn_out: str) -> None:
+def get_version_str(version_int: typing.Union[int, None]) -> str:
+	if version_int is None:
+		return "any"
+	else:
+		ver_maj = version_int // 100
+		ver_min = version_int % 100
+		return f"{ver_maj}.{ver_min:02}"
+
+def write_asm(cmd_list, label_list, include_list, fn_out: str) -> None:
 	cmd_pos_map = {}
 	for (cid, cmd) in enumerate(cmd_list):
 		(cmd_pos, cmd_id, params) = cmd
@@ -1022,9 +1268,18 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 				if cmd_pos in label_list:
 					lbl_flags = label_list[cmd_pos][1]
 				if cmd_id == -9:
+					cmd_name = "VER"	# engine version
+					data_strs = [get_version_str(params)]
+				elif cmd_id == -8:
+					cmd_name = "ORG"	# origin offset
+					data_strs = [f"0x{params:04X}"]
+				elif cmd_id == -7:
 					cmd_name = "DESC"	# module description
 					data_strs = str2asm_sjis(params)
 					group_list = gen_string_groups(data_strs)	# intelligent line splitting
+				elif cmd_id == -6:
+					cmd_name = "INCLUDE"	# include file
+					data_strs = str2asm_ascii(params.encode("utf-8"))
 				elif cmd_id == -3:
 					cmd_name = "DW"
 					group_size = 1
@@ -1120,7 +1375,7 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 					elif (par_type & SCPT_MASK) == SCPTM_REG:
 						if par_type == SCPT_REG_IL:
 							# int/long register (depends on ID)
-							if par_val < 0x400:
+							if (par_val < 0x400) or (config.engine_ver >= 310):
 								par_type = SCPT_REG_INT
 							else:
 								par_type = SCPT_REG_LNG
@@ -1158,25 +1413,246 @@ def write_asm(cmd_list, label_list, fn_out: str) -> None:
 				f.write("\t".join(cols) + '\n')
 				last_mode = 0
 				
-				if len(cmd_info) >= 3:
-					if cmd_info[2] == SC_EXEC_END:
+				if len(cmd_info) >= 4:
+					if cmd_info[3] == SC_EXEC_END:
 						f.write("\n")
 						last_mode = None
-					elif cmd_info[2] == SC_EXEC_SPC:
+					elif cmd_info[3] == SC_EXEC_SPC:
 						if cmd_id == 0x13:
 							last_mode = 1	# expect data
 	return
 
-def decompile_scene(fn_in: str, fn_out: str) -> int:
+
+def write_symbols(label_list, fn_out: str, asm_name: str) -> None:
+	asm_name = os.path.basename(asm_name)
+	
+	with open(fn_out, "wt", encoding="utf-8") as f:
+		f.write(f"; Symbols for {asm_name}\n")
+		
+		for ptr in sorted(label_list):
+			lbl = label_list[ptr]
+			f.write(f"{lbl[2]} = 0x{ptr:04X}\n")
+	return
+
+
+def find_next_token(line: str, startpos: int) -> int:
+	pos = startpos
+	while pos < len(line) and line[pos].isspace():
+		pos += 1
+	return pos
+
+def get_token_int(line: str, startpos: int) -> typing.Tuple[int, int, int]:
+	pos = startpos
+	while pos < len(line):
+		if not line[pos].isalnum():
+			break
+		pos += 1
+	result = line[startpos : pos]
+	try:
+		return (TKTP_INT, int(result, 0), pos)	# return value as integer
+	except:
+		return None	# handle parse error
+
+def get_token_name(line: str, startpos: int, space_split: bool = False) -> typing.Tuple[int, str, int]:
+	pos = startpos
+	while pos < len(line):
+		if line[pos].isspace():
+			break
+		if (not space_split) and (line[pos] not in TOKEN_ALPHABET):
+			break
+		pos += 1
+	return (TKTP_NAME, line[startpos : pos], pos)
+
+def parse_include(lines: typing.List[str], asm_filename: str) -> typing.Tuple[list, list]:
+	label_list = {}	# dict{ file offset: (label type, flags, label name) }
+	
+	for (lid, line) in enumerate(lines):
+		line = line.rstrip()
+		lstr = line.lstrip()
+		if len(lstr) == 0 or lstr.startswith(';'):
+			continue	# empty line or comment
+		
+		startpos = len(line) - len(lstr)
+		if startpos > 0:
+			continue	# ignore command lines
+		else: #if startpos == 0:
+			# label
+			pos = line.find(':')
+			if pos >= 0:
+				continue	# ignore labels
+		
+		(_, lbl_name, pos) = get_token_name(line, startpos)
+		pos = find_next_token(line, pos)
+		if pos >= len(line) or line[pos] == ';':
+			continue
+		if line[pos] != '=':
+			print(f"Parse error in {asm_filename}:{1+lid}: '=' missing. Line format has to be \"symbol = value\"")
+			return None
+		pos = find_next_token(line, pos + 1)
+		
+		res = get_token_int(line, pos)
+		if res is None:
+			print(f"Parse error in {asm_filename}:{1+lid}: Bad integer. Line format has to be \"symbol = value\"")
+			return None
+		(ttype, tdata, endpos) = res
+		label_list[tdata] = (SCPTM_PTR, 0x00, lbl_name)
+		pos = find_next_token(line, endpos)	# skip spaces
+		if pos < len(line) and line[pos] != ';':	# comment
+			print(f"Parse error in {asm_filename}:{1+lid}: Expected line end position {1+pos}")
+			return None
+	
+	return label_list
+
+def load_parse_inc(fn_in: str) -> tuple:
+	try:
+		with open(fn_in, "rt", encoding="utf-8") as f:
+			asm_lines = f.readlines()
+	except IOError:
+		print(f"Error loading {fn_in}")
+		return 1
+	ret = parse_include(asm_lines, fn_in)
+	if ret is None:
+		return 2
+	return ret
+
+
+def detect_version(scenedata: bytes) -> float:
+	global config
+	
+	has_comment_block = False
+	if len(scenedata) > MOD_DESC_LEN:
+		# check that the last 0x10 bytes of the (potential) comment are all 00s
+		if scenedata[MOD_DESC_LEN-0x10 : MOD_DESC_LEN] == (b"\x00" * 0x10):
+			has_comment_block = True	# System-98 v1..v3 comment block (unencrypted, 00 padded)
+		elif scenedata[MOD_DESC_LEN-0x10 : MOD_DESC_LEN] == (b"\x00\xFE" * 0x08):
+			has_comment_block = True	# v4 comment block (padded with encrypted FF bytes)
+	
+	start_ofs = MOD_DESC_LEN if has_comment_block else 0x00
+	encryption_type = 0
+	if scenedata[start_ofs + 0x01] == 0x00:
+		encryption_type = 0
+	elif scenedata[start_ofs + 0x01] == 0x01:
+		encryption_type = 1	# System-98 PC-98 encryption (XOR 0x01)
+	elif scenedata[start_ofs + 0x01] == 0xFF:
+		encryption_type = 2	# four-nine Windows encryption (d[0/2/4/...] DEC 1, d[1/3/5/...] INC 1)
+	else:
+		print("Unable to detect encryption type!")
+		return 0
+	
+	if config.unscrambled:
+		if encryption_type != 0:
+			print("Detected encryption when file should be unencrypted!")
+			return 0
+		if has_comment_block:
+			return -3.1	# version 3.10 (unsure)
+		else:
+			return 4.0
+	else:
+		if encryption_type == 0:
+			print("File seems to be unencrypted - please decode using \"--unscrambled\".")
+			return 0
+		if has_comment_block:
+			if encryption_type != 1:
+				print("Detected encryption type does not match engine version!")
+				return 0
+			return -3.1	# version 3.10 (unsure)
+		else:
+			if encryption_type != 2:
+				print("Detected encryption type does not match engine version!")
+				return 0
+			return 4.0
+
+def decrypt_scene_data(scenedata: bytes) -> bytes:
+	# Note that System-98 skips the module description and only decrypts from offset 0x100 on.
+	enc_data = scenedata[config.desc_len:]
+	if config.enc_type == 1:
+		# XOR all bytes with 0x01
+		decdata = bytearray([x ^ 0x01 for x in enc_data])
+	elif config.enc_type == 2:
+		# for each set of 2 bytes
+		#  - decrement byte [0] by 1
+		#  - increment byte [1] by 1
+		decdata = bytearray(enc_data)
+		if (len(decdata) % 2) != 0:
+			decdata += b'\x00'	# make size a multiple of 2 for easier processing
+		for pos in range(0, len(decdata), 2):
+			decdata[pos + 0] = (decdata[pos + 0] - 1) & 0xFF
+			decdata[pos + 1] = (decdata[pos + 1] + 1) & 0xFF
+		decdata = decdata[: len(enc_data)]
+	return scenedata[:config.desc_len] + bytes(decdata)
+
+def decompile_scene(fn_in: str, fn_out: str, fn_sym_out: str, fns_include: typing.List[str]) -> int:
+	global config
+	global SCENE_CMD_LIST
+	
+	folder_out = os.path.dirname(fn_out)
+	inc_sym_list = {}
+	inc_files = []
+	for fn_inc in fns_include:
+		ret = load_parse_inc(fn_inc)
+		if type(ret) is int:
+			return ret
+		inc_sym_list.update(ret)
+		inc_files.append(os.path.relpath(fn_inc, folder_out))
+	
 	try:
 		scn_data = load_scene_binary(fn_in)
 	except IOError:
 		print(f"Error loading {fn_in}")
 		return 1
-	(cmd_list, file_usage, label_list) = parse_scene_binary(scn_data)
+	
+	if config.engine_ver == 0:
+		config.engine_ver = detect_version(scn_data)
+		if config.engine_ver == 0:
+			print("Unable to detect engine version!")
+			return 1
+		if config.engine_ver > 0:
+			print(f"Detected engine version: {config.engine_ver:.1f}")
+		elif config.engine_ver == -3.1:
+			print(f"Detected engine version: 1.0 .. 3.1")
+	
+	engine_ver = abs(config.engine_ver)
+	if engine_ver >= 1.0 and engine_ver < 4.0:
+		config.desc_len = MOD_DESC_LEN
+		config.enc_type = 1
+		SCENE_CMD_LIST = SCENE_CMD_LIST_PC98
+	else:
+		# version 4 has no comment block
+		if config.base_ofs == 0:
+			config.desc_len = 0x00
+		else:
+			config.desc_len = MOD_DESC_LEN	# ... except that the sub-module does!
+		config.enc_type = 2
+		SCENE_CMD_LIST = SCENE_CMD_LIST_WIN
+	config.engine_ver = int(config.engine_ver * 100)	# the parsing code assumes 100 = v1.0
+	
+	if not config.unscrambled:
+		# remove the "encryption"
+		scn_data = decrypt_scene_data(scn_data)
+	
+	(cmd_list, file_usage, label_list) = parse_scene_binary(scn_data, {})
 	generate_label_names(label_list)
+	
+	if fn_sym_out is not None:
+		try:
+			write_symbols(label_list, fn_sym_out, fn_out)
+		except IOError:
+			print(f"Error writing {fn_sym_out}")
+			return 1
+	# inject include statements
+	inc_cmd_id = None
+	for (cmd_id, cmd) in enumerate(cmd_list):
+		if cmd[1] == -6:
+			inc_cmd_id = cmd_id
+	if inc_cmd_id is not None:
+		cmd = cmd_list[inc_cmd_id]
+		inc_cmds = []
+		for inc_file in inc_files:
+			inc_cmds.append((cmd[0], cmd[1], inc_file))
+		cmd_list = cmd_list[:inc_cmd_id] + inc_cmds + cmd_list[inc_cmd_id+1:]
+	
 	try:
-		write_asm(cmd_list, label_list, fn_out)
+		write_asm(cmd_list, inc_sym_list | label_list, inc_files, fn_out)
 		print("Done.")
 	except IOError:
 		print(f"Error writing {fn_out}")
@@ -1192,11 +1668,14 @@ def main(argv):
 	
 	print("four-nine/Izuho Saruta System-98 Scenario Decompiler")
 	aparse = argparse.ArgumentParser()
+	aparse.add_argument("-V", "--engine-ver", type=float, help="set System-98 engine version, can be [0, 1.0, 1.1, 3.0, 3.1, 4], 0 = auto, 4 = Windows version", default=0)
 	aparse.add_argument("-b", "--base-ofs", type=auto_int, help="set base/load offset of the scenario file", default=0x0000)
 	# for LILITH/DISK_A/li_sub.s, use "-b 0x4000"
 	aparse.add_argument("-f", "--font-file", type=str, help="description file for custom font characters")
 	aparse.add_argument("-e", "--use-emojis", action="store_true", help="decode custom font into emojis")
 	aparse.add_argument("-u", "--unscrambled", action="store_true", help="assume descrambled input data")
+	aparse.add_argument("-s", "--symbol-export", type=str, help="export label offsets to include-file")
+	aparse.add_argument("-i", "--include", action="append", type=str, help="file with symbols/constants to be included", default=[])
 	aparse.add_argument("in_file", help="input scenario file (.S)")
 	aparse.add_argument("out_file", help="output assembly file (.ASM)")
 	
@@ -1205,7 +1684,7 @@ def main(argv):
 	necjis.load_from_pickle(os.path.join(MODULE_PATH, "NEC-C-6226-lut.pkl"))
 	if config.font_file:
 		load_additional_font_table(config.font_file)
-	return decompile_scene(config.in_file, config.out_file)
+	return decompile_scene(config.in_file, config.out_file, config.symbol_export, config.include)
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))

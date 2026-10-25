@@ -1,0 +1,1 @@
+place contents of "May Club" (Windows 95 version) game directory here (e.g. MAYE.EXE, MAY0.LST, MAY0.DST, *.S files)
