@@ -37,6 +37,122 @@ IsSlowTextEnabled:
 	incbin "NOSMAIN.DEC.EXE", $, 628Ch-($-$$-CODE_BASE_OFS)
 j_DrawString:
 
+	incbin "NOSMAIN.DEC.EXE", $, 62EEh-($-$$-CODE_BASE_OFS)
+	call	DrawChar_JIS
+	incbin "NOSMAIN.DEC.EXE", $, 62F8h-($-$$-CODE_BASE_OFS)
+	call	DrawChar_ASCII
+
+	incbin "NOSMAIN.DEC.EXE", $, 639Eh-($-$$-CODE_BASE_OFS)
+DrawCharBlock:
+
+	incbin "NOSMAIN.DEC.EXE", $, 6434h-($-$$-CODE_BASE_OFS)
+DrawChar_JIS:
+	incbin "NOSMAIN.DEC.EXE", $, 6484h-($-$$-CODE_BASE_OFS)
+dcjis_fin:
+	incbin "NOSMAIN.DEC.EXE", $, 6497h-($-$$-CODE_BASE_OFS)
+dcjis_pop_all:	; pop BP/ES/DS/DI/SI/DX/CX/BX/AX
+	incbin "NOSMAIN.DEC.EXE", $, 64C4h-($-$$-CODE_BASE_OFS)
+	jmp	short dcjis_fin	; reuse the "finish" code from the other branch to save space
+
+	;incbin "NOSMAIN.DEC.EXE", $, 64E1h-($-$$-CODE_BASE_OFS)
+textChrBuf EQU 6150h
+DrawChar_ASCII:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	di
+	push	ds
+	push	es
+	push	bp
+	
+	push	ax
+	
+	mov	ax, cs
+	mov	ds, ax
+	mov	es, ax
+	
+	mov	di, textChrBuf
+	push	di
+	mov	al, 0
+	mov	cx, 40h
+	rep stosb
+	pop	di	; smaller "mov di, textChrBuf"
+	pop	ax
+	
+	mov	si, CustomFont_HalfWidth + (DATA_BASE_OFS-CODE_BASE_OFS)
+dca_cfhw_loop:
+	mov	bx, [si]
+	or	bx, bx
+	jz	short j_dca_rom_char	; list end reached - jump
+	cmp	bx, ax
+	jz	short j_dca_custom_hw	; character has an entry in the Custom Font list - jump
+	add	si, byte 12h
+	jmp	short dca_cfhw_loop
+
+j_dca_rom_char:
+	jmp	near dca_rom_char
+
+j_dca_custom_hw:
+	jmp	near dca_custom_hw
+
+CustomFont_HalfWidth:
+	db	'|',09h	; JIS 2B72: Left Single Quotation Mark (U+2018)
+	db		00h, 04h, 08h, 08h, 08h, 00h, 00h, 00h
+	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+	db	'{',09h	; JIS 2B73: Left Double Quotation Mark (U+201C)
+	db		00h, 24h, 48h, 48h, 48h, 00h, 00h, 00h
+	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+	db	'`',09h	; JIS 2B70: Right Single Quotation Mark (U+2019)
+	db		00h, 20h, 20h, 20h, 40h, 00h, 00h, 00h
+	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+	db	'}',09h	; JIS 2B22: Right Double Quotation Mark (U+201D)
+	db		00h, 24h, 24h, 24h, 48h, 00h, 00h, 00h
+	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+	dw	0000h		; size: 74 bytes
+
+	times 6548h-($-$$-CODE_BASE_OFS) db 90h	; free space: 3 bytes
+
+	incbin "NOSMAIN.DEC.EXE", $, 670Ah-($-$$-CODE_BASE_OFS)
+
+dca_rom_char:
+	out	0A1h, al
+	mov	al, ah
+	out	0A3h, al
+	
+	mov	cl, 0
+dca_getrom_loop:
+	mov	al, cl
+	or	al, 20h
+	out	0A5h, al
+	in	al, 0A9h
+	stosb
+	add	di, byte 3
+	inc	cl
+	cmp	cl, 10h
+	jnz	short dca_getrom_loop
+	
+dca_fin:
+	call	DrawCharBlock
+	mov	ax, [cs:6210h]	; txtSpacing
+	shr	ax, 1
+	add	ax, 8
+	add	[cs:6214h], ax	; txtPixPosX
+	
+	jmp	near dcjis_pop_all
+
+dca_custom_hw:
+	add	si, byte 2
+	mov	cx, 10h
+dca_getcustom_loop:
+	movsb
+	add	di, byte 3
+	loop	dca_getcustom_loop
+	jmp	short dca_fin
+
+	times 6748h-($-$$-CODE_BASE_OFS) db 90h	; free space: 1 byte
+
 	incbin "NOSMAIN.DEC.EXE", $, 6858h-($-$$-CODE_BASE_OFS)
 sub_16858:
 
@@ -142,6 +258,7 @@ cctb_ret:
 	neg	cx
 	pop	di	; restore initial DI, so that the parent functions can reuse it
 	retn
+	; free space: 31 - 22 (message length) = 9 bytes
 
 	times 6AF8h-1-($-$$-CODE_BASE_OFS) db 90h
 	db	0, "Patch by Valley Bell", 0
@@ -194,7 +311,7 @@ dt_dlg_ctrl_nowait:
 	mov	byte [bp-03h], 01h	; set "no wait" flag
 	jmp	short dt_dlg_main_loop
 
-	times 6BA7h+7-($-$$-CODE_BASE_OFS) db 90h
+	times 6BA7h+7-($-$$-CODE_BASE_OFS) db 90h	; free space: 9 bytes
 dt_dlg_linex_check:
 	mov	ax, [TextBoxes + 12h*2 + tb_txPosX]
 	add	ax, cx
@@ -256,7 +373,7 @@ get_tbox_glyph_width:	; function size: 5 bytes
 	mov	ax, [si+TextBoxes+tb_txSzX]	; read glyph size from text box (instead of hardcoded 18)
 	retn
 
-	times 6C8Ch-($-$$-CODE_BASE_OFS) db 90h
+	times 6C8Ch-($-$$-CODE_BASE_OFS) db 90h	; free space: 12 bytes
 
 
 
@@ -286,7 +403,7 @@ dt_tb1a_check_ctrl:
 	jz	short dt_tb1a_drawchr
 	jmp	short dt_tb1a_linex_check
 
-	times 6D1Ch-11-($-$$-CODE_BASE_OFS) db 90h
+	times 6D1Ch-11-($-$$-CODE_BASE_OFS) db 90h	; free space: 12 bytes
 dt_tb1a_linex_check:
 	mov	ax, [bp-14h]	; relPosX; Note: can't compare against [TextBoxes + 12h*1 + tb_txPosX], because it is not properly reset on line breaks
 	add	ax, cx
@@ -310,12 +427,12 @@ dt_tb1a_drawchr:
 j_dt_tb1a_main_loop:
 	jmp	dt_tb1a_main_loop
 	
-	times 6D9Ah-($-$$-CODE_BASE_OFS) db 90h
+	times 6D9Ah-($-$$-CODE_BASE_OFS) db 90h	; free space: 3 bytes
 	incbin "NOSMAIN.DEC.EXE", $, 6D9Ah-($-$$-CODE_BASE_OFS)
 dt_tb1a_fin:
 	mov	bx, 12h		; set text box offset
 	jmp	near dt_tbna_retlines	; Note: works, because relPosY is at the same stack offset [bp-12h] as in DrawText_TbNa
-	times 6DB6h-($-$$-CODE_BASE_OFS) db 90h
+	times 6DB6h-($-$$-CODE_BASE_OFS) db 90h	; free space: 22 bytes
 
 
 	; DrawTBoxBorder (6DB6h)
@@ -387,11 +504,12 @@ dt_tbna_drawchr:
 	add	word [si+TextBoxes+tb_txPosX], cx
 	add	word [bp-18h], cx	; bp-18h = var_18
 	jmp	short dt_tbna_linex_check
+	; free space: 42 - 38 (message length) = 4 bytes
 	
 	times 72FCh-1-($-$$-CODE_BASE_OFS) db 90h
 	db	0, "Proudly made with human intelligence", 0
 	
-	times 7324h-($-$$-CODE_BASE_OFS) db 90h
+	times 7324h-($-$$-CODE_BASE_OFS) db 90h	
 dt_tbna_linex_check:
 	mov	ax, [bp-14h]
 	cmp	ax, [si+TextBoxes+tb_sizeX]	; relPosX < text box size X?
@@ -448,9 +566,5 @@ TextBoxes:
 	dw	536, 156,	 6*2,  2,	18/2, 18,	0, 0,	0	; text box 4
 	dw	502, 184,	 7*2,  3,	18/2, 18,	0, 0,	0	; text box 5
 	dw	  0,   0,	35*2, 22,	18/2, 18,	0, 0,	0	; text box 6 (customizable)
-
-	;incbin "NOSMAIN.DEC.EXE", $, 8F7Bh - ($-$$-SEG_BASE_OFS)
-	; The code at 8F7Bh seems to be unused.
-	;times 9062h-($-$$-SEG_BASE_OFS) db 90h	; remaining space: 231 bytes
 
 	incbin "NOSMAIN.DEC.EXE", $

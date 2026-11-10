@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # Written by Valley Bell, 2026-10-14
 # based on MIME Scenario Compiler
+#
+# Special character mappings:
+# - left quotation mark:    \u201C -> {
+# - right quotation mark:   \u201D -> }
+# - left apostrophe:        \u2018 -> |
+# - right apostrophe:       \u2019 -> `
+# - ellipsis:               \u2026 -> ...
+
 import sys
 import os
 import dataclasses
@@ -621,9 +629,9 @@ def generate_binary(cmd_list, label_list) -> bytes:
 				elif cptype in [SCPT_FNAME, SCPT_STR]:
 					text = pitem.data
 					if cptype == SCPT_STR:
-						text = text.replace('\u201C', '"').replace('\u201D', '"')
-						text = text.replace("\u2018", "'").replace("\u2019", "'")
-						text = text.replace("\u2026", "...")
+						text = text.replace('\u201C', '{').replace('\u201D', '}')	# left/right quotation mark
+						text = text.replace("\u2018", "|").replace("\u2019", "`")	# left/right apostrophe
+						text = text.replace("\u2026", "...")	# ellipsis
 					value = necjis.sjis_encode_str(text, True)
 					if type(value) is not bytes:
 						print(f"Error in {citem.asmFile}:{1+citem.lineID}, column {1+pitem.pos+value[0]}: Unable to convert string to Shift-JIS!")
