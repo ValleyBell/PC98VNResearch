@@ -99,16 +99,16 @@ j_dca_custom_hw:
 
 CustomFont_HalfWidth:
 	db	'|',09h	; JIS 2B72: Left Single Quotation Mark (U+2018)
-	db		00h, 04h, 08h, 08h, 08h, 00h, 00h, 00h
+	db		20h, 40h, 60h, 60h, 00h, 00h, 00h, 00h
 	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
 	db	'{',09h	; JIS 2B73: Left Double Quotation Mark (U+201C)
-	db		00h, 24h, 48h, 48h, 48h, 00h, 00h, 00h
+	db		24h, 48h, 6Ch, 6Ch, 00h, 00h, 00h, 00h
 	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
 	db	'`',09h	; JIS 2B70: Right Single Quotation Mark (U+2019)
-	db		00h, 20h, 20h, 20h, 40h, 00h, 00h, 00h
+	db		00h, 60h, 60h, 20h, 40h, 00h, 00h, 00h
 	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
 	db	'}',09h	; JIS 2B22: Right Double Quotation Mark (U+201D)
-	db		00h, 24h, 24h, 24h, 48h, 00h, 00h, 00h
+	db		00h, 6Ch, 6Ch, 24h, 48h, 00h, 00h, 00h
 	db		00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
 	dw	0000h		; size: 74 bytes
 
